@@ -144,6 +144,17 @@ function Hero() {
           </a>
         </motion.div>
 
+        {/* Hero image */}
+        <motion.div
+          className="mt-16 w-full max-w-4xl"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/bplan-engine/images/hero-cityscape.jpg" alt="Moderne Stadtquartier-Visualisierung" className="w-full rounded-2xl shadow-2xl" />
+        </motion.div>
+
         {/* Decorative gradient blob */}
         <div className="pointer-events-none absolute -top-40 right-0 h-[500px] w-[500px] rounded-full bg-accent/5 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-20 h-[400px] w-[400px] rounded-full bg-primary/5 blur-3xl" />
@@ -175,6 +186,10 @@ const problems = [
 function Problem() {
   return (
     <Section id="problem" gray>
+      <FadeIn className="mb-8 max-w-2xl mx-auto">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/bplan-engine/images/problem-documents.jpg" alt="Bauantrags-Dokumente mit Nachforderungen" className="w-full h-48 object-cover rounded-2xl shadow-lg" />
+      </FadeIn>
       <SectionHeading title="Genehmigungsverfahren bremsen Ihre Pipeline." />
       <div className="grid gap-8 md:grid-cols-3">
         {problems.map((p, i) => (
@@ -363,14 +378,17 @@ const useCases = [
   {
     title: "Portfolio-Rollout",
     desc: "Bewerten Sie 50 Standorte in der Zeit, die Sie heute für 5 brauchen. Gleiche Standards, konsistente Qualität.",
+    image: "/bplan-engine/images/usecase-portfolio.jpg",
   },
   {
     title: "Ankaufsprüfung in 48h",
     desc: "Machbarkeit prüfen bevor der Letter of Intent unterschrieben ist. Fundierte Entscheidung statt Bauchgefühl.",
+    image: "/bplan-engine/images/usecase-ankauf.jpg",
   },
   {
     title: "Serielle Planung mit Standards",
     desc: "Bewährte Gebäudestandards wiederverwenden. Weniger Entwurfsaufwand, schnellere Freigaben.",
+    image: "/bplan-engine/images/usecase-seriell.jpg",
   },
 ];
 
@@ -382,18 +400,22 @@ function UseCases() {
         {useCases.map((uc, i) => (
           <FadeIn key={i} delay={i * 0.1}>
             <div
-              className={`flex flex-col gap-6 rounded-2xl border border-gray-border bg-white p-8 shadow-sm md:flex-row md:items-center ${
+              className={`overflow-hidden rounded-2xl border border-gray-border bg-white shadow-sm ${
                 i % 2 === 1 ? "md:flex-row-reverse" : ""
               }`}
             >
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-accent/10">
-                <span className="text-2xl font-extrabold text-accent">
-                  0{i + 1}
-                </span>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-primary">{uc.title}</h3>
-                <p className="mt-2 leading-relaxed text-slate-text/70">{uc.desc}</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={uc.image} alt={uc.title} className="w-full h-48 object-cover" />
+              <div className="flex flex-col gap-6 p-8 md:flex-row md:items-center">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-accent/10">
+                  <span className="text-2xl font-extrabold text-accent">
+                    0{i + 1}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-primary">{uc.title}</h3>
+                  <p className="mt-2 leading-relaxed text-slate-text/70">{uc.desc}</p>
+                </div>
               </div>
             </div>
           </FadeIn>
@@ -538,8 +560,10 @@ function FAQ() {
 
 function CTA() {
   return (
-    <Section id="kontakt">
-      <FadeIn className="text-center">
+    <Section id="kontakt" className="relative overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/bplan-engine/images/cta-background.jpg" alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+      <FadeIn className="text-center relative z-10">
         <h2 className="text-3xl font-bold tracking-tight text-primary md:text-4xl lg:text-5xl">
           Bereit für schnellere Genehmigungen?
         </h2>
