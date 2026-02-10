@@ -53,13 +53,15 @@ export default function Hero() {
           </motion.p>
         </div>
 
-        {/* Animated product mockup placeholder */}
+        {/* Animated product mockup with hero image */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           className="relative"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/bplan-engine/images/hero-cityscape.png" alt="Moderne Stadtquartier-Visualisierung" className="rounded-2xl shadow-2xl mb-6 w-full object-cover" />
           <div className="bg-gray-bg rounded-2xl border border-gray-border p-8 shadow-xl">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
