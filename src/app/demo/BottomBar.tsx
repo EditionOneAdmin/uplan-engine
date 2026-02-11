@@ -1,6 +1,7 @@
 "use client";
 
 import type { Metrics } from "./types";
+import { getScoreColor, getScoreIcon } from "./matchScore";
 
 function ProgressBar({ value, label, unit }: { value: number; label: string; unit?: string }) {
   const pct = Math.min(value * 100, 100);
@@ -33,7 +34,25 @@ function Stat({ label, value, unit }: { label: string; value: string | number; u
   );
 }
 
-export function BottomBar({ metrics, drawing, onToggleDraw }: { metrics: Metrics; drawing?: boolean; onToggleDraw?: () => void }) {
+function MiniScoreRing({ score }: { score: number }) {
+  const color = getScoreColor(score);
+  const size = 28;
+  const r = 10;
+  const c = Math.PI * 2 * r;
+  const pct = score / 10;
+  return (
+    <svg width={size} height={size} className="shrink-0">
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeOpacity={0.1} strokeWidth={2.5} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={2.5}
+        strokeDasharray={`${c * pct} ${c * (1 - pct)}`}
+        strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`} />
+      <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central"
+        fill={color} fontSize={9} fontWeight="bold">{score}</text>
+    </svg>
+  );
+}
+
+export function BottomBar({ metrics, drawing, onToggleDraw, matchScore }: { metrics: Metrics; drawing?: boolean; onToggleDraw?: () => void; matchScore?: number }) {
   return (
     <div className="bg-[#1E293B] border-t border-white/10 px-4 py-3 flex items-center gap-6 overflow-x-auto shrink-0">
       {onToggleDraw && (
@@ -77,6 +96,15 @@ export function BottomBar({ metrics, drawing, onToggleDraw }: { metrics: Metrics
           {metrics.compliant ? "Konform" : "Überschreitung"}
         </span>
       </div>
+      {matchScore !== undefined && (
+        <>
+          <div className="w-px h-8 bg-white/10 shrink-0" />
+          <div className="flex items-center gap-1.5">
+            <MiniScoreRing score={matchScore} />
+            <span className="text-xs text-white/60 whitespace-nowrap">{matchScore}/10 Match</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

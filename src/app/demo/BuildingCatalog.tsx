@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import type { BuildingModule, BuildingShape, Manufacturer, PlacedUnit, RoofType, FacadeType } from "./types";
+import type { BuildingModule, BuildingShape, Manufacturer, PlacedUnit, RoofType, FacadeType, Baufeld, Filters } from "./types";
 import { MANUFACTURERS, SHAPE_CONFIG } from "./data";
+import { calculateMatch, getScoreColor, getScoreIcon, getCriterionIcon, getCriterionColor, type MatchResult } from "./matchScore";
 
 /* ── SVG Building Shapes ──────────────────────────────────── */
 
@@ -85,6 +86,52 @@ function EnergyBar({ rating }: { rating: string }) {
   );
 }
 
+/* ── Score Components ─────────────────────────────────────── */
+
+function ScoreRing({ score, maxScore = 10, size = 40 }: { score: number; maxScore?: number; size?: number }) {
+  const color = getScoreColor(score);
+  const r = (size - 6) / 2;
+  const c = Math.PI * 2 * r;
+  const pct = score / maxScore;
+  return (
+    <svg width={size} height={size} className="shrink-0">
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="white" strokeOpacity={0.1} strokeWidth={3} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={3}
+        strokeDasharray={`${c * pct} ${c * (1 - pct)}`}
+        strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`} />
+      <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central"
+        fill={color} fontSize={size * 0.28} fontWeight="bold">{score}</text>
+    </svg>
+  );
+}
+
+function ScoreBadge({ score }: { score: number }) {
+  const color = getScoreColor(score);
+  const icon = getScoreIcon(score);
+  return (
+    <span
+      className="absolute top-1.5 right-1.5 z-10 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none"
+      style={{ backgroundColor: color + "22", color, border: `1px solid ${color}44` }}
+    >
+      {icon} {score}/10
+    </span>
+  );
+}
+
+function MatchBreakdown({ result }: { result: MatchResult }) {
+  return (
+    <div className="mt-2 space-y-1">
+      {result.criteria.map((c) => (
+        <div key={c.name} className="flex items-center gap-1.5 text-[11px]">
+          <span style={{ color: getCriterionColor(c.status) }}>{getCriterionIcon(c.status)}</span>
+          <span className="text-white/60 font-medium">{c.label}:</span>
+          <span className="text-white/40">{c.detail}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── Configurator ─────────────────────────────────────────── */
 
 function Configurator({
@@ -96,6 +143,7 @@ function Configurator({
   facade,
   setFacade,
   onPlace,
+  matchResult,
 }: {
   building: BuildingModule;
   geschosse: number;
@@ -105,6 +153,7 @@ function Configurator({
   facade: FacadeType;
   setFacade: (f: FacadeType) => void;
   onPlace: () => void;
+  matchResult: MatchResult | null;
 }) {
   const bgf = building.bgfPerGeschoss * geschosse;
   const we = building.wePerGeschoss * geschosse;
@@ -188,6 +237,19 @@ function Configurator({
         </div>
       </div>
 
+      {matchResult && (
+        <div className="bg-[#1E293B] rounded-lg p-2.5 border border-white/5 mb-3">
+          <div className="flex items-center gap-3 mb-2">
+            <ScoreRing score={matchResult.score} size={48} />
+            <div>
+              <div className="text-xs font-bold text-white">Match-Score</div>
+              <div className="text-[10px] text-white/40">{matchResult.score}/{matchResult.maxScore} Punkte</div>
+            </div>
+          </div>
+          <MatchBreakdown result={matchResult} />
+        </div>
+      )}
+
       <button
         onClick={onPlace}
         className="w-full py-2 rounded-lg bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-bold transition-all shadow-lg shadow-[#0D9488]/20"
@@ -217,6 +279,8 @@ interface Props {
   facade: FacadeType;
   setFacade: (f: FacadeType) => void;
   onPlace: () => void;
+  activeBaufeld: Baufeld | null;
+  filters: Filters;
 }
 
 export function BuildingCatalog({
@@ -236,15 +300,38 @@ export function BuildingCatalog({
   facade,
   setFacade,
   onPlace,
+  activeBaufeld,
+  filters,
 }: Props) {
   const selectedBuilding = buildings.find((b) => b.id === selectedId) || null;
 
+  // Calculate match scores if baufeld is active
+  const matchScores = new Map<string, MatchResult>();
+  if (activeBaufeld) {
+    buildings.forEach((b) => {
+      matchScores.set(b.id, calculateMatch(b, activeBaufeld, filters, b.defaultGeschosse));
+    });
+  }
+
+  const selectedMatchResult = selectedBuilding && activeBaufeld
+    ? calculateMatch(selectedBuilding, activeBaufeld, filters, geschosse)
+    : null;
+
   // Filter buildings
-  const filtered = buildings.filter((b) => {
+  let filtered = buildings.filter((b) => {
     if (manufacturerFilter !== "all" && b.manufacturer !== manufacturerFilter) return false;
     if (shapeFilter !== "all" && b.shape !== shapeFilter) return false;
     return true;
   });
+
+  // Sort by match score (highest first) when baufeld active
+  if (activeBaufeld) {
+    filtered = [...filtered].sort((a, b) => {
+      const sa = matchScores.get(a.id)?.score ?? 0;
+      const sb = matchScores.get(b.id)?.score ?? 0;
+      return sb - sa;
+    });
+  }
 
   return (
     <div>
@@ -321,9 +408,12 @@ export function BuildingCatalog({
               }`}
               style={isSelected ? { borderColor: b.color, boxShadow: `0 0 20px ${b.color}20` } : {}}
             >
+              {activeBaufeld && matchScores.has(b.id) && (
+                <ScoreBadge score={matchScores.get(b.id)!.score} />
+              )}
               {count > 0 && (
                 <span
-                  className="absolute top-2 right-2 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center"
+                  className={`absolute ${activeBaufeld ? "top-7" : "top-2"} right-2 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center`}
                   style={{ backgroundColor: b.color }}
                 >
                   {count}
@@ -372,6 +462,7 @@ export function BuildingCatalog({
           facade={facade}
           setFacade={setFacade}
           onPlace={onPlace}
+          matchResult={selectedMatchResult}
         />
       )}
 

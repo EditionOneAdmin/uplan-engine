@@ -8,6 +8,7 @@ import { BottomBar } from "./BottomBar";
 import { DemoHeader } from "./DemoHeader";
 import type { Baufeld, PlacedUnit, Filters, Manufacturer, BuildingShape, RoofType, FacadeType } from "./types";
 import { BUILDINGS } from "./data";
+import { calculateMatch } from "./matchScore";
 
 const MapPanel = dynamic(() => import("./MapPanel"), { ssr: false });
 
@@ -174,6 +175,8 @@ export default function DemoApp() {
               facade={configFacade}
               setFacade={setConfigFacade}
               onPlace={handlePlace}
+              activeBaufeld={activeBaufeld}
+              filters={filters}
             />
           </div>
           <div className="bg-[#1E293B] border-t border-white/10 p-4">
@@ -181,7 +184,21 @@ export default function DemoApp() {
           </div>
         </div>
       </div>
-      <BottomBar metrics={metrics} drawing={drawing} onToggleDraw={() => setDrawing((d) => !d)} />
+      <BottomBar
+        metrics={metrics}
+        drawing={drawing}
+        onToggleDraw={() => setDrawing((d) => !d)}
+        matchScore={
+          selectedBuilding && activeBaufeld
+            ? calculateMatch(
+                BUILDINGS.find((b) => b.id === selectedBuilding)!,
+                activeBaufeld,
+                filters,
+                configGeschosse
+              ).score
+            : undefined
+        }
+      />
     </div>
   );
 }
