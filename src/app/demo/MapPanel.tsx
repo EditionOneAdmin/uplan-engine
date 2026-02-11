@@ -125,9 +125,9 @@ function ClickFeatureInfo() {
         SERVICE: "WMS",
         VERSION: "1.1.1",
         REQUEST: "GetFeatureInfo",
-        LAYERS: "adv_sn_flurstueck",
-        QUERY_LAYERS: "adv_sn_flurstueck",
-        INFO_FORMAT: "text/plain",
+        LAYERS: "alkis_flurstuecke",
+        QUERY_LAYERS: "alkis_flurstuecke",
+        INFO_FORMAT: "application/json",
         SRS: "EPSG:4326",
         BBOX: bbox,
         WIDTH: String(size.x),
@@ -136,7 +136,7 @@ function ClickFeatureInfo() {
         Y: String(Math.round(point.y)),
       });
 
-      const url = `https://fbinter.stadt-berlin.de/fb/wms/senstadt/wmsk_alkis?${params}`;
+      const url = `https://gdi.berlin.de/services/wms/alkis_flurstuecke?${params}`;
 
       let content = `<div style="font-family:Inter,sans-serif;font-size:12px;">
         <div style="color:#94a3b8;margin-bottom:4px;">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`;
@@ -144,15 +144,17 @@ function ClickFeatureInfo() {
       try {
         const res = await fetch(url);
         if (res.ok) {
-          const text = await res.text();
-          // Parse plain text response for useful fields
-          const lines = text.split("\n").filter((l) => l.includes("="));
-          if (lines.length > 0) {
+          const data = await res.json();
+          const features = data?.features || [];
+          if (features.length > 0) {
+            const props = features[0].properties || {};
             content += `<div style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;">
               <div style="font-weight:600;margin-bottom:4px;color:#0D9488;">Flurstück-Info</div>`;
-            for (const line of lines.slice(0, 8)) {
-              const [key, ...vals] = line.split("=");
-              content += `<div><span style="color:#94a3b8;">${key.trim()}:</span> ${vals.join("=").trim()}</div>`;
+            const displayKeys = ["flurstueckskennzeichen", "gemarkung", "flur", "zaehler", "nenner", "flaeche", "gemeinde", "land"];
+            const shownKeys = Object.keys(props).filter(k => displayKeys.includes(k.toLowerCase()) || displayKeys.some(dk => k.toLowerCase().includes(dk)));
+            const keysToShow = shownKeys.length > 0 ? shownKeys : Object.keys(props).slice(0, 8);
+            for (const key of keysToShow) {
+              content += `<div><span style="color:#94a3b8;">${key}:</span> ${props[key]}</div>`;
             }
             content += `</div>`;
           } else {
@@ -321,32 +323,35 @@ export default function MapPanel({
       <LayersControl position="topright">
         <LayersControl.Overlay checked name="Flurstücke (ALKIS)">
           <WMSTileLayer
-            url="https://fbinter.stadt-berlin.de/fb/wms/senstadt/wmsk_alkis"
-            layers="adv_sn_flurstueck"
+            url="https://gdi.berlin.de/services/wms/alkis_flurstuecke"
+            layers="alkis_flurstuecke"
             format="image/png"
             transparent={true}
             opacity={0.7}
-            attribution="© Berlin FIS-Broker"
+            version="1.1.1"
+            attribution="© Berlin GDI"
           />
         </LayersControl.Overlay>
         <LayersControl.Overlay checked name="Bebauungspläne">
           <WMSTileLayer
-            url="https://fbinter.stadt-berlin.de/fb/wms/senstadt/wmsk_bplan"
-            layers="bplan_festges"
+            url="https://gdi.berlin.de/services/wms/bplan"
+            layers="bp_fs"
             format="image/png"
             transparent={true}
             opacity={0.6}
-            attribution="© Berlin FIS-Broker"
+            version="1.1.1"
+            attribution="© Berlin GDI"
           />
         </LayersControl.Overlay>
         <LayersControl.Overlay name="Bodenrichtwerte">
           <WMSTileLayer
-            url="https://fbinter.stadt-berlin.de/fb/wms/senstadt/wmsk_boris"
-            layers="boris_2024"
+            url="https://gdi.berlin.de/services/wms/alkis_flurstuecke"
+            layers="flurstuecke"
             format="image/png"
             transparent={true}
             opacity={0.5}
-            attribution="© Berlin FIS-Broker"
+            version="1.1.1"
+            attribution="© Berlin GDI"
           />
         </LayersControl.Overlay>
       </LayersControl>
