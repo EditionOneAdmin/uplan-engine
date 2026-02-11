@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   ScanLine,
   BookOpen,
@@ -28,6 +28,9 @@ import {
   AlertTriangle,
   FolderOpen,
   Mail,
+  Menu,
+  X,
+  ChevronRight,
 } from "lucide-react";
 
 /* ─── Helpers ──────────────────────────────────────────── */
@@ -260,6 +263,11 @@ function HowItWorks() {
           </FadeIn>
         ))}
       </div>
+      <FadeIn delay={0.5} className="mt-10 text-center">
+        <a href="/bplan-engine/produkt" className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent-light transition">
+          Alle Module im Detail <ArrowRight className="h-4 w-4" />
+        </a>
+      </FadeIn>
     </Section>
   );
 }
@@ -379,16 +387,19 @@ const useCases = [
     title: "Portfolio-Rollout",
     desc: "Bewerten Sie 50 Standorte in der Zeit, die Sie heute für 5 brauchen. Gleiche Standards, konsistente Qualität.",
     image: "/bplan-engine/images/usecase-portfolio.jpg",
+    href: "/bplan-engine/anwendungsfaelle/portfolio-rollout",
   },
   {
     title: "Ankaufsprüfung in 48h",
     desc: "Machbarkeit prüfen bevor der Letter of Intent unterschrieben ist. Fundierte Entscheidung statt Bauchgefühl.",
     image: "/bplan-engine/images/usecase-ankauf.jpg",
+    href: "/bplan-engine/anwendungsfaelle/ankaufspruefung",
   },
   {
     title: "Serielle Planung mit Standards",
     desc: "Bewährte Gebäudestandards wiederverwenden. Weniger Entwurfsaufwand, schnellere Freigaben.",
     image: "/bplan-engine/images/usecase-seriell.jpg",
+    href: "/bplan-engine/anwendungsfaelle/serielle-planung",
   },
 ];
 
@@ -415,6 +426,9 @@ function UseCases() {
                 <div>
                   <h3 className="text-xl font-bold text-primary">{uc.title}</h3>
                   <p className="mt-2 leading-relaxed text-slate-text/70">{uc.desc}</p>
+                  <a href={uc.href} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-light transition">
+                    Mehr erfahren <ArrowRight className="h-3.5 w-3.5" />
+                  </a>
                 </div>
               </div>
             </div>
@@ -486,6 +500,11 @@ function Technology() {
           </FadeIn>
         ))}
       </div>
+      <FadeIn delay={0.5} className="mt-10 text-center">
+        <a href="/bplan-engine/technologie" className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent-light transition">
+          Architektur, Sicherheit & Integrationen im Detail <ArrowRight className="h-4 w-4" />
+        </a>
+      </FadeIn>
     </Section>
   );
 }
@@ -613,9 +632,12 @@ function Footer() {
         <p className="text-sm text-slate-text/50">
           Vom Flürstück zur Genehmigungsreife.
         </p>
-        <nav className="flex gap-6 text-sm text-slate-text/50">
-          <a href="#pipeline" className="transition hover:text-primary">Pipeline</a>
-          <a href="#produkt" className="transition hover:text-primary">Produkt</a>
+        <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-text/50">
+          <a href="/bplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
+          <a href="/bplan-engine/anwendungsfaelle/portfolio-rollout" className="transition hover:text-primary">Portfolio-Rollout</a>
+          <a href="/bplan-engine/anwendungsfaelle/ankaufspruefung" className="transition hover:text-primary">Ankaufsprüfung</a>
+          <a href="/bplan-engine/anwendungsfaelle/serielle-planung" className="transition hover:text-primary">Serielle Planung</a>
+          <a href="/bplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
           <a href="#faq" className="transition hover:text-primary">FAQ</a>
           <a href="#kontakt" className="transition hover:text-primary">Kontakt</a>
         </nav>
@@ -630,6 +652,33 @@ function Footer() {
 /* ─── NAV ──────────────────────────────────────────────── */
 
 function Nav() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [ucOpen, setUcOpen] = useState(false);
+
+  // close mobile menu on resize
+  useEffect(() => {
+    const handler = () => { if (window.innerWidth >= 768) setMobileOpen(false); };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  const Logo = () => (
+    <a href="/bplan-engine/" className="flex items-center gap-2">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="8" fill="#1E3A5F" />
+        <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
+        <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
+      </svg>
+      <span className="text-lg font-bold text-primary">B-Plan Engine</span>
+    </a>
+  );
+
+  const useCaseLinks = [
+    { href: "/bplan-engine/anwendungsfaelle/portfolio-rollout", label: "Portfolio-Rollout", sub: "50 Standorte parallel bewerten" },
+    { href: "/bplan-engine/anwendungsfaelle/ankaufspruefung", label: "Ankaufsprüfung in 48h", sub: "Machbarkeit vor LOI prüfen" },
+    { href: "/bplan-engine/anwendungsfaelle/serielle-planung", label: "Serielle Planung", sub: "Standards wiederverwenden" },
+  ];
+
   return (
     <motion.header
       className="fixed top-0 right-0 left-0 z-50 border-b border-gray-border/60 bg-white/80 backdrop-blur-lg"
@@ -638,33 +687,87 @@ function Nav() {
       transition={{ duration: 0.5 }}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <a href="#" className="flex items-center gap-2">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect width="32" height="32" rx="8" fill="#1E3A5F" />
-            <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
-            <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
-          </svg>
-          <span className="text-lg font-bold text-primary">B-Plan Engine</span>
-        </a>
-        <nav className="hidden gap-6 text-sm font-medium text-slate-text/60 md:flex">
+        <Logo />
+
+        {/* Desktop Nav */}
+        <nav className="hidden items-center gap-6 text-sm font-medium text-slate-text/60 md:flex">
           <a href="/bplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
-          <a href="/bplan-engine/anwendungsfaelle/portfolio-rollout" className="transition hover:text-primary">Use Cases</a>
+
+          {/* Use Cases Dropdown */}
+          <div className="relative" onMouseEnter={() => setUcOpen(true)} onMouseLeave={() => setUcOpen(false)}>
+            <button className="flex items-center gap-1 transition hover:text-primary">
+              Use Cases
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${ucOpen ? "rotate-180" : ""}`} />
+            </button>
+            <AnimatePresence>
+              {ucOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-1/2 -translate-x-1/2 top-full pt-2"
+                >
+                  <div className="w-72 rounded-xl border border-gray-border bg-white p-2 shadow-xl">
+                    {useCaseLinks.map((uc) => (
+                      <a key={uc.href} href={uc.href} className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition hover:bg-gray-bg group">
+                        <ChevronRight className="mt-0.5 h-4 w-4 text-accent opacity-0 group-hover:opacity-100 transition shrink-0" />
+                        <div>
+                          <div className="text-sm font-semibold text-primary">{uc.label}</div>
+                          <div className="text-xs text-slate-text/50">{uc.sub}</div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <a href="/bplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
           <a href="#faq" className="transition hover:text-primary">FAQ</a>
         </nav>
-        <a
-          href="#kontakt"
-          className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-light"
-        >
-          Demo anfragen
-        </a>
+
+        <div className="flex items-center gap-3">
+          <a
+            href="#kontakt"
+            className="hidden rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-light sm:inline-flex"
+          >
+            Demo anfragen
+          </a>
+
+          {/* Mobile Hamburger */}
+          <button className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-bg transition" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <X className="h-5 w-5 text-primary" /> : <Menu className="h-5 w-5 text-primary" />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-gray-border/40 md:hidden"
+          >
+            <nav className="flex flex-col gap-1 px-6 py-4 bg-white">
+              <a href="/bplan-engine/produkt" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Produkt</a>
+              <div className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-text/40">Use Cases</div>
+              {useCaseLinks.map((uc) => (
+                <a key={uc.href} href={uc.href} className="rounded-lg px-3 py-2.5 pl-6 text-sm text-slate-text/80 hover:bg-gray-bg hover:text-primary transition" onClick={() => setMobileOpen(false)}>
+                  {uc.label}
+                </a>
+              ))}
+              <a href="/bplan-engine/technologie" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Technologie</a>
+              <a href="#faq" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>FAQ</a>
+              <a href="#kontakt" className="mt-2 rounded-lg bg-accent px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-accent-light transition" onClick={() => setMobileOpen(false)}>Demo anfragen</a>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 }
