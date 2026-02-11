@@ -112,32 +112,23 @@ function ClickFeatureInfo() {
   useMapEvents({
     click: async (e) => {
       const { lat, lng } = e.latlng;
-      const size = map.getSize();
-      const bounds = map.getBounds();
-      const sw = bounds.getSouthWest();
-      const ne = bounds.getNorthEast();
-      const bbox = `${sw.lng},${sw.lat},${ne.lng},${ne.lat}`;
 
-      // Pixel position
-      const point = map.latLngToContainerPoint(e.latlng);
+      // Use WFS instead of WMS GetFeatureInfo to avoid CORS issues
+      // Build a small bbox around the click point
+      const d = 0.0002; // ~20m
+      const bbox = `${lat - d},${lng - d},${lat + d},${lng + d},urn:ogc:def:crs:EPSG::4326`;
 
       const params = new URLSearchParams({
-        SERVICE: "WMS",
-        VERSION: "1.1.1",
-        REQUEST: "GetFeatureInfo",
-        LAYERS: "flurstuecke",
-        QUERY_LAYERS: "flurstuecke",
-        STYLES: "",
-        INFO_FORMAT: "application/json",
-        SRS: "EPSG:4326",
+        SERVICE: "WFS",
+        VERSION: "2.0.0",
+        REQUEST: "GetFeature",
+        TYPENAMES: "flurstuecke",
+        COUNT: "1",
         BBOX: bbox,
-        WIDTH: String(size.x),
-        HEIGHT: String(size.y),
-        X: String(Math.round(point.x)),
-        Y: String(Math.round(point.y)),
+        OUTPUTFORMAT: "application/json",
       });
 
-      const url = `https://gdi.berlin.de/services/wms/alkis_flurstuecke?${params}`;
+      const url = `https://gdi.berlin.de/services/wfs/alkis_flurstuecke?${params}`;
 
       let content = `<div style="font-family:Inter,sans-serif;font-size:12px;">
         <div style="color:#94a3b8;margin-bottom:4px;">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`;
@@ -151,19 +142,35 @@ function ClickFeatureInfo() {
             const props = features[0].properties || {};
             content += `<div style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;">
               <div style="font-weight:600;margin-bottom:4px;color:#0D9488;">Flurstück-Info</div>`;
-            const displayKeys = ["flurstueckskennzeichen", "gemarkung", "flur", "zaehler", "nenner", "flaeche", "gemeinde", "land"];
-            const shownKeys = Object.keys(props).filter(k => displayKeys.includes(k.toLowerCase()) || displayKeys.some(dk => k.toLowerCase().includes(dk)));
-            const keysToShow = shownKeys.length > 0 ? shownKeys : Object.keys(props).slice(0, 8);
-            for (const key of keysToShow) {
-              content += `<div><span style="color:#94a3b8;">${key}:</span> ${props[key]}</div>`;
+            const labelMap: Record<string, string> = {
+              fsko: "Kennzeichen",
+              gmk: "Gemarkung",
+              namgmk: "Gemarkung (Name)",
+              fln: "Flur",
+              zae: "Zähler",
+              nen: "Nenner",
+              afl: "Fläche (m²)",
+              namgem: "Gemeinde",
+            };
+            const keysToShow = Object.keys(labelMap).filter(k => props[k] !== undefined && props[k] !== null && props[k] !== "");
+            if (keysToShow.length > 0) {
+              for (const key of keysToShow) {
+                const val = key === "afl" ? Number(props[key]).toLocaleString("de-DE") : props[key];
+                content += `<div><span style="color:#94a3b8;">${labelMap[key]}:</span> ${val}</div>`;
+              }
+            } else {
+              // Fallback: show first 8 properties
+              for (const key of Object.keys(props).slice(0, 8)) {
+                content += `<div><span style="color:#94a3b8;">${key}:</span> ${props[key]}</div>`;
+              }
             }
             content += `</div>`;
           } else {
-            content += `<div style="color:#64748b;margin-top:4px;font-style:italic;">Keine Flurstück-Info verfügbar</div>`;
+            content += `<div style="color:#64748b;margin-top:4px;font-style:italic;">Kein Flurstück an dieser Stelle gefunden</div>`;
           }
         }
       } catch {
-        content += `<div style="color:#64748b;margin-top:4px;font-style:italic;">GetFeatureInfo nicht verfügbar (CORS)</div>`;
+        content += `<div style="color:#64748b;margin-top:4px;font-style:italic;">Flurstück-Abfrage nicht verfügbar</div>`;
       }
 
       content += `</div>`;
