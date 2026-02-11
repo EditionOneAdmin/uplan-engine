@@ -61,14 +61,18 @@ export interface ExportData {
 
 async function loadImageAsBase64(url: string): Promise<string | null> {
   try {
-    const resp = await fetch(url);
+    // Convert relative URL to absolute using current origin
+    const absoluteUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`;
+    const resp = await fetch(absoluteUrl);
+    if (!resp.ok) return null;
     const blob = await resp.blob();
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
-  } catch { return null; }
+  } catch(e) { console.warn("loadImageAsBase64 failed:", url, e); return null; }
 }
 
 async function captureMap(): Promise<string | null> {
@@ -80,9 +84,14 @@ async function captureMap(): Promise<string | null> {
       useCORS: true,
       allowTaint: true,
       scale: 2,
+      logging: false,
+      // Ignore WMS tiles that may cause CORS issues
+      ignoreElements: (el: Element) => {
+        return el.tagName === "IMG" && (el as HTMLImageElement).src?.includes("gdi.berlin.de");
+      },
     });
     return canvas.toDataURL("image/jpeg", 0.85);
-  } catch { return null; }
+  } catch(e) { console.warn("captureMap failed:", e); return null; }
 }
 
 export async function exportProjectPlan(data: ExportData): Promise<void> {
