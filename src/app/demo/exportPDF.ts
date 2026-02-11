@@ -103,18 +103,70 @@ async function captureMap(): Promise<string | null> {
     const html2canvas = (await import("html2canvas")).default;
     const mapEl = document.querySelector(".leaflet-container") as HTMLElement;
     if (!mapEl) return null;
+    
+    // Strategy: Use proxy for tile images by converting them to inline data first
+    // First, try to pre-load all tile images as base64
+    const tileImages = mapEl.querySelectorAll("img.leaflet-tile");
+    const originalSrcs: Map<HTMLImageElement, string> = new Map();
+    
+    // Replace tile srcs with data URLs where possible
+    const proxyPromises: Promise<void>[] = [];
+    tileImages.forEach((tile) => {
+      const img = tile as HTMLImageElement;
+      if (img.complete && img.naturalWidth > 0) {
+        proxyPromises.push((async () => {
+          try {
+            const resp = await fetch(img.src);
+            const blob = await resp.blob();
+            const dataUrl = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+            originalSrcs.set(img, img.src);
+            img.src = dataUrl;
+          } catch {
+            // Skip tiles that can't be fetched (CORS)
+          }
+        })());
+      }
+    });
+    
+    await Promise.allSettled(proxyPromises);
+    console.log("[PDF Export] Proxied", originalSrcs.size, "of", tileImages.length, "tile images");
+    
     const canvas = await html2canvas(mapEl, {
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       scale: 2,
       logging: false,
-      // Ignore WMS tiles that may cause CORS issues
-      ignoreElements: (el: Element) => {
-        return el.tagName === "IMG" && (el as HTMLImageElement).src?.includes("gdi.berlin.de");
-      },
     });
-    return canvas.toDataURL("image/jpeg", 0.85);
-  } catch(e) { console.warn("captureMap failed:", e); return null; }
+    
+    // Restore original tile srcs
+    originalSrcs.forEach((src, img) => { img.src = src; });
+    
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    console.log("[PDF Export] Map captured:", dataUrl.length, "bytes");
+    return dataUrl;
+  } catch(e) { 
+    console.warn("captureMap failed:", e);
+    // Fallback: try with allowTaint (produces image but can't export as clean data url on some browsers)
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const mapEl = document.querySelector(".leaflet-container") as HTMLElement;
+      if (!mapEl) return null;
+      const canvas = await html2canvas(mapEl, {
+        useCORS: false,
+        allowTaint: true,
+        scale: 2,
+        logging: false,
+      });
+      return canvas.toDataURL("image/jpeg", 0.85);
+    } catch(e2) {
+      console.warn("captureMap fallback also failed:", e2);
+      return null;
+    }
+  }
 }
 
 export async function exportProjectPlan(data: ExportData): Promise<void> {
