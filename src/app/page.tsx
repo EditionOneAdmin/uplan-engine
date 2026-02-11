@@ -643,7 +643,9 @@ function Footer() {
           <a href="/bplan-engine/anwendungsfaelle/portfolio-rollout" className="transition hover:text-primary">Portfolio-Rollout</a>
           <a href="/bplan-engine/anwendungsfaelle/ankaufspruefung" className="transition hover:text-primary">Ankaufsprüfung</a>
           <a href="/bplan-engine/anwendungsfaelle/serielle-planung" className="transition hover:text-primary">Serielle Planung</a>
+          <a href="/bplan-engine/partner" className="transition hover:text-primary">Partner</a>
           <a href="/bplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
+          <a href="/bplan-engine/lizenzen" className="transition hover:text-primary">Lizenzen</a>
           <a href="#faq" className="transition hover:text-primary">FAQ</a>
           <a href="#kontakt" className="transition hover:text-primary">Kontakt</a>
         </nav>
@@ -730,7 +732,9 @@ function Nav() {
             </AnimatePresence>
           </div>
 
+          <a href="/bplan-engine/partner" className="transition hover:text-primary">Partner</a>
           <a href="/bplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
+          <a href="/bplan-engine/lizenzen" className="transition hover:text-primary">Pläne lizenzieren</a>
           <a href="#faq" className="transition hover:text-primary">FAQ</a>
         </nav>
 
@@ -768,6 +772,8 @@ function Nav() {
                 </a>
               ))}
               <a href="/bplan-engine/technologie" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Technologie</a>
+              <a href="/bplan-engine/partner" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Partner werden</a>
+              <a href="/bplan-engine/lizenzen" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Pläne lizenzieren</a>
               <a href="#faq" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>FAQ</a>
               <a href="/bplan-engine/demo" className="mt-2 rounded-lg bg-accent px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-accent-light transition" onClick={() => setMobileOpen(false)}>Interaktive Demo</a>
             </nav>
