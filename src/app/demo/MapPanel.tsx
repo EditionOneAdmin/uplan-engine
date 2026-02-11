@@ -125,8 +125,9 @@ function ClickFeatureInfo() {
         SERVICE: "WMS",
         VERSION: "1.1.1",
         REQUEST: "GetFeatureInfo",
-        LAYERS: "alkis_flurstuecke",
-        QUERY_LAYERS: "alkis_flurstuecke",
+        LAYERS: "flurstuecke",
+        QUERY_LAYERS: "flurstuecke",
+        STYLES: "",
         INFO_FORMAT: "application/json",
         SRS: "EPSG:4326",
         BBOX: bbox,
@@ -324,7 +325,8 @@ export default function MapPanel({
         <LayersControl.Overlay checked name="Flurstücke (ALKIS)">
           <WMSTileLayer
             url="https://gdi.berlin.de/services/wms/alkis_flurstuecke"
-            layers="alkis_flurstuecke"
+            layers="flurstuecke"
+            styles=""
             format="image/png"
             transparent={true}
             opacity={0.7}
@@ -335,21 +337,11 @@ export default function MapPanel({
         <LayersControl.Overlay checked name="Bebauungspläne">
           <WMSTileLayer
             url="https://gdi.berlin.de/services/wms/bplan"
-            layers="bp_fs"
+            layers="b_bp_fs"
+            styles=""
             format="image/png"
             transparent={true}
             opacity={0.6}
-            version="1.1.1"
-            attribution="© Berlin GDI"
-          />
-        </LayersControl.Overlay>
-        <LayersControl.Overlay name="Bodenrichtwerte">
-          <WMSTileLayer
-            url="https://gdi.berlin.de/services/wms/alkis_flurstuecke"
-            layers="flurstuecke"
-            format="image/png"
-            transparent={true}
-            opacity={0.5}
             version="1.1.1"
             attribution="© Berlin GDI"
           />
