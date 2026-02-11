@@ -1,7 +1,7 @@
 export interface Baufeld {
   id: string;
   name: string;
-  type: "WA" | "MI" | "GE";
+  type: "WA" | "MI" | "GE" | "SO";
   typeLabel: string;
   color: string;
   fillColor: string;
