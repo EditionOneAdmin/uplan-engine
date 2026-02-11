@@ -422,9 +422,20 @@ export function BuildingCatalog({
                 </span>
               )}
 
-              <div className="flex justify-center mb-2">
-                <BuildingShapeSVG shape={b.shape} color={b.color} size={56} />
-              </div>
+              {b.rendering ? (
+                <div className="w-full h-24 rounded-lg overflow-hidden mb-2 bg-white/5">
+                  <img
+                    src={b.rendering}
+                    alt={b.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div className="flex justify-center mb-2">
+                  <BuildingShapeSVG shape={b.shape} color={b.color} size={56} />
+                </div>
+              )}
 
               <div className="text-xs font-bold text-white leading-tight">{b.name}</div>
               <div className="flex items-center gap-1 mt-0.5">

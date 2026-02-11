@@ -184,8 +184,8 @@ export default function DemoApp() {
     return { totalBGF, totalUnits, parkingNeeded, grzUsage, gfzUsage, compliant };
   }, [placedUnits, activeBaufeld, baufelder]);
 
-  const handleExport = useCallback(() => {
-    exportProjectPlan({
+  const handleExport = useCallback(async () => {
+    await exportProjectPlan({
       baufelder,
       placedUnits,
       buildings: BUILDINGS,

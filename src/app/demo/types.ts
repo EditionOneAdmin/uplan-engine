@@ -38,6 +38,7 @@ export interface BuildingModule {
   pricePerSqm: number;
   tags: string[];
   color: string;
+  rendering?: string;
 }
 
 export interface PlacedUnit {

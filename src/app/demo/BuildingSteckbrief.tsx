@@ -236,18 +236,31 @@ export function BuildingSteckbrief({
           </span>
         </div>
 
-        {/* SVG */}
+        {/* Building Visual */}
         <div className="px-5 pb-2">
-          <div className="w-full h-[150px] flex items-center justify-center bg-white/[0.03] rounded-xl">
-            <div className="w-[200px] h-[150px]">
-              <BuildingSVGLarge
-                shape={building.shape}
-                geschosse={geschosse}
-                color={mfr.color}
-                roofType={roofType}
-              />
+          {building.rendering ? (
+            <div>
+              <div className="w-full h-48 rounded-xl overflow-hidden bg-white/5">
+                <img
+                  src={building.rendering}
+                  alt={building.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="text-[10px] text-white/30 text-right mt-1 italic">Vorschau</div>
             </div>
-          </div>
+          ) : (
+            <div className="w-full h-[150px] flex items-center justify-center bg-white/[0.03] rounded-xl">
+              <div className="w-[200px] h-[150px]">
+                <BuildingSVGLarge
+                  shape={building.shape}
+                  geschosse={geschosse}
+                  color={mfr.color}
+                  roofType={roofType}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Name */}

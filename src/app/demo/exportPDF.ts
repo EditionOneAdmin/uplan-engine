@@ -57,12 +57,55 @@ export interface ExportData {
   metrics: Metrics;
 }
 
-export function exportProjectPlan(data: ExportData): void {
+// ── Image helpers ──
+
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
+async function captureMap(): Promise<string | null> {
+  try {
+    const html2canvas = (await import("html2canvas")).default;
+    const mapEl = document.querySelector(".leaflet-container") as HTMLElement;
+    if (!mapEl) return null;
+    const canvas = await html2canvas(mapEl, {
+      useCORS: true,
+      allowTaint: true,
+      scale: 2,
+    });
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } catch { return null; }
+}
+
+export async function exportProjectPlan(data: ExportData): Promise<void> {
   const { baufelder, placedUnits, buildings, filters, metrics } = data;
   const { dateStr, full } = dateStamp();
 
+  // Pre-load images
+  const mapImage = await captureMap();
+  const renderingImages: Record<string, string> = {};
+  const seenIds = new Set<string>();
+  for (const unit of placedUnits) {
+    if (seenIds.has(unit.buildingId)) continue;
+    seenIds.add(unit.buildingId);
+    const building = buildings.find(b => b.id === unit.buildingId);
+    if (building?.rendering) {
+      const img = await loadImageAsBase64(building.rendering);
+      if (img) renderingImages[building.id] = img;
+    }
+  }
+
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const W = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
 
   // ════════════════════════════════════════════════════════════════
   // PAGE 1 — Cover + Overview
@@ -197,6 +240,21 @@ export function exportProjectPlan(data: ExportData): void {
     doc.text("Keine Baufelder definiert.", 25, y + 6);
   }
 
+  // Map screenshot
+  if (mapImage) {
+    const mapY = bfRows.length > 0 ? (doc as any).lastAutoTable.finalY + 10 : y + 16;
+    const mapW = W - 40;
+    const mapH = Math.min(100, pageH - mapY - 25);
+    if (mapH > 30) {
+      try {
+        doc.addImage(mapImage, "JPEG", 20, mapY, mapW, mapH);
+        doc.setFontSize(7);
+        doc.setTextColor(100, 116, 139);
+        doc.text("Lageplan — Vorschau", 20, mapY + mapH + 4);
+      } catch { /* skip if image fails */ }
+    }
+  }
+
   drawFooter(doc);
 
   // ════════════════════════════════════════════════════════════════
@@ -269,7 +327,6 @@ export function exportProjectPlan(data: ExportData): void {
   }
 
   // Technische Details pro Gebäude
-  const pageH = doc.internal.pageSize.getHeight();
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
@@ -285,8 +342,10 @@ export function exportProjectPlan(data: ExportData): void {
     const bf = baufelder.find(bff => bff.id === u.baufeldId);
     const match = bf ? calculateMatch(b, bf, filters, u.geschosse) : null;
 
-    // Check page space
-    if (y > pageH - 45) {
+    // Check page space (need more if rendering present)
+    const hasRendering = !!renderingImages[b.id];
+    const neededSpace = hasRendering ? 65 : 45;
+    if (y > pageH - neededSpace) {
       drawFooter(doc);
       doc.addPage();
       y = 20;
@@ -298,30 +357,45 @@ export function exportProjectPlan(data: ExportData): void {
     doc.text(`Gebäude ${i + 1}: ${b.manufacturerLabel} ${b.name}`, 25, y);
     y += 5;
 
+    // Rendering image
+    const renderingStartY = y;
+    if (hasRendering) {
+      try {
+        doc.addImage(renderingImages[b.id], "JPEG", 25, y, 60, 40);
+        doc.setFontSize(6);
+        doc.setTextColor(150, 150, 150);
+        doc.text("Vorschau", 25, y + 43);
+      } catch { /* skip */ }
+    }
+
+    const detailX = hasRendering ? 95 : 30;
+
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...DARK);
 
     const bfLabel = bf ? `${bf.name} (${bf.type})` : "—";
-    doc.text(`Baufeld: ${bfLabel}  │  Geschosse: ${u.geschosse}  │  Rotation: ${u.rotation}°`, 30, y);
+    doc.text(`Baufeld: ${bfLabel}  │  Geschosse: ${u.geschosse}  │  Rotation: ${u.rotation}°`, detailX, y);
     y += 4;
-    doc.text(`Footprint: ${b.footprint.width} × ${b.footprint.depth} m  │  Grundfläche: ${b.footprint.width * b.footprint.depth} m²`, 30, y);
+    doc.text(`Footprint: ${b.footprint.width} × ${b.footprint.depth} m  │  Grundfläche: ${b.footprint.width * b.footprint.depth} m²`, detailX, y);
     y += 4;
-    doc.text(`Dach: ${roofLabel[u.roofType] || u.roofType}  │  Fassade: ${facadeLabel[u.facade] || u.facade}  │  Energie: ${b.energyRating}  │  Standard: ${effLabel[filters.efficiency] || filters.efficiency}`, 30, y);
+    doc.text(`Dach: ${roofLabel[u.roofType] || u.roofType}  │  Fassade: ${facadeLabel[u.facade] || u.facade}  │  Energie: ${b.energyRating}  │  Standard: ${effLabel[filters.efficiency] || filters.efficiency}`, detailX, y);
     y += 4;
 
     if (match) {
-      doc.text(`Kompatibilität: ${match.score}/${match.maxScore}`, 30, y);
+      doc.text(`Kompatibilität: ${match.score}/${match.maxScore}`, detailX, y);
       y += 4;
       const criteriaLine = match.criteria.map(c => {
         const icon = c.status === "pass" ? "✓" : c.status === "warn" ? "⚠" : "✗";
         return `${icon} ${c.label}`;
       }).join("  ");
       doc.setFontSize(7);
-      doc.text(criteriaLine, 35, y);
+      doc.text(criteriaLine, detailX + 5, y);
       y += 3;
     }
 
+    // Ensure y advances past the rendering image if present
+    if (hasRendering) y = Math.max(y, renderingStartY + 46);
     y += 4;
   }
 

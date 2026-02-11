@@ -40,6 +40,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1890,
     tags: ["holzbau", "kfw40", "barrierefrei"],
     color: "#3B82F6",
+    rendering: "/bplan-engine/renderings/optimized/gropius-riegel-36.jpg",
   },
   {
     id: "gropius-punkt-16",
@@ -60,6 +61,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 2150,
     tags: ["kfw40", "barrierefrei", "aufzug"],
     color: "#3B82F6",
+    rendering: "/bplan-engine/renderings/optimized/gropius-punkt-16.jpg",
   },
   {
     id: "gropius-u-36",
@@ -80,6 +82,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1780,
     tags: ["kfw40", "innenhof"],
     color: "#3B82F6",
+    rendering: "/bplan-engine/renderings/optimized/gropius-u-36.jpg",
   },
   // ── Okera (2) ──
   {
@@ -101,6 +104,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 2050,
     tags: ["holzbau", "kfw40", "passivhaus"],
     color: "#22C55E",
+    rendering: "/bplan-engine/renderings/optimized/okera-riegel-30.jpg",
   },
   {
     id: "okera-l-24",
@@ -121,6 +125,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 2200,
     tags: ["holzbau", "passivhaus", "barrierefrei"],
     color: "#22C55E",
+    rendering: "/bplan-engine/renderings/optimized/okera-l-24.jpg",
   },
   // ── ALHO (2) ──
   {
@@ -142,6 +147,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1650,
     tags: ["modulbau", "stahl", "schnellbau"],
     color: "#F59E0B",
+    rendering: "/bplan-engine/renderings/optimized/alho-riegel-42.jpg",
   },
   {
     id: "alho-t-32",
@@ -162,6 +168,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1580,
     tags: ["modulbau", "stahl"],
     color: "#F59E0B",
+    rendering: "/bplan-engine/renderings/optimized/alho-t-32.jpg",
   },
   // ── Goldbeck (3) ──
   {
@@ -183,6 +190,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1720,
     tags: ["systembau", "kfw40"],
     color: "#EF4444",
+    rendering: "/bplan-engine/renderings/optimized/goldbeck-punkt-18.jpg",
   },
   {
     id: "goldbeck-doppel-12",
@@ -203,6 +211,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1950,
     tags: ["eigentum", "reihenbau"],
     color: "#EF4444",
+    rendering: "/bplan-engine/renderings/optimized/goldbeck-doppel-12.jpg",
   },
   {
     id: "goldbeck-u-30",
@@ -223,6 +232,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1620,
     tags: ["systembau", "innenhof"],
     color: "#EF4444",
+    rendering: "/bplan-engine/renderings/optimized/goldbeck-u-30.jpg",
   },
   // ── Max Bögl (2) ──
   {
@@ -244,6 +254,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1550,
     tags: ["betonfertigteil", "großserie"],
     color: "#8B5CF6",
+    rendering: "/bplan-engine/renderings/optimized/maxboegl-riegel-48.jpg",
   },
   {
     id: "maxboegl-l-28",
@@ -264,5 +275,6 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1680,
     tags: ["betonfertigteil", "kfw40"],
     color: "#8B5CF6",
+    rendering: "/bplan-engine/renderings/optimized/maxboegl-l-28.jpg",
   },
 ];
