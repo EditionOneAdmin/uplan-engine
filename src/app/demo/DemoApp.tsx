@@ -12,6 +12,7 @@ import { FLOORPLANS } from "./data";
 const MapPanel = dynamic(() => import("./MapPanel"), { ssr: false });
 
 export default function DemoApp() {
+  const [drawing, setDrawing] = useState(false);
   const [baufelder, setBaufelder] = useState<Baufeld[]>([]);
   const [selectedBaufeld, setSelectedBaufeld] = useState<string | null>(null);
   const [selectedFloorplan, setSelectedFloorplan] = useState<string | null>(null);
@@ -113,6 +114,8 @@ export default function DemoApp() {
             onAddBaufeld={handleAddBaufeld}
             onDeleteBaufeld={handleDeleteBaufeld}
             activeBaufeld={activeBaufeld}
+            drawing={drawing}
+            onDrawingChange={setDrawing}
           />
         </div>
         <div className="lg:w-[40%] flex flex-col min-h-0 border-l border-white/10">
@@ -130,7 +133,7 @@ export default function DemoApp() {
           </div>
         </div>
       </div>
-      <BottomBar metrics={metrics} />
+      <BottomBar metrics={metrics} drawing={drawing} onToggleDraw={() => setDrawing(d => !d)} />
     </div>
   );
 }

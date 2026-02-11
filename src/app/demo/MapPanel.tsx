@@ -593,34 +593,20 @@ function DrawToolbar({
 }) {
   const btnBase = "px-3 py-1.5 rounded-md text-xs font-semibold border-none cursor-pointer transition-all";
 
+  if (!drawing) return null;
   return (
     <div
       className="leaflet-top leaflet-left"
       style={{ top: 10, left: 310, position: "absolute", zIndex: 1000, display: "flex", gap: 4 }}
     >
-      <button
-        onClick={onToggle}
-        className={btnBase}
-        style={{
-          background: drawing ? "#F59E0B" : "#0D9488",
-          color: "white",
-          boxShadow: drawing ? "0 0 12px rgba(245,158,11,0.4)" : "none",
-        }}
-      >
-        {drawing ? "✏️ Zeichne…" : "🖊️ Baufeld zeichnen"}
-      </button>
-      {drawing && (
-        <>
-          {pointCount > 0 && (
-            <button onClick={onUndo} className={btnBase} style={{ background: "rgba(15,23,42,0.9)", color: "#94a3b8" }}>
-              ↩ Undo
-            </button>
-          )}
-          <button onClick={onCancel} className={btnBase} style={{ background: "rgba(15,23,42,0.9)", color: "#EF4444" }}>
-            ✕ Abbrechen
-          </button>
-        </>
+      {pointCount > 0 && (
+        <button onClick={onUndo} className={btnBase} style={{ background: "rgba(15,23,42,0.9)", color: "#94a3b8" }}>
+          ↩ Undo
+        </button>
       )}
+      <button onClick={onCancel} className={btnBase} style={{ background: "rgba(15,23,42,0.9)", color: "#EF4444" }}>
+        ✕ Abbrechen
+      </button>
     </div>
   );
 }
@@ -647,19 +633,23 @@ export default function MapPanel({
   onAddBaufeld,
   onDeleteBaufeld,
   activeBaufeld,
-}: Props) {
+  drawing: drawingProp,
+  onDrawingChange,
+}: Props & { drawing?: boolean; onDrawingChange?: (d: boolean) => void }) {
   const center: [number, number] = [52.52, 13.405];
 
-  const [drawing, setDrawing] = useState(false);
+  const [drawingInternal, setDrawingInternal] = useState(false);
+  const drawing = drawingProp ?? drawingInternal;
+  const setDrawing = onDrawingChange ?? setDrawingInternal;
   const [drawPoints, setDrawPoints] = useState<[number, number][]>([]);
   const [mousePos, setMousePos] = useState<[number, number] | null>(null);
   const [pendingCoords, setPendingCoords] = useState<[number, number][] | null>(null);
 
   const handleToggleDraw = useCallback(() => {
-    setDrawing((d) => !d);
+    setDrawing(!drawing);
     setDrawPoints([]);
     setMousePos(null);
-  }, []);
+  }, [drawing, setDrawing]);
 
   const handleCancelDraw = useCallback(() => {
     setDrawing(false);

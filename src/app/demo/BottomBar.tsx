@@ -33,9 +33,24 @@ function Stat({ label, value, unit }: { label: string; value: string | number; u
   );
 }
 
-export function BottomBar({ metrics }: { metrics: Metrics }) {
+export function BottomBar({ metrics, drawing, onToggleDraw }: { metrics: Metrics; drawing?: boolean; onToggleDraw?: () => void }) {
   return (
     <div className="bg-[#1E293B] border-t border-white/10 px-4 py-3 flex items-center gap-6 overflow-x-auto shrink-0">
+      {onToggleDraw && (
+        <>
+          <button
+            onClick={onToggleDraw}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+              drawing
+                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                : "bg-[#0D9488] text-white hover:bg-[#0F766E]"
+            }`}
+          >
+            {drawing ? "✏️ Zeichne…" : "🖊️ Baufeld zeichnen"}
+          </button>
+          <div className="w-px h-8 bg-white/10 shrink-0" />
+        </>
+      )}
       <div className="flex items-center gap-1 mr-2">
         <span className="text-xs text-white/40 uppercase tracking-wider font-semibold">📊</span>
       </div>
