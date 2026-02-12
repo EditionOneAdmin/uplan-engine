@@ -127,6 +127,16 @@ function AddressSearch() {
   );
 }
 
+/* ── Mietspiegel Neubau Lookup (Berlin 2024, Bezugsfertig ab 2010) ── */
+
+const MIETSPIEGEL_NEUBAU: Record<string, { unter40: [number,number,number]; bis60: [number,number,number]; bis90: [number,number,number]; ueber90: [number,number,number] }> = {
+  "einfach": { unter40: [11.08, 12.73, 14.38], bis60: [10.15, 11.94, 13.13], bis90: [9.52, 10.89, 12.26], ueber90: [8.97, 10.21, 11.45] },
+  "mittel":  { unter40: [12.35, 14.52, 16.69], bis60: [11.22, 13.08, 15.34], bis90: [10.48, 12.41, 14.34], ueber90: [9.84, 11.63, 13.42] },
+  "gut":     { unter40: [14.12, 17.43, 20.74], bis60: [12.89, 15.82, 18.75], bis90: [11.94, 14.57, 17.20], ueber90: [11.28, 13.86, 16.44] },
+};
+
+const fmtEur = (n: number) => n.toFixed(2).replace(".", ",");
+
 /* ── GetFeatureInfo ───────────────────────────────────────── */
 
 function ClickFeatureInfo({ enabled }: { enabled: boolean }) {
@@ -263,6 +273,29 @@ function ClickFeatureInfo({ enabled }: { enabled: boolean }) {
             if (props[key]) {
               content += `<div><span style="color:#94a3b8;">${key}:</span> ${props[key]}</div>`;
             }
+          }
+          // Mietspiegel Neubau lookup
+          const wohnlage = (props["Wohnlage"] || "").toLowerCase().trim();
+          const miet = MIETSPIEGEL_NEUBAU[wohnlage];
+          if (miet) {
+            const rows: [string, [number,number,number]][] = [
+              ["&lt; 40 m²", miet.unter40],
+              ["40–60 m²", miet.bis60],
+              ["60–90 m²", miet.bis90],
+              ["&gt; 90 m²", miet.ueber90],
+            ];
+            content += `<div style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;">
+              <div style="font-weight:600;margin-bottom:4px;color:#34D399;">💶 Neubau-Miete (nettokalt/m²)</div>`;
+            for (const [label, [lo, mid, hi]] of rows) {
+              content += `<div style="display:flex;justify-content:space-between;gap:8px;">
+                <span style="color:#94a3b8;white-space:nowrap;">${label}</span>
+                <span style="white-space:nowrap;">${fmtEur(lo)} – ${fmtEur(hi)} € <span style="color:#94a3b8;">(Ø ${fmtEur(mid)} €)</span></span>
+              </div>`;
+            }
+            if (wohnlage === "gut") {
+              content += `<div style="margin-top:4px;font-size:11px;color:#FBBF24;">⚠️ Neubau ab 2023: bis 24,74 €/m² möglich</div>`;
+            }
+            content += `</div>`;
           }
           content += `</div>`;
         } else {
