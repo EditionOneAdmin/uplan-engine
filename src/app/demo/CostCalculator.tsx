@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import type { CostData } from "./exportPDF";
 import type { Baufeld, PlacedUnit, BuildingModule, Filters } from "./types";
 
 /* ── Mietspiegel Data ─────────────────────────────────────── */
@@ -186,9 +187,10 @@ interface Props {
   buildings: BuildingModule[];
   filters: Filters;
   matchScore?: number;
+  onCalcUpdate?: (data: CostData) => void;
 }
 
-export function CostCalculator({ baufelder, placedUnits, buildings, filters, matchScore }: Props) {
+export function CostCalculator({ baufelder, placedUnits, buildings, filters, matchScore, onCalcUpdate }: Props) {
   // Editable parameters
   const [kg200Pct, setKg200Pct] = useState(5);
   const [kg500Pct, setKg500Pct] = useState(4);
@@ -343,6 +345,46 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       grundstuecksanteil, baukostenProM2,
     };
   }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, bauweise, vermarktungszeit, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride]);
+
+  // Push calc data to parent
+  useEffect(() => {
+    if (onCalcUpdate && (baufelder.length > 0 || placedUnits.length > 0)) {
+      onCalcUpdate({
+        kg100: calc.kg100,
+        kg200: calc.kg200,
+        kg300: calc.kg300,
+        kg500: calc.kg500,
+        kg700: calc.kg700,
+        finanz: calc.finKostenBau,
+        gesamtkosten: calc.gesamtkosten,
+        ekBedarf: calc.ekBedarf,
+        fkVolumen: calc.fkVolumen,
+        bauzinsen: calc.bauzinsen,
+        bereitstellungszinsen: calc.bereitstellungszinsen,
+        annuitaetJahr: calc.annuitaetJahr,
+        monatlicheRate: calc.monatlicheRate,
+        zinssatz: zinssatz,
+        tilgung: tilgung,
+        ekQuote: ekQuote,
+        bauzeit: calc.bauzeit,
+        gesamtlaufzeit: calc.gesamtlaufzeitMonate,
+        jahresmiete: calc.jahresmiete,
+        verkaufserloes: calc.verkaufserloes,
+        mieteProM2: calc.mieteProM2,
+        verkaufProM2: calc.verkaufProM2,
+        strategy: strategy,
+        niy: calc.niy,
+        marge: calc.marge,
+        cashOnCash: calc.coc ?? 0,
+        ekRenditeSell: calc.ekRenditeSell ?? 0,
+        irrSell: calc.irrSell,
+        irrHold: calc.irrHold,
+        dscr: calc.dscr,
+        grundstuecksanteil: calc.grundstuecksanteil,
+        baukostenProM2: calc.baukostenProM2,
+      });
+    }
+  }, [calc, onCalcUpdate, baufelder.length, placedUnits.length, zinssatz, tilgung, ekQuote, strategy]);
 
   if (baufelder.length === 0 && placedUnits.length === 0) {
     return (

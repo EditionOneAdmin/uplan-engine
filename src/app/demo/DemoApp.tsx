@@ -8,10 +8,13 @@ import { FilterPanel } from "./FilterPanel";
 import { BottomBar } from "./BottomBar";
 import { DemoHeader } from "./DemoHeader";
 import { CostCalculator } from "./CostCalculator";
+import { ExportModal } from "./ExportModal";
+import type { ExportConfig } from "./ExportModal";
 import type { Baufeld, PlacedUnit, Filters, Manufacturer, BuildingShape, RoofType, FacadeType } from "./types";
 import { BUILDINGS } from "./data";
 import { calculateMatch } from "./matchScore";
 import { exportProjectPlan } from "./exportPDF";
+import type { CostData } from "./exportPDF";
 
 const MapPanel = dynamic(() => import("./MapPanel"), { ssr: false });
 
@@ -46,6 +49,11 @@ export default function DemoApp() {
   const [steckbriefUnit, setSteckbriefUnit] = useState<string | null>(null);
   // Tab state for right panel
   const [activeTab, setActiveTab] = useState<"katalog" | "wirtschaftlichkeit">("katalog");
+  // Export modal
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  // Cost data from CostCalculator
+  const [costData, setCostData] = useState<CostData | undefined>(undefined);
 
   const handlePlace = useCallback(() => {
     setPlaceMode(true);
@@ -244,15 +252,27 @@ export default function DemoApp() {
     return { totalBGF, totalUnits, parkingNeeded, grzUsage, gfzUsage, compliant };
   }, [placedUnits, activeBaufeld, baufelder]);
 
-  const handleExport = useCallback(async () => {
-    await exportProjectPlan({
-      baufelder,
-      placedUnits,
-      buildings: BUILDINGS,
-      filters,
-      metrics,
-    });
-  }, [baufelder, placedUnits, filters, metrics]);
+  const handleOpenExport = useCallback(() => {
+    setShowExportModal(true);
+  }, []);
+
+  const handleExport = useCallback(async (exportConfig: ExportConfig) => {
+    setExporting(true);
+    try {
+      await exportProjectPlan({
+        baufelder,
+        placedUnits,
+        buildings: BUILDINGS,
+        filters,
+        metrics,
+        config: exportConfig,
+        costData,
+      });
+    } finally {
+      setExporting(false);
+      setShowExportModal(false);
+    }
+  }, [baufelder, placedUnits, filters, metrics, costData]);
 
   return (
     <div className="h-screen flex flex-col bg-[#0F172A] text-white overflow-hidden">
@@ -306,6 +326,7 @@ export default function DemoApp() {
                 placedUnits={placedUnits}
                 buildings={BUILDINGS}
                 filters={filters}
+                onCalcUpdate={setCostData}
                 matchScore={
                   selectedBuilding && activeBaufeld
                     ? calculateMatch(
@@ -352,7 +373,7 @@ export default function DemoApp() {
         metrics={metrics}
         drawing={drawing}
         onToggleDraw={() => setDrawing((d) => !d)}
-        onExport={handleExport}
+        onExport={handleOpenExport}
         matchScore={
           selectedBuilding && activeBaufeld
             ? calculateMatch(
@@ -363,6 +384,12 @@ export default function DemoApp() {
               ).score
             : undefined
         }
+      />
+      <ExportModal
+        open={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={handleExport}
+        exporting={exporting}
       />
       {steckbriefUnit && (() => {
         const unit = placedUnits.find((u) => u.id === steckbriefUnit);
