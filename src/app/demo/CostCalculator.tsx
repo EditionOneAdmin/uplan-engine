@@ -103,10 +103,32 @@ function Toggle({
       }`}
     >
       <div
-        className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all ${
-          enabled ? "left-4.5" : "left-0.5"
-        }`}
+        className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all`}
         style={{ left: enabled ? "17px" : "2px" }}
+      />
+    </button>
+  );
+}
+
+/* ── Big Toggle Switch ────────────────────────────────────── */
+
+function BigToggle({
+  enabled,
+  onChange,
+}: {
+  enabled: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      onClick={() => onChange(!enabled)}
+      className={`w-11 h-6 rounded-full transition-colors relative ${
+        enabled ? "bg-teal-500" : "bg-white/20"
+      }`}
+    >
+      <div
+        className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all`}
+        style={{ left: enabled ? "22px" : "2px" }}
       />
     </button>
   );
@@ -171,7 +193,6 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   const [kg200Pct, setKg200Pct] = useState(5);
   const [kg500Pct, setKg500Pct] = useState(4);
   const [kg700Pct, setKg700Pct] = useState(20);
-  const [zinssatz, setZinssatz] = useState(4);
   const [bauweise, setBauweise] = useState<"seriell" | "konventionell">("seriell");
   const [strategy, setStrategy] = useState<"hold" | "sell">(filters.strategy);
   const [mietOverride, setMietOverride] = useState<number | null>(null);
@@ -183,7 +204,14 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   const [kg300On, setKg300On] = useState(true);
   const [kg500On, setKg500On] = useState(true);
   const [kg700On, setKg700On] = useState(true);
-  const [finanzOn, setFinanzOn] = useState(true);
+
+  // Finanzierung
+  const [finanzierungAktiv, setFinanzierungAktiv] = useState(true);
+  const [ekQuote, setEkQuote] = useState(20);
+  const [zinssatz, setZinssatz] = useState(4.0);
+  const [tilgung, setTilgung] = useState(2.0);
+  const [bereitstellungszins, setBereitstellungszins] = useState(0.25);
+  const [vermarktungszeit, setVermarktungszeit] = useState(6);
 
   const calc = useMemo(() => {
     // KG 300+400: Baukosten
@@ -216,7 +244,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     }
     const kg700 = kg300 * (kg700BasePct / 100);
 
-    // Sum KGs
+    // Sum KGs (ohne Finanzierung)
     const sumKG =
       (kg100On ? kg100 : 0) +
       (kg200On ? kg200 : 0) +
@@ -226,16 +254,27 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
 
     // Finanzierung
     const bauzeit = bauweise === "seriell" ? 6 : 15;
-    const finanz = sumKG * (zinssatz / 100) * (bauzeit / 12);
+    const fkQuote = (100 - ekQuote) / 100;
+    const ekQuoteDec = ekQuote / 100;
+    const fkVolumen = sumKG * fkQuote;
+    const ekBedarf = sumKG * ekQuoteDec;
 
-    const gesamtkosten = sumKG + (finanzOn ? finanz : 0);
+    // Bauzeitfinanzierung
+    const bauzinsen = fkVolumen * 0.5 * (zinssatz / 100) * (bauzeit / 12);
+    const bereitstellungszinsenVal = fkVolumen * 0.5 * (bereitstellungszins / 100) * bauzeit;
+    const finKostenBau = bauzinsen + bereitstellungszinsenVal;
+
+    // Annuität
+    const annuitaetJahr = fkVolumen * ((zinssatz + tilgung) / 100);
+    const monatlicheRate = annuitaetJahr / 12;
+
+    const gesamtkosten = sumKG + (finanzierungAktiv ? finKostenBau : 0);
 
     // Erlöse
-    // Default Miete from Wohnlage
     const defaultMiete = (() => {
       const wl = baufelder[0]?.wohnlage?.toLowerCase().trim();
       const m = wl ? MIETSPIEGEL_NEUBAU[wl] : null;
-      return m ? m.bis90[1] : 12.41; // mittel default
+      return m ? m.bis90[1] : 12.41;
     })();
 
     const mieteProM2 = mietOverride ?? defaultMiete;
@@ -249,32 +288,61 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     const niy = gesamtkosten > 0 ? (jahresmiete / gesamtkosten) * 100 : 0;
     const marge = gesamtkosten > 0 ? ((verkaufserloes - gesamtkosten) / gesamtkosten) * 100 : 0;
 
-    const bauzeitMonate = bauweise === "seriell" ? 6 : 15;
+    // Cash-on-Cash (Hold + Finanzierung)
+    const coc = finanzierungAktiv && ekBedarf > 0
+      ? ((jahresmiete - annuitaetJahr) / ekBedarf) * 100
+      : null;
+
+    // EK-Rendite Sell
+    const ekRenditeSell = finanzierungAktiv && ekBedarf > 0
+      ? ((verkaufserloes - gesamtkosten) / ekBedarf) * 100
+      : null;
+
+    // IRR
+    const gesamtlaufzeitMonate = bauzeit + vermarktungszeit;
     const irrSell = (() => {
-      const totalMonths = bauzeitMonate + 6; // + 6 Vermarktung
+      if (finanzierungAktiv && ekRenditeSell !== null) {
+        if (gesamtlaufzeitMonate <= 0) return 0;
+        return (Math.pow(1 + ekRenditeSell / 100, 12 / gesamtlaufzeitMonate) - 1) * 100;
+      }
+      const totalMonths = bauzeit + 6;
       const years = totalMonths / 12;
       if (years <= 0 || gesamtkosten <= 0) return 0;
       return (Math.pow(1 + marge / 100, 1 / years) - 1) * 100;
     })();
+
     const irrHold = (() => {
       if (gesamtkosten <= 0) return 0;
-      const vacancyMonths = bauzeitMonate;
+      const vacancyMonths = bauzeit;
       const firstYearRent = jahresmiete * ((12 - Math.min(vacancyMonths, 12)) / 12);
       return (firstYearRent / gesamtkosten) * 100;
     })();
+
+    // DSCR
+    const dscr = finanzierungAktiv && annuitaetJahr > 0
+      ? jahresmiete / annuitaetJahr
+      : null;
 
     const grundstuecksanteil = gesamtkosten > 0 ? (kg100 / gesamtkosten) * 100 : 0;
     const baukostenProM2 = totalBGF > 0 ? kg300 / totalBGF : 0;
 
     return {
-      kg100, kg200, kg300, kg500, kg700, kg700BasePct, finanz, gesamtkosten,
-      totalBGF, bauzeit: bauzeitMonate,
+      kg100, kg200, kg300, kg500, kg700, kg700BasePct,
+      sumKG, gesamtkosten, totalBGF, bauzeit,
+      // Finanzierung
+      fkVolumen, ekBedarf, bauzinsen,
+      bereitstellungszinsen: bereitstellungszinsenVal,
+      finKostenBau, annuitaetJahr, monatlicheRate,
+      // Erlöse
       defaultMiete, mieteProM2, jahresmiete,
       defaultVerkauf, verkaufProM2, verkaufserloes,
+      // KPIs
       niy, marge, irrSell, irrHold,
+      coc, ekRenditeSell, dscr,
+      gesamtlaufzeitMonate,
       grundstuecksanteil, baukostenProM2,
     };
-  }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, bauweise, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzOn, mietOverride, verkaufOverride]);
+  }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, bauweise, vermarktungszeit, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride]);
 
   if (baufelder.length === 0 && placedUnits.length === 0) {
     return (
@@ -285,6 +353,8 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       </div>
     );
   }
+
+  const fkQuoteVal = 100 - ekQuote;
 
   return (
     <div className="space-y-3">
@@ -328,26 +398,23 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
           </div>
         </CostRow>
 
+        {/* Zwischensumme KG */}
         <div className="border-t border-white/10 pt-2 mt-2">
-          <CostRow label="Finanzierungskosten" value={calc.finanz} enabled={finanzOn} onToggle={setFinanzOn}>
-            <div className="flex items-center gap-3 flex-wrap">
-              <NumInput value={zinssatz} onChange={setZinssatz} suffix="% Zins" step={0.25} />
-              <div className="flex rounded-md overflow-hidden border border-white/10">
-                {(["seriell", "konventionell"] as const).map(b => (
-                  <button
-                    key={b}
-                    onClick={() => setBauweise(b)}
-                    className={`px-2 py-0.5 text-[10px] transition-colors ${
-                      bauweise === b ? "bg-teal-600 text-white" : "bg-white/5 text-white/40 hover:bg-white/10"
-                    }`}
-                  >
-                    {b === "seriell" ? "Seriell (6M)" : "Konv. (15M)"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </CostRow>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-white/50">Σ Kostengruppen</span>
+            <span className="text-xs font-medium text-white/70">{fmtEur(calc.sumKG)}</span>
+          </div>
         </div>
+
+        {/* Finanzierungskosten Bau (wenn aktiv) */}
+        {finanzierungAktiv && (
+          <div className="mt-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-white/50">+ Finanzierungskosten Bau</span>
+              <span className="text-xs font-medium text-amber-400">{fmtEur(calc.finKostenBau)}</span>
+            </div>
+          </div>
+        )}
 
         {/* Gesamtkosten */}
         <div className="mt-3 p-3 bg-[#0F172A] rounded-lg border border-amber-500/20">
@@ -357,6 +424,100 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
           </div>
         </div>
       </Section>
+
+      {/* ── Finanzierung ─────────────────────────────────── */}
+      <div className="border border-white/10 rounded-lg overflow-hidden mb-2">
+        <div className="flex items-center justify-between px-3 py-2">
+          <span className="text-xs font-semibold" style={{ color: "#FBBF24" }}>
+            🏦 Finanzierung{!finanzierungAktiv && ": Aus"}
+          </span>
+          <BigToggle enabled={finanzierungAktiv} onChange={setFinanzierungAktiv} />
+        </div>
+
+        {finanzierungAktiv && (
+          <div className="px-3 pb-3 space-y-3">
+            {/* EK/FK Bar */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-white/50">EK {ekQuote}% / FK {fkQuoteVal}%</span>
+              </div>
+              <div className="flex h-3 rounded-full overflow-hidden">
+                <div className="bg-teal-500 transition-all" style={{ width: `${ekQuote}%` }} />
+                <div className="bg-amber-500 transition-all" style={{ width: `${fkQuoteVal}%` }} />
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[10px] text-teal-400">{fmtEur(calc.ekBedarf)}</span>
+                <span className="text-[10px] text-amber-400">{fmtEur(calc.fkVolumen)}</span>
+              </div>
+            </div>
+
+            {/* Inputs */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/70">Eigenkapitalquote</span>
+                <NumInput value={ekQuote} onChange={(v) => setEkQuote(Math.max(5, Math.min(100, v)))} suffix="%" step={5} min={5} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/70">Zinssatz p.a.</span>
+                <NumInput value={zinssatz} onChange={setZinssatz} suffix="%" step={0.25} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/70">Tilgung p.a.</span>
+                <NumInput value={tilgung} onChange={setTilgung} suffix="%" step={0.5} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/70">Bereitstellungszins</span>
+                <NumInput value={bereitstellungszins} onChange={setBereitstellungszins} suffix="%/Mo" step={0.05} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/70">Bauzeit</span>
+                <div className="flex rounded-md overflow-hidden border border-white/10">
+                  {(["seriell", "konventionell"] as const).map(b => (
+                    <button
+                      key={b}
+                      onClick={() => setBauweise(b)}
+                      className={`px-2 py-0.5 text-[10px] transition-colors ${
+                        bauweise === b ? "bg-teal-600 text-white" : "bg-white/5 text-white/40 hover:bg-white/10"
+                      }`}
+                    >
+                      {b === "seriell" ? "Seriell (6M)" : "Konv. (15M)"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/70">Vermarktungszeit</span>
+                <NumInput value={vermarktungszeit} onChange={setVermarktungszeit} suffix="Monate" step={1} min={0} />
+              </div>
+            </div>
+
+            {/* Berechnete Werte */}
+            <div className="bg-white/5 rounded-lg p-2.5 space-y-1.5">
+              <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Berechnete Werte</div>
+              <div className="flex justify-between">
+                <span className="text-[10px] text-white/50">Bauzinsen</span>
+                <span className="text-[10px] text-white/80">{fmtEur(calc.bauzinsen)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[10px] text-white/50">Bereitstellungszinsen</span>
+                <span className="text-[10px] text-white/80">{fmtEur(calc.bereitstellungszinsen)}</span>
+              </div>
+              <div className="flex justify-between border-t border-white/10 pt-1">
+                <span className="text-[10px] text-amber-400 font-semibold">Finanzierungskosten Bau</span>
+                <span className="text-[10px] text-amber-400 font-semibold">{fmtEur(calc.finKostenBau)}</span>
+              </div>
+              <div className="flex justify-between border-t border-white/10 pt-1 mt-1">
+                <span className="text-[10px] text-white/50">Annuität / Jahr</span>
+                <span className="text-[10px] text-white/80">{fmtEur(calc.annuitaetJahr)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[10px] text-white/50">Monatliche Rate</span>
+                <span className="text-[10px] text-white/80">{fmtEur(calc.monatlicheRate)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ── Erlöse ───────────────────────────────────────── */}
       <Section title="Erlöse" color="#22C55E">
@@ -422,15 +583,41 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             <>
               <KPICard label="Net Initial Yield" value={fmtPct(calc.niy)} color="#0D9488" />
               <KPICard label="IRR (adj.)" value={fmtPct(calc.irrHold)} color="#0D9488" />
+              {finanzierungAktiv && calc.coc !== null && (
+                <KPICard
+                  label="Cash-on-Cash"
+                  value={fmtPct(calc.coc)}
+                  color={calc.coc > 8 ? "#22C55E" : calc.coc >= 4 ? "#FBBF24" : "#EF4444"}
+                />
+              )}
+              {finanzierungAktiv && calc.dscr !== null && (
+                <KPICard
+                  label="DSCR"
+                  value={calc.dscr.toFixed(2)}
+                  unit="×"
+                  color={calc.dscr > 1.3 ? "#22C55E" : calc.dscr >= 1.0 ? "#FBBF24" : "#EF4444"}
+                />
+              )}
             </>
           ) : (
             <>
               <KPICard label="Marge" value={fmtPct(calc.marge)} color={calc.marge > 0 ? "#22C55E" : "#EF4444"} />
               <KPICard label="IRR (ann.)" value={fmtPct(calc.irrSell)} color="#0D9488" />
+              {finanzierungAktiv && calc.ekRenditeSell !== null && (
+                <KPICard
+                  label="EK-Rendite"
+                  value={fmtPct(calc.ekRenditeSell)}
+                  color={calc.ekRenditeSell > 0 ? "#22C55E" : "#EF4444"}
+                />
+              )}
             </>
           )}
           <KPICard label="Grundstücksanteil" value={fmtPct(calc.grundstuecksanteil)} color="#FBBF24" />
           <KPICard label="Baukosten/m²" value={`${Math.round(calc.baukostenProM2).toLocaleString("de-DE")}`} unit=" €" color="#A78BFA" />
+          <KPICard label="Gesamtlaufzeit" value={`${calc.gesamtlaufzeitMonate}`} unit=" Mo." color="#94A3B8" />
+          {finanzierungAktiv && (
+            <KPICard label="Monatl. Rate" value={fmtEur(calc.monatlicheRate)} color="#F59E0B" />
+          )}
         </div>
       </Section>
     </div>
