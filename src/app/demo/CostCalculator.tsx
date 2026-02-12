@@ -26,6 +26,10 @@ function fmtPct(n: number): string {
   return `${n.toFixed(1)}%`;
 }
 
+function betaCurve(t: number, alpha = 2, beta = 3): number {
+  return Math.pow(t, alpha - 1) * Math.pow(1 - t, beta - 1);
+}
+
 /* ── Collapsible Section ──────────────────────────────────── */
 
 function Section({
@@ -179,6 +183,99 @@ function KPICard({ label, value, unit, color }: { label: string; value: string; 
   );
 }
 
+/* ── Cashflow Chart (SVG) ─────────────────────────────────── */
+
+function CashflowChart({
+  cashflows,
+  breakEvenMonth,
+}: {
+  cashflows: { month: number; cashOut: number; cashIn: number; cumulative: number }[];
+  breakEvenMonth: number | null;
+}) {
+  if (cashflows.length === 0) return null;
+
+  const W = 600;
+  const H = 150;
+  const PAD_L = 30;
+  const PAD_R = 10;
+  const PAD_T = 10;
+  const PAD_B = 20;
+  const chartW = W - PAD_L - PAD_R;
+  const chartH = H - PAD_T - PAD_B;
+
+  const maxOut = Math.max(...cashflows.map(c => Math.abs(c.cashOut)), 1);
+  const maxIn = Math.max(...cashflows.map(c => c.cashIn), 1);
+  const maxVal = Math.max(maxOut, maxIn);
+  const maxCum = Math.max(...cashflows.map(c => Math.abs(c.cumulative)), 1);
+
+  const n = cashflows.length;
+  const barW = Math.max(2, (chartW / n) * 0.7);
+  const gap = chartW / n;
+  const midY = PAD_T + chartH * 0.5;
+
+  // Cumulative line points
+  const cumPoints = cashflows.map((c, i) => {
+    const x = PAD_L + i * gap + gap * 0.5;
+    const y = midY - (c.cumulative / maxCum) * (chartH * 0.45);
+    return `${x},${y}`;
+  }).join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 150 }}>
+      {/* Zero line */}
+      <line x1={PAD_L} y1={midY} x2={W - PAD_R} y2={midY} stroke="white" strokeOpacity={0.15} strokeWidth={0.5} />
+
+      {/* Bars */}
+      {cashflows.map((c, i) => {
+        const x = PAD_L + i * gap + (gap - barW) * 0.5;
+        const outH = (Math.abs(c.cashOut) / maxVal) * (chartH * 0.45);
+        const inH = (c.cashIn / maxVal) * (chartH * 0.45);
+        return (
+          <g key={i}>
+            {/* Expense bar (down) */}
+            {c.cashOut !== 0 && (
+              <rect x={x} y={midY} width={barW} height={outH} fill="#EF4444" opacity={0.6} rx={1} />
+            )}
+            {/* Income bar (up) */}
+            {c.cashIn > 0 && (
+              <rect x={x} y={midY - inH} width={barW} height={inH} fill="#22C55E" opacity={0.6} rx={1} />
+            )}
+          </g>
+        );
+      })}
+
+      {/* Cumulative line */}
+      <polyline points={cumPoints} fill="none" stroke="#94A3B8" strokeWidth={1.5} strokeDasharray="4 2" opacity={0.7} />
+
+      {/* Break-even marker */}
+      {breakEvenMonth !== null && breakEvenMonth < n && (() => {
+        const x = PAD_L + breakEvenMonth * gap + gap * 0.5;
+        return (
+          <g>
+            <circle cx={x} cy={midY} r={4} fill="#22C55E" />
+            <text x={x} y={midY - 8} textAnchor="middle" fill="#22C55E" fontSize={8} fontWeight="bold">BE</text>
+          </g>
+        );
+      })()}
+
+      {/* X-axis labels */}
+      {cashflows.filter((_, i) => i % 6 === 0 || i === n - 1).map((c, _, arr) => {
+        const i = cashflows.indexOf(c);
+        const x = PAD_L + i * gap + gap * 0.5;
+        return (
+          <text key={i} x={x} y={H - 4} textAnchor="middle" fill="white" fillOpacity={0.3} fontSize={8}>
+            {c.month}
+          </text>
+        );
+      })}
+
+      {/* Y labels */}
+      <text x={PAD_L - 4} y={PAD_T + 8} textAnchor="end" fill="white" fillOpacity={0.2} fontSize={7}>+</text>
+      <text x={PAD_L - 4} y={H - PAD_B - 2} textAnchor="end" fill="white" fillOpacity={0.2} fontSize={7}>−</text>
+    </svg>
+  );
+}
+
 /* ── Main Component ───────────────────────────────────────── */
 
 interface Props {
@@ -195,7 +292,6 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   const [kg200Pct, setKg200Pct] = useState(5);
   const [kg500Pct, setKg500Pct] = useState(4);
   const [kg700Pct, setKg700Pct] = useState(20);
-  const [bauweise, setBauweise] = useState<"seriell" | "konventionell">("seriell");
   const [strategy, setStrategy] = useState<"hold" | "sell">(filters.strategy);
   const [mietOverride, setMietOverride] = useState<number | null>(null);
   const [verkaufOverride, setVerkaufOverride] = useState<number | null>(null);
@@ -213,7 +309,35 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   const [zinssatz, setZinssatz] = useState(4.0);
   const [tilgung, setTilgung] = useState(2.0);
   const [bereitstellungszins, setBereitstellungszins] = useState(0.25);
-  const [vermarktungszeit, setVermarktungszeit] = useState(6);
+
+  // Zeitachse (replaces bauweise + vermarktungszeit)
+  const [bauzeitPreset, setBauzeitPreset] = useState<"seriell" | "konventionell" | "custom">("seriell");
+  const [baustart, setBaustart] = useState(0);
+  const [bauende, setBauende] = useState(6);
+  const [vertriebsstart, setVertriebsstart] = useState(3);
+  const [vertriebsende, setVertriebsende] = useState(12);
+  const [auszahlungskurve, setAuszahlungskurve] = useState<"s-kurve" | "linear">("s-kurve");
+
+  // Preset handlers
+  const handlePreset = (preset: "seriell" | "konventionell") => {
+    setBauzeitPreset(preset);
+    const dur = preset === "seriell" ? 6 : 15;
+    setBauende(baustart + dur);
+  };
+
+  const handleBaustartChange = (v: number) => {
+    setBaustart(v);
+    if (bauzeitPreset !== "custom") {
+      const dur = bauzeitPreset === "seriell" ? 6 : 15;
+      setBauende(v + dur);
+    }
+    setBauzeitPreset("custom");
+  };
+
+  const handleBauendeChange = (v: number) => {
+    setBauende(v);
+    setBauzeitPreset("custom");
+  };
 
   const calc = useMemo(() => {
     // KG 300+400: Baukosten
@@ -255,7 +379,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       (kg700On ? kg700 : 0);
 
     // Finanzierung
-    const bauzeit = bauweise === "seriell" ? 6 : 15;
+    const bauzeit = Math.max(1, bauende - baustart);
     const fkQuote = (100 - ekQuote) / 100;
     const ekQuoteDec = ekQuote / 100;
     const fkVolumen = sumKG * fkQuote;
@@ -286,29 +410,104 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     const verkaufProM2 = verkaufOverride ?? defaultVerkauf;
     const verkaufserloes = verkaufProM2 * totalBGF;
 
+    // Gesamtlaufzeit
+    const gesamtlaufzeitMonate = Math.max(bauende, vertriebsende);
+
+    // ── Monthly Cashflows ──
+    const totalMonths = gesamtlaufzeitMonate;
+    const monthlyCashflows: { month: number; cashOut: number; cashIn: number; cumulative: number }[] = [];
+
+    // Build cost distribution (KG200-700) over baustart..bauende
+    const baukostenOhnGrund = (kg200On ? kg200 : 0) + (kg300On ? kg300 : 0) + (kg500On ? kg500 : 0) + (kg700On ? kg700 : 0);
+    const finKostenMonatlich = finanzierungAktiv ? finKostenBau / Math.max(1, bauzeit) : 0;
+
+    // Precompute distribution weights
+    const weights: number[] = [];
+    let weightSum = 0;
+    for (let m = baustart; m < bauende; m++) {
+      const t = bauzeit > 1 ? (m - baustart) / (bauzeit - 1) : 0.5;
+      const w = auszahlungskurve === "s-kurve" ? betaCurve(t) : 1;
+      weights.push(w);
+      weightSum += w;
+    }
+
+    let cumulative = 0;
+    for (let m = 0; m < totalMonths; m++) {
+      let cashOut = 0;
+      let cashIn = 0;
+
+      // KG100 at baustart
+      if (m === baustart && kg100On) {
+        cashOut += kg100;
+      }
+
+      // Baukosten distributed
+      if (m >= baustart && m < bauende) {
+        const idx = m - baustart;
+        const frac = weightSum > 0 ? weights[idx] / weightSum : 0;
+        cashOut += baukostenOhnGrund * frac;
+        cashOut += finKostenMonatlich;
+      }
+
+      // Income
+      if (strategy === "hold") {
+        // Linear ramp from vertriebsstart to vertriebsende (0%→100% occupancy)
+        if (m >= vertriebsstart && m < vertriebsende) {
+          const vertriebsDauer = Math.max(1, vertriebsende - vertriebsstart);
+          const progress = (m - vertriebsstart + 1) / vertriebsDauer;
+          cashIn += (jahresmiete / 12) * progress;
+        } else if (m >= vertriebsende) {
+          cashIn += jahresmiete / 12;
+        }
+      } else {
+        // Sell: sigmoid distribution over vertriebsstart..vertriebsende
+        if (m >= vertriebsstart && m < vertriebsende) {
+          const vertriebsDauer = Math.max(1, vertriebsende - vertriebsstart);
+          const t = vertriebsDauer > 1 ? (m - vertriebsstart) / (vertriebsDauer - 1) : 0.5;
+          const w = betaCurve(t, 2, 2);
+          // We need normalized weights for sell distribution
+          let sellWeightSum = 0;
+          for (let sm = vertriebsstart; sm < vertriebsende; sm++) {
+            const st = vertriebsDauer > 1 ? (sm - vertriebsstart) / (vertriebsDauer - 1) : 0.5;
+            sellWeightSum += betaCurve(st, 2, 2);
+          }
+          cashIn += sellWeightSum > 0 ? verkaufserloes * (w / sellWeightSum) : 0;
+        }
+      }
+
+      cumulative += cashIn - cashOut;
+      monthlyCashflows.push({ month: m, cashOut, cashIn, cumulative });
+    }
+
+    // Break-even & peak capital
+    let breakEvenMonth: number | null = null;
+    let peakCapital = 0;
+    for (const cf of monthlyCashflows) {
+      if (cf.cumulative < peakCapital) peakCapital = cf.cumulative;
+      if (breakEvenMonth === null && cf.cumulative >= 0 && cf.month > baustart) {
+        breakEvenMonth = cf.month;
+      }
+    }
+
     // KPIs
     const niy = gesamtkosten > 0 ? (jahresmiete / gesamtkosten) * 100 : 0;
     const marge = gesamtkosten > 0 ? ((verkaufserloes - gesamtkosten) / gesamtkosten) * 100 : 0;
 
-    // Cash-on-Cash (Hold + Finanzierung)
     const coc = finanzierungAktiv && ekBedarf > 0
       ? ((jahresmiete - annuitaetJahr) / ekBedarf) * 100
       : null;
 
-    // EK-Rendite Sell
     const ekRenditeSell = finanzierungAktiv && ekBedarf > 0
       ? ((verkaufserloes - gesamtkosten) / ekBedarf) * 100
       : null;
 
-    // IRR
-    const gesamtlaufzeitMonate = bauzeit + vermarktungszeit;
     const irrSell = (() => {
       if (finanzierungAktiv && ekRenditeSell !== null) {
         if (gesamtlaufzeitMonate <= 0) return 0;
         return (Math.pow(1 + ekRenditeSell / 100, 12 / gesamtlaufzeitMonate) - 1) * 100;
       }
-      const totalMonths = bauzeit + 6;
-      const years = totalMonths / 12;
+      const totalM = bauzeit + 6;
+      const years = totalM / 12;
       if (years <= 0 || gesamtkosten <= 0) return 0;
       return (Math.pow(1 + marge / 100, 1 / years) - 1) * 100;
     })();
@@ -320,7 +519,6 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       return (firstYearRent / gesamtkosten) * 100;
     })();
 
-    // DSCR
     const dscr = finanzierungAktiv && annuitaetJahr > 0
       ? jahresmiete / annuitaetJahr
       : null;
@@ -331,20 +529,18 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     return {
       kg100, kg200, kg300, kg500, kg700, kg700BasePct,
       sumKG, gesamtkosten, totalBGF, bauzeit,
-      // Finanzierung
       fkVolumen, ekBedarf, bauzinsen,
       bereitstellungszinsen: bereitstellungszinsenVal,
       finKostenBau, annuitaetJahr, monatlicheRate,
-      // Erlöse
       defaultMiete, mieteProM2, jahresmiete,
       defaultVerkauf, verkaufProM2, verkaufserloes,
-      // KPIs
       niy, marge, irrSell, irrHold,
       coc, ekRenditeSell, dscr,
       gesamtlaufzeitMonate,
       grundstuecksanteil, baukostenProM2,
+      monthlyCashflows, breakEvenMonth, peakCapital,
     };
-  }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, bauweise, vermarktungszeit, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride]);
+  }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, baustart, bauende, vertriebsstart, vertriebsende, auszahlungskurve, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride, strategy]);
 
   // Push calc data to parent
   useEffect(() => {
@@ -382,9 +578,16 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
         dscr: calc.dscr,
         grundstuecksanteil: calc.grundstuecksanteil,
         baukostenProM2: calc.baukostenProM2,
+        monthlyCashflows: calc.monthlyCashflows,
+        breakEvenMonth: calc.breakEvenMonth,
+        peakCapital: calc.peakCapital,
+        baustart,
+        bauende,
+        vertriebsstart,
+        vertriebsende,
       });
     }
-  }, [calc, onCalcUpdate, baufelder.length, placedUnits.length, zinssatz, tilgung, ekQuote, strategy]);
+  }, [calc, onCalcUpdate, baufelder.length, placedUnits.length, zinssatz, tilgung, ekQuote, strategy, baustart, bauende, vertriebsstart, vertriebsende]);
 
   if (baufelder.length === 0 && placedUnits.length === 0) {
     return (
@@ -397,6 +600,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   }
 
   const fkQuoteVal = 100 - ekQuote;
+  const vertriebsDauer = Math.max(0, vertriebsende - vertriebsstart);
 
   return (
     <div className="space-y-3">
@@ -511,26 +715,6 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
                 <span className="text-xs text-white/70">Bereitstellungszins</span>
                 <NumInput value={bereitstellungszins} onChange={setBereitstellungszins} suffix="%/Mo" step={0.05} />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-white/70">Bauzeit</span>
-                <div className="flex rounded-md overflow-hidden border border-white/10">
-                  {(["seriell", "konventionell"] as const).map(b => (
-                    <button
-                      key={b}
-                      onClick={() => setBauweise(b)}
-                      className={`px-2 py-0.5 text-[10px] transition-colors ${
-                        bauweise === b ? "bg-teal-600 text-white" : "bg-white/5 text-white/40 hover:bg-white/10"
-                      }`}
-                    >
-                      {b === "seriell" ? "Seriell (6M)" : "Konv. (15M)"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-white/70">Vermarktungszeit</span>
-                <NumInput value={vermarktungszeit} onChange={setVermarktungszeit} suffix="Monate" step={1} min={0} />
-              </div>
             </div>
 
             {/* Berechnete Werte */}
@@ -560,6 +744,85 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
           </div>
         )}
       </div>
+
+      {/* ── Zeitachse ────────────────────────────────────── */}
+      <Section title="📅 Zeitachse" color="#0D9488">
+        {/* Preset buttons */}
+        <div className="flex gap-1 mb-3">
+          {(["seriell", "konventionell", "custom"] as const).map(p => (
+            <button
+              key={p}
+              onClick={() => p !== "custom" ? handlePreset(p) : setBauzeitPreset("custom")}
+              className={`px-2.5 py-1 text-[10px] rounded-md transition-colors ${
+                bauzeitPreset === p ? "bg-teal-600 text-white" : "bg-white/5 text-white/40 hover:bg-white/10"
+              }`}
+            >
+              {p === "seriell" ? "Seriell 6M" : p === "konventionell" ? "Konv. 15M" : "Custom"}
+            </button>
+          ))}
+        </div>
+
+        {/* Sliders */}
+        <div className="space-y-3">
+          {[
+            { label: "Baustart", value: baustart, onChange: handleBaustartChange },
+            { label: "Bauende", value: bauende, onChange: handleBauendeChange },
+            { label: "Vertriebsstart", value: vertriebsstart, onChange: setVertriebsstart },
+            { label: "Vertriebsende", value: vertriebsende, onChange: setVertriebsende },
+          ].map(({ label, value, onChange }) => (
+            <div key={label}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-white/50">{label}</span>
+                <span className="text-[10px] text-white/70 font-medium">{value} Mo.</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={48}
+                value={value}
+                onChange={(e) => onChange(parseInt(e.target.value))}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #0D9488 ${(value / 48) * 100}%, rgba(255,255,255,0.1) ${(value / 48) * 100}%)`,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Ausgaben-Kurve */}
+        <div className="flex items-center gap-2 mt-3 mb-2">
+          <span className="text-[10px] text-white/50">Ausgaben-Kurve:</span>
+          <div className="flex rounded-md overflow-hidden border border-white/10">
+            {(["s-kurve", "linear"] as const).map(k => (
+              <button
+                key={k}
+                onClick={() => setAuszahlungskurve(k)}
+                className={`px-2 py-0.5 text-[10px] transition-colors ${
+                  auszahlungskurve === k ? "bg-teal-600 text-white" : "bg-white/5 text-white/40 hover:bg-white/10"
+                }`}
+              >
+                {k === "s-kurve" ? "S-Kurve" : "Linear"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="text-[10px] text-white/40 mt-2">
+          Bauzeit {calc.bauzeit} Mo. · Vertrieb {vertriebsDauer} Mo. · Gesamt {calc.gesamtlaufzeitMonate} Mo.
+        </div>
+
+        {/* Cashflow Chart */}
+        <div className="mt-3 border border-white/5 rounded-lg overflow-hidden">
+          <CashflowChart cashflows={calc.monthlyCashflows} breakEvenMonth={calc.breakEvenMonth} />
+          <div className="flex justify-between px-2 pb-1.5">
+            <span className="text-[9px] text-red-400/60">■ Ausgaben</span>
+            <span className="text-[9px] text-white/30">┅ Kumuliert</span>
+            <span className="text-[9px] text-green-400/60">■ Einnahmen</span>
+          </div>
+        </div>
+      </Section>
 
       {/* ── Erlöse ───────────────────────────────────────── */}
       <Section title="Erlöse" color="#22C55E">
@@ -654,6 +917,8 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
               )}
             </>
           )}
+          <KPICard label="Break-Even" value={calc.breakEvenMonth !== null ? `${calc.breakEvenMonth}` : "—"} unit=" Mo." color="#22C55E" />
+          <KPICard label="Max. Kapitalbedarf" value={fmtEur(Math.abs(calc.peakCapital))} color="#EF4444" />
           <KPICard label="Grundstücksanteil" value={fmtPct(calc.grundstuecksanteil)} color="#FBBF24" />
           <KPICard label="Baukosten/m²" value={`${Math.round(calc.baukostenProM2).toLocaleString("de-DE")}`} unit=" €" color="#A78BFA" />
           <KPICard label="Gesamtlaufzeit" value={`${calc.gesamtlaufzeitMonate}`} unit=" Mo." color="#94A3B8" />

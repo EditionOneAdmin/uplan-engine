@@ -23,7 +23,7 @@ export function DemoHeader() {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-white/40 hidden sm:inline">B-Plan Engine v0.2 · Build 026</span>
+        <span className="text-xs text-white/40 hidden sm:inline">B-Plan Engine v0.2 · Build 027</span>
         <span className="w-2 h-2 rounded-full bg-[#0D9488] animate-pulse" />
       </div>
     </header>

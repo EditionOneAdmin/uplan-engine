@@ -67,6 +67,14 @@ export interface CostData {
   ekRenditeSell: number; irrSell: number; irrHold: number;
   dscr: number | null;
   grundstuecksanteil: number; baukostenProM2: number;
+  // Cashflow timeline (optional for backward compat)
+  monthlyCashflows?: { month: number; cashOut: number; cashIn: number; cumulative: number }[];
+  breakEvenMonth?: number | null;
+  peakCapital?: number;
+  baustart?: number;
+  bauende?: number;
+  vertriebsstart?: number;
+  vertriebsende?: number;
 }
 
 // ── Main export interface ──
