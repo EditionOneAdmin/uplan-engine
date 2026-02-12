@@ -131,19 +131,17 @@ function AddressSearch() {
 
 function ClickFeatureInfo({ enabled }: { enabled: boolean }) {
   const map = useMap();
-  const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
+  const activeLayersRef = useRef<Set<string>>(new Set());
 
   // Track which overlay layers are active
   useEffect(() => {
     const onAdd = (e: L.LayersControlEvent) => {
-      setActiveLayers((prev) => new Set(prev).add(e.name));
+      activeLayersRef.current = new Set(activeLayersRef.current).add(e.name);
     };
     const onRemove = (e: L.LayersControlEvent) => {
-      setActiveLayers((prev) => {
-        const next = new Set(prev);
-        next.delete(e.name);
-        return next;
-      });
+      const next = new Set(activeLayersRef.current);
+      next.delete(e.name);
+      activeLayersRef.current = next;
     };
     map.on("overlayadd", onAdd as any);
     map.on("overlayremove", onRemove as any);
@@ -157,6 +155,7 @@ function ClickFeatureInfo({ enabled }: { enabled: boolean }) {
     click: async (e) => {
       if (!enabled) return;
       const { lat, lng } = e.latlng;
+      const activeLayers = activeLayersRef.current;
 
       let content = `<div style="font-family:Inter,sans-serif;font-size:12px;max-height:400px;overflow-y:auto;">
         <div style="color:#94a3b8;margin-bottom:4px;">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`;
