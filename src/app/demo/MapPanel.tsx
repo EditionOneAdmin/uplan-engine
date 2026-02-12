@@ -636,6 +636,50 @@ function BaufeldPolygon({
   onClick: () => void;
   onDelete: () => void;
 }) {
+  const [borisData, setBorisData] = useState<{ brw: number; nutzung: string } | null>(null);
+  const [borisLoading, setBorisLoading] = useState(false);
+  const fetchedRef = useRef(false);
+
+  // Fetch BORIS Bodenrichtwert for Baufeld centroid
+  useEffect(() => {
+    if (fetchedRef.current || bf.coordinates.length === 0) return;
+    fetchedRef.current = true;
+    setBorisLoading(true);
+
+    const centroidLat = bf.coordinates.reduce((s, c) => s + c[0], 0) / bf.coordinates.length;
+    const centroidLng = bf.coordinates.reduce((s, c) => s + c[1], 0) / bf.coordinates.length;
+    const delta = 0.0005;
+    const wmsBbox = `${centroidLng - delta},${centroidLat - delta},${centroidLng + delta},${centroidLat + delta}`;
+    const params = new URLSearchParams({
+      SERVICE: "WMS", VERSION: "1.1.1", REQUEST: "GetFeatureInfo",
+      LAYERS: "brw2025", QUERY_LAYERS: "brw2025",
+      INFO_FORMAT: "text/html", STYLES: "",
+      WIDTH: "256", HEIGHT: "256", SRS: "EPSG:4326",
+      BBOX: wmsBbox, X: "128", Y: "128",
+    });
+
+    fetch(`https://gdi.berlin.de/services/wms/brw2025?${params}`)
+      .then(r => r.ok ? r.text() : null)
+      .then(html => {
+        if (!html) return;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const headers = Array.from(doc.querySelectorAll("th")).map(th => th.textContent?.trim() || "");
+        const cells = Array.from(doc.querySelectorAll("td")).map(td => td.textContent?.trim() || "");
+        const props: Record<string, string> = {};
+        headers.forEach((h, i) => { if (h && cells[i]) props[h] = cells[i]; });
+        const brwStr = props["Bodenrichtwert (in EURO/m²)"] || "";
+        const brw = parseFloat(brwStr);
+        if (!isNaN(brw)) {
+          setBorisData({ brw, nutzung: props["Art der Nutzung"] || "" });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setBorisLoading(false));
+  }, [bf.coordinates]);
+
+  const grundstueckspreis = borisData ? borisData.brw * bf.grundstuecksflaecheM2 : null;
+
   return (
     <Polygon
       positions={bf.coordinates}
@@ -649,7 +693,7 @@ function BaufeldPolygon({
       eventHandlers={{ click: onClick }}
     >
       <Popup>
-        <div className="text-sm min-w-[200px]">
+        <div className="text-sm min-w-[220px]">
           <div className="font-bold text-base mb-2" style={{ color: bf.color }}>
             {bf.name} — {bf.type}
           </div>
@@ -660,9 +704,26 @@ function BaufeldPolygon({
               <tr className="border-b"><td className="py-1 text-gray-500">GFZ max</td><td className="py-1 font-medium text-right">{bf.maxGFZ}</td></tr>
               <tr className="border-b"><td className="py-1 text-gray-500">Max. Geschosse</td><td className="py-1 font-medium text-right">{bf.maxGeschosse}</td></tr>
               <tr className="border-b"><td className="py-1 text-gray-500">Grundstück</td><td className="py-1 font-medium text-right">{bf.grundstuecksflaecheM2.toLocaleString("de-DE")} m²</td></tr>
-              <tr><td className="py-1 text-gray-500">Nutzung</td><td className="py-1 font-medium text-right">{bf.nutzung}</td></tr>
+              <tr className="border-b"><td className="py-1 text-gray-500">Nutzung</td><td className="py-1 font-medium text-right">{bf.nutzung}</td></tr>
             </tbody>
           </table>
+          {/* BORIS Grundstückspreis */}
+          {borisLoading && (
+            <div className="mt-2 pt-2 border-t text-xs text-gray-400">💰 Bodenrichtwert wird geladen…</div>
+          )}
+          {borisData && grundstueckspreis != null && (
+            <div className="mt-2 pt-2 border-t">
+              <div className="text-xs font-semibold text-amber-400 mb-1">💰 Grundstückswert (BORIS 2025)</div>
+              <table className="w-full text-xs">
+                <tbody>
+                  <tr className="border-b"><td className="py-1 text-gray-500">Bodenrichtwert</td><td className="py-1 font-medium text-right">{borisData.brw.toLocaleString("de-DE")} €/m²</td></tr>
+                  <tr className="border-b"><td className="py-1 text-gray-500">Grundstück</td><td className="py-1 font-medium text-right">{bf.grundstuecksflaecheM2.toLocaleString("de-DE")} m²</td></tr>
+                  <tr><td className="py-1 text-gray-500 font-semibold">Geschätzter Preis</td><td className="py-1 font-bold text-right text-amber-400">{grundstueckspreis.toLocaleString("de-DE", { maximumFractionDigits: 0 })} €</td></tr>
+                </tbody>
+              </table>
+              {borisData.nutzung && <div className="text-xs text-gray-400 mt-1">{borisData.nutzung}</div>}
+            </div>
+          )}
           {unitCount > 0 && (
             <div className="mt-2 pt-2 border-t text-xs text-teal-600 font-medium">{unitCount} WE platziert</div>
           )}
