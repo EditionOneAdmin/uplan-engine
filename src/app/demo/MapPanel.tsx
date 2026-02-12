@@ -698,6 +698,30 @@ export default function MapPanel({
               attribution="© Berlin GDI"
             />
           </LayersControl.Overlay>
+          <LayersControl.Overlay name="Wohnlagenkarte (Mietspiegel 2024)">
+            <WMSTileLayer
+              url="https://gdi.berlin.de/services/wms/wohnlagenadr2024"
+              layers="wohnlagenadr2024"
+              styles=""
+              format="image/png"
+              transparent={true}
+              opacity={0.5}
+              version="1.1.1"
+              attribution="© Berlin GDI – Mietspiegel 2024"
+            />
+          </LayersControl.Overlay>
+          <LayersControl.Overlay name="Bodenrichtwerte 2025 (BORIS)">
+            <WMSTileLayer
+              url="https://gdi.berlin.de/services/wms/brw2025"
+              layers="brw2025"
+              styles=""
+              format="image/png"
+              transparent={true}
+              opacity={0.5}
+              version="1.1.1"
+              attribution="© Berlin GDI – BORIS 2025"
+            />
+          </LayersControl.Overlay>
         </LayersControl>
 
         <ScaleControl position="bottomleft" imperial={false} />

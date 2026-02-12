@@ -98,6 +98,8 @@ export default function DemoApp() {
     strategy: "hold",
     energy: "fernwaerme",
     efficiency: "geg",
+    targetMode: "off",
+    targetValue: 0,
   });
 
   const handleBaufeldClick = useCallback(

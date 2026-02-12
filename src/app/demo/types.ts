@@ -14,7 +14,7 @@ export interface Baufeld {
 }
 
 export type BuildingShape = "riegel" | "l-winkel" | "u-form" | "punkthaus" | "t-form" | "doppelhaus";
-export type Manufacturer = "gropius" | "okera" | "alho" | "goldbeck" | "max-boegl";
+export type Manufacturer = "gropius" | "okera" | "alho" | "goldbeck" | "max-boegl" | "nokera";
 export type RoofType = "flat" | "saddle" | "pult";
 export type FacadeType = "putz" | "klinker" | "holz" | "metall";
 export type EnergyRating = "A+" | "A" | "B" | "C";
@@ -62,6 +62,8 @@ export interface Filters {
   strategy: "hold" | "sell";
   energy: "fernwaerme" | "waermepumpe" | "gas";
   efficiency: "geg" | "kfw40" | "passivhaus";
+  targetMode: "off" | "miete" | "verkauf";
+  targetValue: number; // €/m² (Miete monatlich or Verkaufserlös)
 }
 
 export interface Metrics {

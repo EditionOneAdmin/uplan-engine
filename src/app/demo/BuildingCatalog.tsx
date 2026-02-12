@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import type { BuildingModule, BuildingShape, Manufacturer, PlacedUnit, RoofType, FacadeType, Baufeld, Filters } from "./types";
 import { MANUFACTURERS, SHAPE_CONFIG } from "./data";
 import { calculateMatch, getScoreColor, getScoreIcon, getCriterionIcon, getCriterionColor, type MatchResult } from "./matchScore";
+import { calcMaxBaukosten } from "./FilterPanel";
 
 /* ── SVG Building Shapes ──────────────────────────────────── */
 
@@ -319,10 +320,14 @@ export function BuildingCatalog({
     ? calculateMatch(selectedBuilding, activeBaufeld, filters, geschosse)
     : null;
 
+  // Calculate max construction cost from target calculator
+  const maxBaukosten = calcMaxBaukosten(filters);
+
   // Filter buildings
   let filtered = buildings.filter((b) => {
     if (manufacturerFilter !== "all" && b.manufacturer !== manufacturerFilter) return false;
     if (shapeFilter !== "all" && b.shape !== shapeFilter) return false;
+    if (maxBaukosten !== null && b.pricePerSqm > maxBaukosten) return false;
     return true;
   });
 
