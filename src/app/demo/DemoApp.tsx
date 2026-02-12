@@ -7,6 +7,7 @@ import { BuildingSteckbrief } from "./BuildingSteckbrief";
 import { FilterPanel } from "./FilterPanel";
 import { BottomBar } from "./BottomBar";
 import { DemoHeader } from "./DemoHeader";
+import { CostCalculator } from "./CostCalculator";
 import type { Baufeld, PlacedUnit, Filters, Manufacturer, BuildingShape, RoofType, FacadeType } from "./types";
 import { BUILDINGS } from "./data";
 import { calculateMatch } from "./matchScore";
@@ -43,6 +44,8 @@ export default function DemoApp() {
   const [placeMode, setPlaceMode] = useState(false);
   // Steckbrief modal for placed units
   const [steckbriefUnit, setSteckbriefUnit] = useState<string | null>(null);
+  // Tab state for right panel
+  const [activeTab, setActiveTab] = useState<"katalog" | "wirtschaftlichkeit">("katalog");
 
   const handlePlace = useCallback(() => {
     setPlaceMode(true);
@@ -145,6 +148,61 @@ export default function DemoApp() {
 
   const handleAddBaufeld = useCallback((bf: Baufeld) => {
     setBaufelder((prev) => [...prev, bf]);
+    // Fetch BORIS + Wohnlage for the new baufeld
+    if (bf.coordinates.length > 0) {
+      const centroidLat = bf.coordinates.reduce((s, c) => s + c[0], 0) / bf.coordinates.length;
+      const centroidLng = bf.coordinates.reduce((s, c) => s + c[1], 0) / bf.coordinates.length;
+      const delta = 0.0005;
+      const wmsBbox = `${centroidLng - delta},${centroidLat - delta},${centroidLng + delta},${centroidLat + delta}`;
+      // BORIS fetch
+      const borisParams = new URLSearchParams({
+        SERVICE: "WMS", VERSION: "1.1.1", REQUEST: "GetFeatureInfo",
+        LAYERS: "brw2025", QUERY_LAYERS: "brw2025",
+        INFO_FORMAT: "text/html", STYLES: "",
+        WIDTH: "256", HEIGHT: "256", SRS: "EPSG:4326",
+        BBOX: wmsBbox, X: "128", Y: "128",
+      });
+      fetch(`https://gdi.berlin.de/services/wms/brw2025?${borisParams}`)
+        .then(r => r.ok ? r.text() : null)
+        .then(html => {
+          if (!html) return;
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          const headers = Array.from(doc.querySelectorAll("th")).map(th => th.textContent?.trim() || "");
+          const cells = Array.from(doc.querySelectorAll("td")).map(td => td.textContent?.trim() || "");
+          const props: Record<string, string> = {};
+          headers.forEach((h, i) => { if (h && cells[i]) props[h] = cells[i]; });
+          const brw = parseFloat(props["Bodenrichtwert (in EURO/m²)"] || "");
+          if (!isNaN(brw)) {
+            setBaufelder(prev => prev.map(b => b.id === bf.id ? { ...b, borisBodenrichtwert: brw } : b));
+          }
+        })
+        .catch(() => {});
+      // Wohnlage fetch
+      const wlParams = new URLSearchParams({
+        SERVICE: "WMS", VERSION: "1.1.1", REQUEST: "GetFeatureInfo",
+        LAYERS: "wohnlagenadr2024", QUERY_LAYERS: "wohnlagenadr2024",
+        INFO_FORMAT: "text/html", STYLES: "",
+        WIDTH: "256", HEIGHT: "256", SRS: "EPSG:4326",
+        BBOX: wmsBbox, X: "128", Y: "128",
+      });
+      fetch(`https://gdi.berlin.de/services/wms/wohnlagenadr2024?${wlParams}`)
+        .then(r => r.ok ? r.text() : null)
+        .then(html => {
+          if (!html) return;
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, "text/html");
+          const headers = Array.from(doc.querySelectorAll("th")).map(th => th.textContent?.trim() || "");
+          const cells = Array.from(doc.querySelectorAll("td")).map(td => td.textContent?.trim() || "");
+          const props: Record<string, string> = {};
+          headers.forEach((h, i) => { if (h && cells[i]) props[h] = cells[i]; });
+          const wohnlage = props["Wohnlage"] || "";
+          if (wohnlage) {
+            setBaufelder(prev => prev.map(b => b.id === bf.id ? { ...b, wohnlage: wohnlage.toLowerCase().trim() } : b));
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const handleDeleteBaufeld = useCallback((bfId: string) => {
@@ -225,7 +283,41 @@ export default function DemoApp() {
           )}
         </div>
         <div className="lg:w-[40%] flex flex-col min-h-0 border-l border-white/10">
+          {/* Tab bar */}
+          <div className="flex border-b border-white/10 bg-[#1E293B] shrink-0">
+            {([["katalog", "🏗️ Katalog"], ["wirtschaftlichkeit", "📊 Wirtschaftlichkeit"]] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex-1 text-xs font-semibold py-2.5 transition-colors ${
+                  activeTab === key
+                    ? "text-teal-400 border-b-2 border-teal-400"
+                    : "text-white/40 hover:text-white/60"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="flex-1 min-h-0 overflow-y-auto bg-[#1E293B] p-4">
+            {activeTab === "wirtschaftlichkeit" ? (
+              <CostCalculator
+                baufelder={baufelder}
+                placedUnits={placedUnits}
+                buildings={BUILDINGS}
+                filters={filters}
+                matchScore={
+                  selectedBuilding && activeBaufeld
+                    ? calculateMatch(
+                        BUILDINGS.find((b) => b.id === selectedBuilding)!,
+                        activeBaufeld,
+                        filters,
+                        configGeschosse
+                      ).score
+                    : undefined
+                }
+              />
+            ) : (
             <BuildingCatalog
               buildings={BUILDINGS}
               selectedId={selectedBuilding}
@@ -247,10 +339,13 @@ export default function DemoApp() {
               activeBaufeld={activeBaufeld}
               filters={filters}
             />
+            )}
           </div>
+          {activeTab === "katalog" && (
           <div className="bg-[#1E293B] border-t border-white/10 p-4">
             <FilterPanel filters={filters} onChange={setFilters} />
           </div>
+          )}
         </div>
       </div>
       <BottomBar

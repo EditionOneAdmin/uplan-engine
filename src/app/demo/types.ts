@@ -11,6 +11,8 @@ export interface Baufeld {
   maxGeschosse: number;
   nutzung: string;
   grundstuecksflaecheM2: number;
+  borisBodenrichtwert?: number;
+  wohnlage?: string;
 }
 
 export type BuildingShape = "riegel" | "l-winkel" | "u-form" | "punkthaus" | "t-form" | "doppelhaus";
