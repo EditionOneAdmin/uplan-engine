@@ -123,69 +123,52 @@ async function loadImageAsBase64(url: string): Promise<string | null> {
   } catch { return null; }
 }
 
-async function captureMap(): Promise<string | null> {
+interface MapCapture {
+  image: string;
+  bounds: { north: number; south: number; east: number; west: number };
+}
+
+async function captureMap(): Promise<MapCapture | null> {
   try {
     const html2canvas = (await import("html2canvas")).default;
     const mapEl = document.querySelector(".leaflet-container") as HTMLElement;
     if (!mapEl) return null;
 
-    // Close any open popups before capturing
-    const popups = mapEl.querySelectorAll(".leaflet-popup");
-    popups.forEach(p => (p as HTMLElement).style.display = "none");
-
-    // Convert SVG overlays to inline canvas images so html2canvas can capture them
-    // Leaflet renders polygons/markers in SVG elements inside .leaflet-overlay-pane
-    const svgElements = mapEl.querySelectorAll(".leaflet-overlay-pane svg, .leaflet-marker-pane *");
-    const inlinedCanvases: { canvas: HTMLCanvasElement; parent: Element; svg: Element }[] = [];
-
-    for (const svg of Array.from(mapEl.querySelectorAll(".leaflet-overlay-pane svg"))) {
+    // Get map bounds from Leaflet instance
+    const leafletMap = (mapEl as any)._leaflet_map || (window as any).L?.map?.(mapEl);
+    let bounds = { north: 0, south: 0, east: 0, west: 0 };
+    
+    // Try to get bounds from leaflet instance stored on the container
+    try {
+      // Leaflet stores the map instance — find it
+      const mapInstance = Object.values(mapEl).find((v: any) => v?._leaflet_id !== undefined && v?.getBounds) as any;
+      if (mapInstance?.getBounds) {
+        const b = mapInstance.getBounds();
+        bounds = { north: b.getNorth(), south: b.getSouth(), east: b.getEast(), west: b.getWest() };
+      }
+    } catch {}
+    
+    // Fallback: try window._leafletMap (we'll set this in MapPanel)
+    if (bounds.north === 0) {
       try {
-        const svgEl = svg as SVGSVGElement;
-        const bbox = svgEl.getBoundingClientRect();
-        if (bbox.width === 0 || bbox.height === 0) continue;
-
-        // Serialize SVG to string
-        const serializer = new XMLSerializer();
-        const svgStr = serializer.serializeToString(svgEl);
-        const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(svgBlob);
-
-        // Draw SVG onto a canvas element
-        const img = new Image();
-        await new Promise<void>((resolve) => {
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-          img.src = url;
-        });
-
-        const c = document.createElement("canvas");
-        c.width = bbox.width * 2;
-        c.height = bbox.height * 2;
-        c.style.position = "absolute";
-        c.style.left = `${svgEl.style.left || "0px"}`;
-        c.style.top = `${svgEl.style.top || "0px"}`;
-        c.style.width = `${bbox.width}px`;
-        c.style.height = `${bbox.height}px`;
-        c.style.pointerEvents = "none";
-        const ctx = c.getContext("2d");
-        if (ctx) {
-          ctx.scale(2, 2);
-          ctx.drawImage(img, 0, 0, bbox.width, bbox.height);
+        const wMap = (window as any).__bplanMap;
+        if (wMap?.getBounds) {
+          const b = wMap.getBounds();
+          bounds = { north: b.getNorth(), south: b.getSouth(), east: b.getEast(), west: b.getWest() };
         }
-        URL.revokeObjectURL(url);
-
-        // Insert canvas next to SVG and hide SVG
-        const parent = svgEl.parentElement;
-        if (parent) {
-          parent.appendChild(c);
-          (svgEl as any)._origDisplay = svgEl.style.display;
-          svgEl.style.display = "none";
-          inlinedCanvases.push({ canvas: c, parent, svg: svgEl });
-        }
-      } catch { /* skip individual SVG errors */ }
+      } catch {}
     }
 
-    // Now capture with html2canvas — canvas elements are captured natively
+    // Hide popups and SVG overlays (we'll draw them with jsPDF instead)
+    const popups = mapEl.querySelectorAll(".leaflet-popup");
+    popups.forEach(p => (p as HTMLElement).style.display = "none");
+    const overlayPane = mapEl.querySelector(".leaflet-overlay-pane") as HTMLElement;
+    const markerPane = mapEl.querySelector(".leaflet-marker-pane") as HTMLElement;
+    const overlayDisplay = overlayPane?.style.display;
+    const markerDisplay = markerPane?.style.display;
+    if (overlayPane) overlayPane.style.display = "none";
+    if (markerPane) markerPane.style.display = "none";
+
     const canvas = await html2canvas(mapEl, {
       useCORS: true,
       allowTaint: true,
@@ -193,28 +176,15 @@ async function captureMap(): Promise<string | null> {
       logging: false,
     });
 
-    // Restore: remove temp canvases, show SVGs again
-    for (const { canvas: c, parent, svg } of inlinedCanvases) {
-      parent.removeChild(c);
-      (svg as HTMLElement).style.display = (svg as any)._origDisplay || "";
-    }
-
-    // Restore popups
+    // Restore
+    if (overlayPane) overlayPane.style.display = overlayDisplay || "";
+    if (markerPane) markerPane.style.display = markerDisplay || "";
     popups.forEach(p => (p as HTMLElement).style.display = "");
 
     try {
-      return canvas.toDataURL("image/jpeg", 0.85);
+      return { image: canvas.toDataURL("image/jpeg", 0.85), bounds };
     } catch {
-      // Tainted canvas fallback
-      popups.forEach(p => (p as HTMLElement).style.display = "none");
-      const canvas2 = await html2canvas(mapEl, {
-        useCORS: false,
-        allowTaint: true,
-        scale: 2,
-        logging: false,
-      });
-      popups.forEach(p => (p as HTMLElement).style.display = "");
-      try { return canvas2.toDataURL("image/jpeg", 0.85); } catch { return null; }
+      return null;
     }
   } catch { return null; }
 }
@@ -241,7 +211,7 @@ export async function exportProjectPlan(data: ExportData): Promise<void> {
   const { dateStr, full } = dateStamp();
 
   // Pre-load images
-  const mapImage = config.lageplan ? await captureMap() : null;
+  const mapCapture = config.lageplan ? await captureMap() : null;
   const renderingImages: Record<string, string> = {};
   if (config.gebaeudeSteckbriefe) {
     const seenIds = new Set<string>();
@@ -417,7 +387,7 @@ export async function exportProjectPlan(data: ExportData): Promise<void> {
   // ═══════════════════════════════════════════════════════════
   // MODUL 2: Lageplan
   // ═══════════════════════════════════════════════════════════
-  if (config.lageplan && mapImage) {
+  if (config.lageplan && mapCapture) {
     let y = newPage();
 
     doc.setFontSize(14);
@@ -426,17 +396,102 @@ export async function exportProjectPlan(data: ExportData): Promise<void> {
     doc.text("LAGEPLAN", 20, y);
     y += 8;
 
+    const mapX = 20;
     const mapW = W - 40;
     const mapH = pageH - y - 30;
     try {
-      doc.addImage(mapImage, "JPEG", 20, y, mapW, mapH);
+      doc.addImage(mapCapture.image, "JPEG", mapX, y, mapW, mapH);
     } catch { /* skip */ }
 
-    // Legende
+    // Draw baufeld polygons and buildings directly on PDF
+    const { north, south, east, west } = mapCapture.bounds;
+    if (north !== 0 || south !== 0) {
+      const latRange = north - south;
+      const lngRange = east - west;
+
+      // Helper: convert lat/lng to PDF coordinates
+      const toX = (lng: number) => mapX + ((lng - west) / lngRange) * mapW;
+      const toY = (lat: number) => y + ((north - lat) / latRange) * mapH;
+
+      // Draw baufeld polygons
+      for (const bf of baufelder) {
+        if (bf.coordinates.length < 3) continue;
+        const color = bf.color || "#0D9488";
+        const r = parseInt(color.slice(1, 3), 16) || 13;
+        const g = parseInt(color.slice(3, 5), 16) || 148;
+        const b = parseInt(color.slice(5, 7), 16) || 136;
+
+        doc.setDrawColor(r, g, b);
+        doc.setLineWidth(0.8);
+        doc.setFillColor(r, g, b);
+
+        // Draw polygon using doc.lines (relative offsets, closed path)
+        const points = bf.coordinates.map(([lat, lng]) => [toX(lng), toY(lat)]);
+        if (points.length >= 3) {
+          // Build relative line segments for doc.lines
+          const segments: [number, number][] = [];
+          for (let i = 1; i < points.length; i++) {
+            segments.push([points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]]);
+          }
+          // Close polygon
+          segments.push([points[0][0] - points[points.length - 1][0], points[0][1] - points[points.length - 1][1]]);
+
+          // Filled polygon
+          doc.setFillColor(r, g, b);
+          doc.setDrawColor(r, g, b);
+          doc.setLineWidth(0.6);
+          (doc as any).lines(segments, points[0][0], points[0][1], [1, 1], "FD", true);
+
+          // Label at centroid
+          const cx = points.reduce((s, p) => s + p[0], 0) / points.length;
+          const cy = points.reduce((s, p) => s + p[1], 0) / points.length;
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(255, 255, 255);
+          doc.text(bf.name, cx, cy, { align: "center" });
+        }
+      }
+
+      // Draw placed buildings as rectangles
+      for (const unit of placedUnits) {
+        const b = buildings.find(bb => bb.id === unit.buildingId);
+        if (!b) continue;
+
+        const px = toX(unit.position[1]);
+        const py = toY(unit.position[0]);
+
+        // Building footprint in meters → approximate PDF size
+        const mPerDegLng = 111320 * Math.cos((unit.position[0] * Math.PI) / 180);
+        const mPerDegLat = 110574;
+        const bw = (b.footprint.width / mPerDegLng / lngRange) * mapW;
+        const bh = (b.footprint.depth / mPerDegLat / latRange) * mapH;
+
+        doc.setDrawColor(255, 255, 255);
+        doc.setFillColor(13, 148, 136);
+        doc.setLineWidth(0.3);
+        doc.rect(px - bw / 2, py - bh / 2, bw, bh, "FD");
+
+        // Building label
+        doc.setFontSize(5);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(255, 255, 255);
+        doc.text(`${b.name}`, px, py + 1, { align: "center" });
+      }
+    }
+
+    // Legende + Adresse
     const legY = y + mapH + 4;
     doc.setFontSize(7);
     doc.setTextColor(100, 116, 139);
-    doc.text(`Lageplan — Generiert am ${full}  ·  ${baufelder.length} Baufelder  ·  ${placedUnits.length} Gebäude`, 20, legY);
+    
+    // Try to get address from search bar
+    let addressText = "";
+    try {
+      const searchInput = document.querySelector("input[placeholder*='Adresse']") as HTMLInputElement;
+      if (searchInput?.value) addressText = searchInput.value + "  ·  ";
+    } catch {}
+    
+    doc.text(`${addressText}Lageplan — Generiert am ${full}  ·  ${baufelder.length} Baufelder  ·  ${placedUnits.length} Gebäude`, 20, legY);
 
     drawFooter(doc);
   }

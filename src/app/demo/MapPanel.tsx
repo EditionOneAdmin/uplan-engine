@@ -60,6 +60,16 @@ function calcAreaM2(coords: [number, number][]): number {
   return Math.abs(area / 2);
 }
 
+/* ── Export map instance to window for PDF export ──────────── */
+function MapInstanceExporter() {
+  const map = useMap();
+  useEffect(() => {
+    (window as any).__bplanMap = map;
+    return () => { (window as any).__bplanMap = null; };
+  }, [map]);
+  return null;
+}
+
 /* ── Address Search ───────────────────────────────────────── */
 
 function AddressSearch() {
@@ -874,6 +884,7 @@ export default function MapPanel({
   return (
     <>
       <MapContainer center={center} zoom={16} className="w-full h-full" zoomControl={true} style={{ background: "#1a1a2e" }}>
+        <MapInstanceExporter />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
