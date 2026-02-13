@@ -1013,11 +1013,11 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
         ) : (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-white/70">Verkaufspreis €/m²</span>
+              <span className="text-xs text-white/70">Verkaufspreis €/m² WF</span>
               <NumInput
                 value={Math.round(verkaufOverride ?? calc.defaultVerkauf)}
                 onChange={(v) => setVerkaufOverride(v)}
-                suffix="€/m²"
+                suffix="€/m² WF"
                 step={100}
               />
             </div>
