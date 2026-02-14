@@ -1,140 +1,164 @@
 "use client";
-import { useState, useRef } from "react";
-import { useAdminStore } from "../store";
-import { Download, Upload, Copy, Check, FileJson, AlertCircle } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { useAdminStore, type ManufacturerData } from "../store";
+import { Card, Button } from "../components";
+import { Download, Upload, Copy, Check, FileJson } from "lucide-react";
+import type { BuildingModule } from "../../demo/types";
+
+function generateDataTS(buildings: BuildingModule[], manufacturers: ManufacturerData[]) {
+  const mfrs = manufacturers.map((m) =>
+    `  "${m.id}": { label: "${m.label}", color: "${m.color}", accent: "${m.accent}" },`
+  ).join("\n");
+
+  const blds = buildings.map((b) => `  {
+    id: "${b.id}",
+    name: "${b.name}",
+    manufacturer: "${b.manufacturer}",
+    manufacturerLabel: "${b.manufacturerLabel}",
+    shape: "${b.shape}",
+    shapeLabel: "${b.shapeLabel}",
+    footprint: { width: ${b.footprint.width}, depth: ${b.footprint.depth} },
+    minGeschosse: ${b.minGeschosse},
+    maxGeschosse: ${b.maxGeschosse},
+    defaultGeschosse: ${b.defaultGeschosse},
+    wePerGeschoss: ${b.wePerGeschoss},
+    bgfPerGeschoss: ${b.bgfPerGeschoss},
+    roofOptions: [${b.roofOptions.map((r) => `"${r}"`).join(", ")}],
+    facadeOptions: [${b.facadeOptions.map((f) => `"${f}"`).join(", ")}],
+    energyRating: "${b.energyRating}",
+    pricePerSqm: ${b.pricePerSqm},
+    tags: [${b.tags.map((t) => `"${t}"`).join(", ")}],
+    color: "${b.color}",${b.rendering ? `\n    rendering: "${b.rendering}",` : ""}
+  }`).join(",\n");
+
+  return `import type { Baufeld, BuildingModule, Manufacturer, BuildingShape } from "./types";
+
+export const BAUFELDER: Baufeld[] = [];
+
+export const MANUFACTURERS: Record<Manufacturer, { label: string; color: string; accent: string }> = {
+${mfrs}
+};
+
+export const SHAPE_CONFIG: Record<BuildingShape, { label: string; icon: string }> = {
+  "riegel": { label: "Riegel", icon: "▬" },
+  "l-winkel": { label: "L-Winkel", icon: "⌐" },
+  "u-form": { label: "U-Form", icon: "⊔" },
+  "punkthaus": { label: "Punkthaus", icon: "■" },
+  "t-form": { label: "T-Form", icon: "⊤" },
+  "doppelhaus": { label: "Doppelhaus", icon: "⊞" },
+};
+
+export const BUILDINGS: BuildingModule[] = [
+${blds},
+];
+`;
+}
 
 export default function ExportPage() {
-  const { buildings, manufacturers, importData } = useAdminStore();
+  const { buildings, manufacturers, setBuildings, setManufacturers } = useAdminStore();
   const [copied, setCopied] = useState(false);
-  const [importPreview, setImportPreview] = useState<{ buildings: number; manufacturers: number } | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
-  const [pendingImport, setPendingImport] = useState<{ buildings: unknown[]; manufacturers: unknown[] } | null>(null);
+  const [importData, setImportData] = useState<{ buildings: BuildingModule[]; manufacturers: ManufacturerData[] } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const exportJson = () => {
-    const data = { buildings, manufacturers, exportedAt: new Date().toISOString(), version: 1 };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `bplan-katalog-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const exportCode = generateDataTS(buildings, manufacturers);
 
-  const copyAsTs = () => {
-    const ts = `export const BUILDINGS: BuildingModule[] = ${JSON.stringify(buildings, null, 2)};`;
-    navigator.clipboard.writeText(ts);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(exportCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImportError(null);
-    setImportPreview(null);
-    setPendingImport(null);
-
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const data = JSON.parse(ev.target?.result as string);
-        if (!data.buildings || !Array.isArray(data.buildings)) throw new Error("Keine 'buildings' Array gefunden");
-        if (!data.manufacturers || !Array.isArray(data.manufacturers)) throw new Error("Keine 'manufacturers' Array gefunden");
-        setImportPreview({ buildings: data.buildings.length, manufacturers: data.manufacturers.length });
-        setPendingImport(data);
-      } catch (err: unknown) {
-        setImportError(err instanceof Error ? err.message : "Ungültiges JSON");
-      }
-    };
-    reader.readAsText(file);
-    if (fileRef.current) fileRef.current.value = "";
+  const handleDownload = () => {
+    const blob = new Blob([exportCode], { type: "text/typescript" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "data.ts"; a.click();
+    URL.revokeObjectURL(url);
   };
 
-  const confirmImport = () => {
-    if (!pendingImport) return;
-    importData(pendingImport.buildings as Parameters<typeof importData>[0], pendingImport.manufacturers as Parameters<typeof importData>[1]);
-    setImportPreview(null);
-    setPendingImport(null);
+  const handleExportJSON = () => {
+    const data = JSON.stringify({ buildings, manufacturers }, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "bplan-data.json"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string);
+        if (data.buildings && data.manufacturers) {
+          setImportData(data);
+        } else {
+          alert("Ungültiges Format. Erwartet: { buildings: [...], manufacturers: [...] }");
+        }
+      } catch { alert("JSON parse error"); }
+    };
+    reader.readAsText(file);
+  };
+
+  const applyImport = () => {
+    if (!importData) return;
+    setBuildings(importData.buildings);
+    setManufacturers(importData.manufacturers);
+    setImportData(null);
   };
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Export & Import</h1>
-        <p className="text-slate-500 text-sm mt-1">Katalog-Daten exportieren oder importieren</p>
-      </div>
+      <h1 className="text-2xl font-bold mb-8">Export / Import</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Export */}
-        <div className="bg-slate-900/50 border border-slate-800/60 rounded-xl p-6 space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-              <Download className="w-5 h-5 text-blue-400" />
-            </div>
-            <div>
-              <h2 className="font-semibold">Export</h2>
-              <p className="text-xs text-slate-500">Katalog als JSON herunterladen</p>
-            </div>
-          </div>
-
-          <div className="bg-slate-800/50 rounded-lg p-4 text-sm text-slate-400 space-y-1">
-            <div className="flex justify-between"><span>Module</span><span className="text-white">{buildings.length}</span></div>
-            <div className="flex justify-between"><span>Hersteller</span><span className="text-white">{manufacturers.length}</span></div>
-          </div>
-
-          <button onClick={exportJson} className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2">
-            <FileJson className="w-4 h-4" /> JSON exportieren
-          </button>
-
-          <button onClick={copyAsTs} className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl transition-all flex items-center justify-center gap-2">
-            {copied ? <><Check className="w-4 h-4 text-green-400" /> Kopiert!</> : <><Copy className="w-4 h-4" /> Als TypeScript kopieren</>}
-          </button>
+      <Card className="mb-6">
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Download size={20} /> Export
+        </h2>
+        <p className="text-sm text-slate-400 mb-4">
+          {buildings.length} Module, {manufacturers.length} Hersteller
+        </p>
+        <div className="flex gap-3 mb-4">
+          <Button onClick={handleDownload}>
+            <FileJson size={16} className="mr-1 inline" /> data.ts
+          </Button>
+          <Button variant="ghost" onClick={handleExportJSON}>
+            <Download size={16} className="mr-1 inline" /> JSON
+          </Button>
+          <Button variant="ghost" onClick={handleCopy}>
+            {copied ? <Check size={16} className="mr-1 inline text-green-400" /> : <Copy size={16} className="mr-1 inline" />}
+            {copied ? "Kopiert!" : "Kopieren"}
+          </Button>
         </div>
+        <div className="bg-slate-900/80 rounded-lg border border-slate-800 p-4 max-h-96 overflow-auto">
+          <pre className="text-xs text-slate-400 font-mono whitespace-pre">{exportCode}</pre>
+        </div>
+      </Card>
 
-        {/* Import */}
-        <div className="bg-slate-900/50 border border-slate-800/60 rounded-xl p-6 space-y-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-              <Upload className="w-5 h-5 text-amber-400" />
-            </div>
-            <div>
-              <h2 className="font-semibold">Import</h2>
-              <p className="text-xs text-slate-500">JSON-Datei importieren</p>
+      <Card>
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Upload size={20} /> Import
+        </h2>
+        <p className="text-sm text-slate-400 mb-4">JSON-Datei mit buildings und manufacturers.</p>
+        <input ref={fileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+        <Button variant="ghost" onClick={() => fileRef.current?.click()}>
+          <Upload size={16} className="mr-1 inline" /> JSON auswählen
+        </Button>
+
+        {importData && (
+          <div className="mt-4">
+            <p className="text-sm text-slate-300 mb-3">
+              {importData.buildings.length} Module, {importData.manufacturers.length} Hersteller
+            </p>
+            <div className="flex gap-2">
+              <Button onClick={applyImport}>Import anwenden</Button>
+              <Button variant="ghost" onClick={() => setImportData(null)}>Abbrechen</Button>
             </div>
           </div>
-
-          <input ref={fileRef} type="file" accept=".json" onChange={handleFileUpload} className="hidden" />
-
-          <button onClick={() => fileRef.current?.click()} className="w-full py-8 border-2 border-dashed border-slate-700 rounded-xl text-slate-500 hover:border-blue-500/40 hover:text-blue-400 transition-all text-sm">
-            JSON-Datei auswählen oder hierher ziehen
-          </button>
-
-          {importError && (
-            <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 rounded-lg p-3">
-              <AlertCircle className="w-4 h-4 shrink-0" /> {importError}
-            </div>
-          )}
-
-          {importPreview && (
-            <div>
-              <div className="bg-slate-800/50 rounded-lg p-4 text-sm text-slate-400 space-y-1 mb-3">
-                <div className="flex justify-between"><span>Module</span><span className="text-white">{importPreview.buildings}</span></div>
-                <div className="flex justify-between"><span>Hersteller</span><span className="text-white">{importPreview.manufacturers}</span></div>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={confirmImport} className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-xl transition-all">
-                  Importieren (überschreibt alles)
-                </button>
-                <button onClick={() => { setImportPreview(null); setPendingImport(null); }} className="px-4 py-2.5 bg-slate-800 text-slate-400 text-sm rounded-xl hover:bg-slate-700 transition-all">
-                  Abbrechen
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+        )}
+      </Card>
     </div>
   );
 }

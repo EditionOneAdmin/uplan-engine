@@ -1,9 +1,9 @@
 "use client";
 import { create } from "zustand";
-import type { BuildingModule, Manufacturer, BuildingShape, RoofType, FacadeType, EnergyRating } from "../demo/types";
+import type { BuildingModule, Manufacturer } from "../demo/types";
 import { BUILDINGS, MANUFACTURERS } from "../demo/data";
 
-export interface ManufacturerEntry {
+export interface ManufacturerData {
   id: Manufacturer;
   label: string;
   color: string;
@@ -11,108 +11,70 @@ export interface ManufacturerEntry {
 }
 
 interface AdminState {
-  isAuthenticated: boolean;
-  manufacturers: ManufacturerEntry[];
+  authenticated: boolean;
   buildings: BuildingModule[];
-  login: (password: string) => boolean;
+  manufacturers: ManufacturerData[];
+  login: (pw: string) => boolean;
   logout: () => void;
-  // Manufacturers
-  addManufacturer: (m: ManufacturerEntry) => void;
-  updateManufacturer: (id: Manufacturer, m: Partial<ManufacturerEntry>) => void;
-  deleteManufacturer: (id: Manufacturer) => void;
-  // Buildings
+  setBuildings: (b: BuildingModule[]) => void;
   addBuilding: (b: BuildingModule) => void;
-  updateBuilding: (id: string, b: Partial<BuildingModule>) => void;
+  updateBuilding: (id: string, b: BuildingModule) => void;
   deleteBuilding: (id: string) => void;
-  // Import
-  importData: (buildings: BuildingModule[], manufacturers: ManufacturerEntry[]) => void;
+  setManufacturers: (m: ManufacturerData[]) => void;
+  addManufacturer: (m: ManufacturerData) => void;
+  updateManufacturer: (id: Manufacturer, m: ManufacturerData) => void;
+  deleteManufacturer: (id: Manufacturer) => void;
+  hydrate: () => void;
 }
 
-const STORAGE_KEY = "bplan-admin";
-const AUTH_KEY = "bplan-admin-auth";
-const PASSWORD = "Bau-Turbo";
+const STORAGE_KEY_B = "bpe-admin-buildings";
+const STORAGE_KEY_M = "bpe-admin-manufacturers";
+const AUTH_KEY = "bpe-admin-auth";
 
-function loadFromStorage(): { buildings: BuildingModule[]; manufacturers: ManufacturerEntry[] } | null {
-  if (typeof window === "undefined") return null;
+function loadJSON<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch { return fallback; }
+}
+function saveJSON(key: string, data: unknown) {
+  if (typeof window !== "undefined") localStorage.setItem(key, JSON.stringify(data));
 }
 
-function saveToStorage(buildings: BuildingModule[], manufacturers: ManufacturerEntry[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ buildings, manufacturers }));
-}
-
-function getDefaultManufacturers(): ManufacturerEntry[] {
+function defaultManufacturers(): ManufacturerData[] {
   return (Object.entries(MANUFACTURERS) as [Manufacturer, { label: string; color: string; accent: string }][]).map(
-    ([id, m]) => ({ id, label: m.label, color: m.color, accent: m.accent })
+    ([id, v]) => ({ id, ...v })
   );
 }
 
-function isAuth(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(AUTH_KEY) === "true";
-}
-
-export const useAdminStore = create<AdminState>((set, get) => {
-  const stored = typeof window !== "undefined" ? loadFromStorage() : null;
-
-  return {
-    isAuthenticated: isAuth(),
-    buildings: stored?.buildings ?? [...BUILDINGS],
-    manufacturers: stored?.manufacturers ?? getDefaultManufacturers(),
-
-    login: (password: string) => {
-      if (password === PASSWORD) {
-        localStorage.setItem(AUTH_KEY, "true");
-        set({ isAuthenticated: true });
-        return true;
-      }
-      return false;
-    },
-    logout: () => {
-      localStorage.removeItem(AUTH_KEY);
-      set({ isAuthenticated: false });
-    },
-
-    addManufacturer: (m) => {
-      const manufacturers = [...get().manufacturers, m];
-      set({ manufacturers });
-      saveToStorage(get().buildings, manufacturers);
-    },
-    updateManufacturer: (id, updates) => {
-      const manufacturers = get().manufacturers.map((m) => (m.id === id ? { ...m, ...updates } : m));
-      set({ manufacturers });
-      saveToStorage(get().buildings, manufacturers);
-    },
-    deleteManufacturer: (id) => {
-      const manufacturers = get().manufacturers.filter((m) => m.id !== id);
-      set({ manufacturers });
-      saveToStorage(get().buildings, manufacturers);
-    },
-
-    addBuilding: (b) => {
-      const buildings = [...get().buildings, b];
-      set({ buildings });
-      saveToStorage(buildings, get().manufacturers);
-    },
-    updateBuilding: (id, updates) => {
-      const buildings = get().buildings.map((b) => (b.id === id ? { ...b, ...updates } : b));
-      set({ buildings });
-      saveToStorage(buildings, get().manufacturers);
-    },
-    deleteBuilding: (id) => {
-      const buildings = get().buildings.filter((b) => b.id !== id);
-      set({ buildings });
-      saveToStorage(buildings, get().manufacturers);
-    },
-
-    importData: (buildings, manufacturers) => {
-      set({ buildings, manufacturers });
-      saveToStorage(buildings, manufacturers);
-    },
-  };
-});
+export const useAdminStore = create<AdminState>((set, get) => ({
+  authenticated: false,
+  buildings: [],
+  manufacturers: [],
+  login: (pw) => {
+    if (pw === "Bau-Turbo") {
+      localStorage.setItem(AUTH_KEY, "1");
+      set({ authenticated: true });
+      return true;
+    }
+    return false;
+  },
+  logout: () => { localStorage.removeItem(AUTH_KEY); set({ authenticated: false }); },
+  setBuildings: (b) => { set({ buildings: b }); saveJSON(STORAGE_KEY_B, b); },
+  addBuilding: (b) => { const n = [...get().buildings, b]; set({ buildings: n }); saveJSON(STORAGE_KEY_B, n); },
+  updateBuilding: (id, b) => { const n = get().buildings.map((x) => x.id === id ? b : x); set({ buildings: n }); saveJSON(STORAGE_KEY_B, n); },
+  deleteBuilding: (id) => { const n = get().buildings.filter((x) => x.id !== id); set({ buildings: n }); saveJSON(STORAGE_KEY_B, n); },
+  setManufacturers: (m) => { set({ manufacturers: m }); saveJSON(STORAGE_KEY_M, m); },
+  addManufacturer: (m) => { const n = [...get().manufacturers, m]; set({ manufacturers: n }); saveJSON(STORAGE_KEY_M, n); },
+  updateManufacturer: (id, m) => { const n = get().manufacturers.map((x) => x.id === id ? m : x); set({ manufacturers: n }); saveJSON(STORAGE_KEY_M, n); },
+  deleteManufacturer: (id) => { const n = get().manufacturers.filter((x) => x.id !== id); set({ manufacturers: n }); saveJSON(STORAGE_KEY_M, n); },
+  hydrate: () => {
+    const auth = typeof window !== "undefined" && localStorage.getItem(AUTH_KEY) === "1";
+    set({
+      authenticated: auth,
+      buildings: loadJSON(STORAGE_KEY_B, BUILDINGS),
+      manufacturers: loadJSON(STORAGE_KEY_M, defaultManufacturers()),
+    });
+  },
+}));
