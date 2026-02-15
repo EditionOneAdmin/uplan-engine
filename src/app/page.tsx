@@ -183,25 +183,22 @@ function Hero() {
 
 const problems = [
   {
+    icon: Layers3,
+    stat: "2 Bundesländer",
+    highlight: "400+ Datenquellen",
+    desc: "Flurstücke, B-Pläne, Bodenrichtwerte, Mietspiegel, Orthophotos — live auf einer Karte. Weitere Regionen folgen.",
+  },
+  {
     icon: Clock,
-    before: "3 Wochen",
-    beforeLabel: "auf Bodenrichtwert-Auskunft warten",
-    after: "1 Klick",
-    afterLabel: "Live-Bodenrichtwerte direkt auf der Karte",
+    stat: "Minuten",
+    highlight: "statt Wochen",
+    desc: "Vollständige Grundstücksanalyse mit Wirtschaftlichkeitsabschätzung — ohne Excel, ohne Portal-Hopping, ohne Wartezeit.",
   },
   {
-    icon: ClipboardList,
-    before: "5 Portale",
-    beforeLabel: "für Flurstücke, B-Plan, Mietspiegel, BORIS durchsuchen",
-    after: "1 Plattform",
-    afterLabel: "Alle Geodaten auf einer interaktiven Karte",
-  },
-  {
-    icon: Coins,
-    before: "Tage",
-    beforeLabel: "manuelle Recherche pro Grundstück",
-    after: "Sekunden",
-    afterLabel: "Automatische Analyse mit Live-Daten",
+    icon: ScanLine,
+    stat: "Ein Klick",
+    highlight: "Alle Daten",
+    desc: "Flurstück anklicken — sofort Fläche, Bodenrichtwert, Mietspiegel, Bebauungsplan. Keine manuellen Recherchen mehr.",
   },
 ];
 
@@ -209,28 +206,21 @@ function Problem() {
   return (
     <Section id="problem" gray>
       <SectionHeading
-        title="Grundstücksanalyse dauert zu lange."
-        subtitle="Projektentwickler verbringen Wochen mit manueller Recherche über dutzende Portale. Das geht besser."
+        title="Alles was Sie für die Grundstücksanalyse brauchen."
+        subtitle="Schluss mit Excel-Tabellen, manueller Recherche und dutzenden Portalen."
       />
       <div className="grid gap-8 md:grid-cols-3">
         {problems.map((p, i) => (
           <FadeIn key={i} delay={i * 0.12}>
-            <div className="rounded-2xl border border-gray-border bg-white p-8 shadow-sm">
-              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/5">
-                <p.icon className="h-7 w-7 text-primary" />
+            <div className="rounded-2xl border border-gray-border bg-white p-8 text-center shadow-sm transition hover:shadow-md">
+              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-accent/10">
+                <p.icon className="h-7 w-7 text-accent" />
               </div>
-              {/* Before */}
-              <div className="text-center mb-4 pb-4 border-b border-gray-border">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-text/40 mb-1">Vorher</p>
-                <p className="text-2xl font-extrabold text-red-500/80">{p.before}</p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-text/60">{p.beforeLabel}</p>
-              </div>
-              {/* After */}
-              <div className="text-center">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-text/40 mb-1">Mit B-Plan Engine</p>
-                <p className="text-2xl font-extrabold text-accent">{p.after}</p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-text/60">{p.afterLabel}</p>
-              </div>
+              <p className="text-3xl font-extrabold text-primary">{p.stat}</p>
+              <p className="text-lg font-semibold text-accent">{p.highlight}</p>
+              <p className="mt-3 text-sm leading-relaxed text-slate-text/70">
+                {p.desc}
+              </p>
             </div>
           </FadeIn>
         ))}
