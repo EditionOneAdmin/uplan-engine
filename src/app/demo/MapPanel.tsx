@@ -885,11 +885,24 @@ export default function MapPanel({
     <>
       <MapContainer center={center} zoom={16} className="w-full h-full" zoomControl={true} style={{ background: "#1a1a2e" }}>
         <MapInstanceExporter />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
         <LayersControl position="topright">
+          <LayersControl.BaseLayer checked name="Dark (Standard)">
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+            />
+          </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="Luftbild 2024 (TrueOrtho)">
+            <WMSTileLayer
+              url="https://gdi.berlin.de/services/wms/truedop_2024"
+              layers="truedop_2024"
+              styles=""
+              format="image/png"
+              transparent={false}
+              version="1.1.1"
+              attribution="© Berlin GDI – TrueOrthophoto 2024"
+            />
+          </LayersControl.BaseLayer>
           <LayersControl.Overlay checked name="Flurstücke (ALKIS)">
             <WMSTileLayer
               url="https://gdi.berlin.de/services/wms/alkis_flurstuecke"
