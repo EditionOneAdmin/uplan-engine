@@ -21,7 +21,7 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mt-6 text-lg md:text-xl text-slate-text/80 leading-relaxed max-w-xl"
           >
-            B-Plan Engine automatisiert die Machbarkeitsprüfung, Variantenplanung
+            U-Plan Engine automatisiert die Machbarkeitsprüfung, Variantenplanung
             und Bauantragsaufbereitung — nachvollziehbar, versioniert und auditierbar.
           </motion.p>
           <motion.div
@@ -61,7 +61,7 @@ export default function Hero() {
           className="relative"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/bplan-engine/images/hero-cityscape.jpg" alt="Moderne Stadtquartier-Visualisierung" className="rounded-2xl shadow-2xl mb-6 w-full object-cover" />
+          <img src="/uplan-engine/images/hero-cityscape.jpg" alt="Moderne Stadtquartier-Visualisierung" className="rounded-2xl shadow-2xl mb-6 w-full object-cover" />
           <div className="bg-gray-bg rounded-2xl border border-gray-border p-8 shadow-xl">
             <div className="space-y-4">
               <div className="flex items-center gap-3">

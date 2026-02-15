@@ -118,22 +118,22 @@ function Nav() {
       transition={{ duration: 0.5 }}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <a href="/bplan-engine/" className="flex items-center gap-2">
+        <a href="/uplan-engine/" className="flex items-center gap-2">
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="32" height="32" rx="8" fill="#1E3A5F" />
             <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
             <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
           </svg>
-          <span className="text-lg font-bold text-primary">B-Plan Engine</span>
+          <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </a>
         <nav className="hidden gap-6 text-sm font-medium text-slate-text/60 md:flex">
-          <a href="/bplan-engine/" className="transition hover:text-primary">Startseite</a>
-          <a href="/bplan-engine/produkt" className="text-primary font-semibold">Produkt</a>
-          <a href="/bplan-engine/#technologie" className="transition hover:text-primary">Technologie</a>
-          <a href="/bplan-engine/#faq" className="transition hover:text-primary">FAQ</a>
+          <a href="/uplan-engine/" className="transition hover:text-primary">Startseite</a>
+          <a href="/uplan-engine/produkt" className="text-primary font-semibold">Produkt</a>
+          <a href="/uplan-engine/#technologie" className="transition hover:text-primary">Technologie</a>
+          <a href="/uplan-engine/#faq" className="transition hover:text-primary">FAQ</a>
         </nav>
         <a
-          href="/bplan-engine/#kontakt"
+          href="/uplan-engine/#kontakt"
           className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-light"
         >
           Demo anfragen
@@ -162,7 +162,7 @@ function Hero() {
         <FadeIn delay={0.2}>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-text/70 md:text-xl">
             Von der Flurstücksnummer bis zum einreichungsfertigen Paket —
-            B-Plan Engine verbindet vier spezialisierte Module zu einem
+            U-Plan Engine verbindet vier spezialisierte Module zu einem
             durchgängigen, automatisierten Workflow.
           </p>
         </FadeIn>
@@ -510,7 +510,7 @@ function CTA() {
           Vereinbaren Sie eine persönliche Demo.
         </p>
         <a
-          href="/bplan-engine/#kontakt"
+          href="/uplan-engine/#kontakt"
           className="mt-8 inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-accent-light hover:shadow-xl"
         >
           Demo anfragen <ArrowRight className="h-4 w-4" />
@@ -532,19 +532,19 @@ function Footer() {
             <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
             <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
           </svg>
-          <span className="text-lg font-bold text-primary">B-Plan Engine</span>
+          <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </div>
         <p className="text-sm text-slate-text/50">
           Vom Flurstück zur Genehmigungsreife.
         </p>
         <nav className="flex gap-6 text-sm text-slate-text/50">
-          <a href="/bplan-engine/" className="transition hover:text-primary">Startseite</a>
-          <a href="/bplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
-          <a href="/bplan-engine/#faq" className="transition hover:text-primary">FAQ</a>
-          <a href="/bplan-engine/#kontakt" className="transition hover:text-primary">Kontakt</a>
+          <a href="/uplan-engine/" className="transition hover:text-primary">Startseite</a>
+          <a href="/uplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
+          <a href="/uplan-engine/#faq" className="transition hover:text-primary">FAQ</a>
+          <a href="/uplan-engine/#kontakt" className="transition hover:text-primary">Kontakt</a>
         </nav>
         <p className="text-xs text-slate-text/30">
-          © 2026 B-Plan Engine · Impressum · Datenschutz
+          © 2026 U-Plan Engine · Impressum · Datenschutz
         </p>
       </div>
     </footer>

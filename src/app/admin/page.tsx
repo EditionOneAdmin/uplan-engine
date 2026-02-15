@@ -41,7 +41,7 @@ export default function DashboardPage() {
             </div>
             {s.href && (
               <button
-                onClick={() => router.push(`/bplan-engine${s.href}`)}
+                onClick={() => router.push(`/uplan-engine${s.href}`)}
                 className="mt-4 text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 group/btn cursor-pointer"
               >
                 Verwalten <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />

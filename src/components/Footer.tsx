@@ -16,7 +16,7 @@ export default function Footer() {
           <a href="#" className="hover:text-primary transition-colors">Datenschutz</a>
         </nav>
 
-        <p className="text-xs text-slate-text/30">© 2026 B-Plan Engine</p>
+        <p className="text-xs text-slate-text/30">© 2026 U-Plan Engine</p>
       </div>
     </footer>
   );

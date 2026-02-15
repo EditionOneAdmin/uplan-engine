@@ -113,7 +113,7 @@ function Nav() {
       transition={{ duration: 0.5 }}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <a href="/bplan-engine/" className="flex items-center gap-2">
+        <a href="/uplan-engine/" className="flex items-center gap-2">
           <svg
             width="28"
             height="28"
@@ -125,16 +125,16 @@ function Nav() {
             <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
             <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
           </svg>
-          <span className="text-lg font-bold text-primary">B-Plan Engine</span>
+          <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </a>
         <nav className="hidden gap-6 text-sm font-medium text-slate-text/60 md:flex">
-          <a href="/bplan-engine/#pipeline" className="transition hover:text-primary">Pipeline</a>
-          <a href="/bplan-engine/#produkt" className="transition hover:text-primary">Produkt</a>
-          <a href="/bplan-engine/technologie" className="text-primary font-semibold">Technologie</a>
-          <a href="/bplan-engine/#faq" className="transition hover:text-primary">FAQ</a>
+          <a href="/uplan-engine/#pipeline" className="transition hover:text-primary">Pipeline</a>
+          <a href="/uplan-engine/#produkt" className="transition hover:text-primary">Produkt</a>
+          <a href="/uplan-engine/technologie" className="text-primary font-semibold">Technologie</a>
+          <a href="/uplan-engine/#faq" className="transition hover:text-primary">FAQ</a>
         </nav>
         <a
-          href="/bplan-engine/#kontakt"
+          href="/uplan-engine/#kontakt"
           className="rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-light"
         >
           Demo anfragen
@@ -151,12 +151,12 @@ function Footer() {
     <footer className="border-t border-gray-border bg-white py-12">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-sm text-slate-text/50">
         <nav className="flex gap-6">
-          <a href="/bplan-engine/" className="transition hover:text-primary">Startseite</a>
-          <a href="/bplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
-          <a href="/bplan-engine/#kontakt" className="transition hover:text-primary">Kontakt</a>
+          <a href="/uplan-engine/" className="transition hover:text-primary">Startseite</a>
+          <a href="/uplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
+          <a href="/uplan-engine/#kontakt" className="transition hover:text-primary">Kontakt</a>
         </nav>
         <p className="text-xs text-slate-text/30">
-          © 2026 B-Plan Engine · Impressum · Datenschutz
+          © 2026 U-Plan Engine · Impressum · Datenschutz
         </p>
       </div>
     </footer>
@@ -183,7 +183,7 @@ function Hero() {
             Infrastruktur.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-text/70 md:text-xl">
-            B-Plan Engine ist gebaut für Teams, die Compliance, Sicherheit
+            U-Plan Engine ist gebaut für Teams, die Compliance, Sicherheit
             und nahtlose Integration in bestehende Systeme brauchen.
           </p>
         </motion.div>
@@ -195,7 +195,7 @@ function Hero() {
           transition={{ duration: 0.6, delay: 0.3 }}
         >
           <a
-            href="/bplan-engine/#kontakt"
+            href="/uplan-engine/#kontakt"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-lg shadow-accent/20 transition hover:bg-accent-light hover:shadow-xl hover:shadow-accent/30"
           >
             Engineering-Gespräch vereinbaren <ArrowRight className="h-4 w-4" />
@@ -476,7 +476,7 @@ function Integrations() {
     <Section id="integrationen" gray>
       <SectionHeading
         title="Integrationen"
-        subtitle="B-Plan Engine fügt sich nahtlos in Ihre bestehende Systemlandschaft ein."
+        subtitle="U-Plan Engine fügt sich nahtlos in Ihre bestehende Systemlandschaft ein."
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {integrations.map((item, i) => (
@@ -605,7 +605,7 @@ function CTA() {
             Integrations-Anforderungen und finden den besten Weg für Ihr Setup.
           </p>
           <a
-            href="/bplan-engine/#kontakt"
+            href="/uplan-engine/#kontakt"
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-accent-light hover:shadow-xl"
           >
             Gespräch vereinbaren <ArrowRight className="h-4 w-4" />

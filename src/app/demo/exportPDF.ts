@@ -47,7 +47,7 @@ function drawFooter(doc: jsPDF) {
   const page = (doc as any).internal.getCurrentPageInfo().pageNumber;
   doc.setFontSize(7);
   doc.setTextColor(...LIGHT_LINE);
-  doc.text("B-Plan Engine v0.2 · Build 024 · Alle Angaben sind unverbindliche Richtwerte.", 20, h - 10);
+  doc.text("U-Plan Engine v0.2 · Build 024 · Alle Angaben sind unverbindliche Richtwerte.", 20, h - 10);
   doc.text(`Seite ${page}`, w - 20, h - 10, { align: "right" });
 }
 
@@ -133,7 +133,7 @@ async function captureMap(baufelder: Baufeld[]): Promise<MapCapture | null> {
   // Step 1: Get map bounds (always needed, even without screenshot)
   let bounds = { north: 0, south: 0, east: 0, west: 0 };
   try {
-    const wMap = (window as any).__bplanMap;
+    const wMap = (window as any).__uplanMap;
     if (wMap?.getBounds) {
       const b = wMap.getBounds();
       bounds = { north: b.getNorth(), south: b.getSouth(), east: b.getEast(), west: b.getWest() };
@@ -281,7 +281,7 @@ export async function exportProjectPlan(data: ExportData): Promise<void> {
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...DARK);
-    doc.text("B-Plan Engine", 20, y + 5);
+    doc.text("U-Plan Engine", 20, y + 5);
     doc.setFontSize(14);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...TEAL);
@@ -1153,7 +1153,7 @@ export async function exportProjectPlan(data: ExportData): Promise<void> {
     y += 5;
     doc.setFontSize(7);
     const disclaimer = [
-      "Dieses Dokument wurde automatisch mit der B-Plan Engine generiert und dient ausschließlich zu Planungszwecken.",
+      "Dieses Dokument wurde automatisch mit der U-Plan Engine generiert und dient ausschließlich zu Planungszwecken.",
       "Alle Angaben zu Kosten, Mieten, Renditen und Bodenrichtwerten sind unverbindliche Richtwerte und Schätzungen.",
       "Die tatsächlichen Werte können erheblich abweichen. Für verbindliche Kalkulationen wenden Sie sich an einen Fachplaner.",
       "Mietspiegel-Daten basieren auf dem Berliner Mietspiegel für Neubauwohnungen (Erstbezug ab 2019).",
@@ -1166,7 +1166,7 @@ export async function exportProjectPlan(data: ExportData): Promise<void> {
 
     y += 6;
     doc.setFontSize(8);
-    doc.text(`Generiert am ${full}  ·  B-Plan Engine v0.2 · Build 024`, 20, y);
+    doc.text(`Generiert am ${full}  ·  U-Plan Engine v0.2 · Build 024`, 20, y);
 
     drawFooter(doc);
   }

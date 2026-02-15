@@ -15,7 +15,7 @@ export default function Logo({ className = "h-8" }: { className?: string }) {
       <line x1="2" y1="26" x2="42" y2="26" stroke="#0D9488" strokeWidth="0.5" opacity="0.5" />
       {/* Text */}
       <text x="50" y="24" fontFamily="Inter, sans-serif" fontWeight="700" fontSize="18" fill="#1E3A5F">
-        B-Plan
+        U-Plan
       </text>
       <text x="118" y="24" fontFamily="Inter, sans-serif" fontWeight="400" fontSize="18" fill="#0D9488">
         Engine

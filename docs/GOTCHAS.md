@@ -38,21 +38,21 @@ const nextConfig = {
 
 **Problem:** `router.push("/demo/")` funktioniert korrekt — Next.js fügt `basePath` automatisch hinzu.
 
-**Falsch:** `router.push("/bplan-engine/demo/")` → wird zu `/bplan-engine/bplan-engine/demo/`
+**Falsch:** `router.push("/uplan-engine/demo/")` → wird zu `/uplan-engine/uplan-engine/demo/`
 
 ```typescript
 // ✅ Richtig
 router.push("/demo/");
 
 // ❌ Falsch — basePath wird doppelt
-router.push("/bplan-engine/demo/");
+router.push("/uplan-engine/demo/");
 ```
 
 ---
 
 ## 📍 `usePathname()` gibt Pfad OHNE basePath
 
-**Problem:** `usePathname()` gibt z.B. `/demo/` zurück, nicht `/bplan-engine/demo/`.
+**Problem:** `usePathname()` gibt z.B. `/demo/` zurück, nicht `/uplan-engine/demo/`.
 
 **Beachten:** Wenn du Pfade vergleichst oder Links baust, berücksichtige dass basePath nicht enthalten ist.
 

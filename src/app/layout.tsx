@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "B-Plan Engine — Vom Flürstück zur Genehmigungsreife",
+  title: "U-Plan Engine — Vom Flürstück zur Genehmigungsreife",
   description:
-    "B-Plan Engine automatisiert die Machbarkeitsprüfung, Variantenplanung und Bauantragsaufbereitung — nachvollziehbar, versioniert und auditierbar.",
+    "U-Plan Engine automatisiert die Machbarkeitsprüfung, Variantenplanung und Bauantragsaufbereitung — nachvollziehbar, versioniert und auditierbar.",
 };
 
 export default function RootLayout({

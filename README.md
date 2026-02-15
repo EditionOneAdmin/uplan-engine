@@ -1,6 +1,6 @@
-# B-Plan Engine
+# U-Plan Engine
 
-Die **B-Plan Engine** ist ein browserbasierter Konfigurator für seriellen Wohnungsbau auf Bebauungsplan-Flächen in Berlin. Nutzer können Baufelder auf einer interaktiven Karte zeichnen, modulare Gebäude verschiedener Hersteller platzieren, Kosten nach DIN 276 kalkulieren und das Ergebnis als PDF-Projektplan exportieren — komplett ohne Backend, rein clientseitig.
+Die **U-Plan Engine** ist ein browserbasierter Konfigurator für seriellen Wohnungsbau auf Bebauungsplan-Flächen in Berlin. Nutzer können Baufelder auf einer interaktiven Karte zeichnen, modulare Gebäude verschiedener Hersteller platzieren, Kosten nach DIN 276 kalkulieren und das Ergebnis als PDF-Projektplan exportieren — komplett ohne Backend, rein clientseitig.
 
 ## Features
 
@@ -33,7 +33,7 @@ Die **B-Plan Engine** ist ein browserbasierter Konfigurator für seriellen Wohnu
 npm install
 
 # Development Server
-npm run dev        # → http://localhost:3000/bplan-engine/
+npm run dev        # → http://localhost:3000/uplan-engine/
 
 # Production Build (Static Export)
 npm run build      # → Ausgabe in out/
@@ -98,7 +98,7 @@ Die App wird als Static Export (`output: "export"`) gebaut und auf GitHub Pages 
 ```typescript
 const nextConfig: NextConfig = {
   output: "export",
-  basePath: "/bplan-engine",
+  basePath: "/uplan-engine",
   trailingSlash: true,       // ⚠️ PFLICHT für GitHub Pages!
   images: { unoptimized: true },
 };
@@ -113,7 +113,7 @@ npm run build          # Erzeugt out/ Verzeichnis
 # out/ wird via GitHub Actions oder manuell auf gh-pages Branch gepusht
 ```
 
-**Live:** [https://editiononeadmin.github.io/bplan-engine/demo](https://editiononeadmin.github.io/bplan-engine/demo)
+**Live:** [https://editiononeadmin.github.io/uplan-engine/demo](https://editiononeadmin.github.io/uplan-engine/demo)
 
 ## Lizenz
 

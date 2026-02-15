@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="w-64 bg-slate-900/80 border-r border-slate-800 flex flex-col">
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-            B-Plan Engine
+            U-Plan Engine
           </h1>
           <p className="text-xs text-slate-500 mt-1">Admin Panel</p>
         </div>

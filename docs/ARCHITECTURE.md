@@ -1,4 +1,4 @@
-# Architektur — B-Plan Engine
+# Architektur — U-Plan Engine
 
 ## Komponenten-Map
 

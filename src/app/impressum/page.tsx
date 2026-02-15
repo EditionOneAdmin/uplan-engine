@@ -10,12 +10,12 @@ export default function Impressum() {
         <div className="prose prose-slate">
           <p>Angaben gemäß § 5 TMG</p>
           <p className="mt-4">
-            B-Plan Engine<br />
+            U-Plan Engine<br />
             [Adresse wird ergänzt]<br />
             Deutschland
           </p>
           <h2 className="text-xl font-semibold text-primary mt-8 mb-4">Kontakt</h2>
-          <p>E-Mail: hello@bplan-engine.de</p>
+          <p>E-Mail: hello@uplan-engine.de</p>
         </div>
       </div>
       <Footer />

@@ -67,8 +67,8 @@ function calcAreaM2(coords: [number, number][]): number {
 function MapInstanceExporter() {
   const map = useMap();
   useEffect(() => {
-    (window as any).__bplanMap = map;
-    return () => { (window as any).__bplanMap = null; };
+    (window as any).__uplanMap = map;
+    return () => { (window as any).__uplanMap = null; };
   }, [map]);
   return null;
 }

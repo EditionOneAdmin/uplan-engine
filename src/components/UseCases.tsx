@@ -9,21 +9,21 @@ const cases = [
     title: "Portfolio-Rollout",
     desc: "Bewerten Sie 50 Standorte in der Zeit, die Sie heute für 5 brauchen. Gleiche Standards, konsistente Qualität über alle Projekte hinweg.",
     highlight: "10x schnellere Standortbewertung",
-    image: "/bplan-engine/images/usecase-portfolio.jpg",
+    image: "/uplan-engine/images/usecase-portfolio.jpg",
   },
   {
     icon: Clock,
     title: "Ankaufsprüfung in 48h",
     desc: "Machbarkeit prüfen bevor der Letter of Intent unterschrieben ist. Fundierte Entscheidung statt Bauchgefühl — datenbasiert und nachvollziehbar.",
     highlight: "Von Wochen auf Stunden",
-    image: "/bplan-engine/images/usecase-ankauf.jpg",
+    image: "/uplan-engine/images/usecase-ankauf.jpg",
   },
   {
     icon: Repeat,
     title: "Serielle Planung mit Standards",
     desc: "Bewährte Gebäudestandards wiederverwenden. Weniger Entwurfsaufwand, schnellere Freigaben, geringere Planungskosten bei gleichbleibender Qualität.",
     highlight: "Bis zu 60% weniger Planungsaufwand",
-    image: "/bplan-engine/images/usecase-seriell.jpg",
+    image: "/uplan-engine/images/usecase-seriell.jpg",
   },
 ];
 

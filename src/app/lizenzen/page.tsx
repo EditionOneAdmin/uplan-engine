@@ -78,9 +78,9 @@ function Nav() {
   }, []);
 
   const useCaseLinks = [
-    { href: "/bplan-engine/anwendungsfaelle/portfolio-rollout", label: "Portfolio-Rollout", sub: "50 Standorte parallel bewerten" },
-    { href: "/bplan-engine/anwendungsfaelle/ankaufspruefung", label: "Ankaufsprüfung in 48h", sub: "Machbarkeit vor LOI prüfen" },
-    { href: "/bplan-engine/anwendungsfaelle/serielle-planung", label: "Serielle Planung", sub: "Standards wiederverwenden" },
+    { href: "/uplan-engine/anwendungsfaelle/portfolio-rollout", label: "Portfolio-Rollout", sub: "50 Standorte parallel bewerten" },
+    { href: "/uplan-engine/anwendungsfaelle/ankaufspruefung", label: "Ankaufsprüfung in 48h", sub: "Machbarkeit vor LOI prüfen" },
+    { href: "/uplan-engine/anwendungsfaelle/serielle-planung", label: "Serielle Planung", sub: "Standards wiederverwenden" },
   ];
 
   return (
@@ -91,17 +91,17 @@ function Nav() {
       transition={{ duration: 0.5 }}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <a href="/bplan-engine/" className="flex items-center gap-2">
+        <a href="/uplan-engine/" className="flex items-center gap-2">
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="32" height="32" rx="8" fill="#1E3A5F" />
             <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
             <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
           </svg>
-          <span className="text-lg font-bold text-primary">B-Plan Engine</span>
+          <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </a>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-slate-text/60 md:flex">
-          <a href="/bplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
+          <a href="/uplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
           <div className="relative" onMouseEnter={() => setUcOpen(true)} onMouseLeave={() => setUcOpen(false)}>
             <button className="flex items-center gap-1 transition hover:text-primary">
               Use Cases
@@ -131,12 +131,12 @@ function Nav() {
               )}
             </AnimatePresence>
           </div>
-          <a href="/bplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
-          <a href="/bplan-engine/lizenzen" className="transition hover:text-primary">Pläne lizenzieren</a>
+          <a href="/uplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
+          <a href="/uplan-engine/lizenzen" className="transition hover:text-primary">Pläne lizenzieren</a>
         </nav>
 
         <div className="flex items-center gap-3">
-          <a href="/bplan-engine/demo" className="hidden rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-light sm:inline-flex">
+          <a href="/uplan-engine/demo" className="hidden rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-light sm:inline-flex">
             Interaktive Demo
           </a>
           <button className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-bg transition" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -155,16 +155,16 @@ function Nav() {
             className="overflow-hidden border-t border-gray-border/40 md:hidden"
           >
             <nav className="flex flex-col gap-1 px-6 py-4 bg-white">
-              <a href="/bplan-engine/produkt" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Produkt</a>
+              <a href="/uplan-engine/produkt" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Produkt</a>
               <div className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-text/40">Use Cases</div>
               {useCaseLinks.map((uc) => (
                 <a key={uc.href} href={uc.href} className="rounded-lg px-3 py-2.5 pl-6 text-sm text-slate-text/80 hover:bg-gray-bg hover:text-primary transition" onClick={() => setMobileOpen(false)}>
                   {uc.label}
                 </a>
               ))}
-              <a href="/bplan-engine/technologie" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Technologie</a>
-              <a href="/bplan-engine/lizenzen" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Pläne lizenzieren</a>
-              <a href="/bplan-engine/demo" className="mt-2 rounded-lg bg-accent px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-accent-light transition" onClick={() => setMobileOpen(false)}>Interaktive Demo</a>
+              <a href="/uplan-engine/technologie" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Technologie</a>
+              <a href="/uplan-engine/lizenzen" className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary hover:bg-gray-bg transition" onClick={() => setMobileOpen(false)}>Pläne lizenzieren</a>
+              <a href="/uplan-engine/demo" className="mt-2 rounded-lg bg-accent px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-accent-light transition" onClick={() => setMobileOpen(false)}>Interaktive Demo</a>
             </nav>
           </motion.div>
         )}
@@ -195,11 +195,11 @@ function Hero() {
               Passives Einkommen.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-text/70 md:text-xl">
-              Lizenzieren Sie genehmigte Bauplanungen auf B-Plan Engine — und verdienen Sie jedes Mal, wenn jemand Ihr Konzept als Grundlage nutzt.
+              Lizenzieren Sie genehmigte Bauplanungen auf U-Plan Engine — und verdienen Sie jedes Mal, wenn jemand Ihr Konzept als Grundlage nutzt.
             </p>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
               <a
-                href="mailto:hello@bplan-engine.de"
+                href="mailto:hello@uplan-engine.de"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-lg shadow-accent/20 transition hover:bg-accent-light hover:shadow-xl hover:shadow-accent/30"
               >
                 <Mail className="h-5 w-5" /> Pläne einreichen
@@ -220,7 +220,7 @@ function Hero() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/bplan-engine/images/pages/optimized/lizenzen-hero.jpg"
+              src="/uplan-engine/images/pages/optimized/lizenzen-hero.jpg"
               alt="Bauplanung lizenzieren"
               className="w-full rounded-2xl shadow-2xl"
               loading="lazy"
@@ -283,7 +283,7 @@ function Prinzip() {
         <FadeIn delay={0.5} className="mt-16">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/bplan-engine/images/pages/optimized/lizenzen-replicate.jpg"
+            src="/uplan-engine/images/pages/optimized/lizenzen-replicate.jpg"
             alt="Gebäude an mehreren Standorten"
             className="w-full rounded-2xl shadow-lg"
             loading="lazy"
@@ -305,7 +305,7 @@ const argumente = [
   {
     icon: Layers,
     title: "Serielle Wiederverwendung",
-    desc: "Warum jedes Mal von null planen? Ihr Entwurf kann an 50 Standorten stehen — mit standortspezifischen Anpassungen, die B-Plan Engine automatisiert. Einmal planen, vielfach verdienen.",
+    desc: "Warum jedes Mal von null planen? Ihr Entwurf kann an 50 Standorten stehen — mit standortspezifischen Anpassungen, die U-Plan Engine automatisiert. Einmal planen, vielfach verdienen.",
   },
   {
     icon: Wallet,
@@ -514,7 +514,7 @@ function CTA() {
     <section className="relative overflow-hidden py-24 md:py-32">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/bplan-engine/images/pages/optimized/lizenzen-skyline.jpg"
+        src="/uplan-engine/images/pages/optimized/lizenzen-skyline.jpg"
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
         loading="lazy"
@@ -530,7 +530,7 @@ function CTA() {
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <a
-              href="mailto:hello@bplan-engine.de"
+              href="mailto:hello@uplan-engine.de"
               className="inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-lg shadow-accent/20 transition hover:bg-accent-light hover:shadow-xl hover:shadow-accent/30"
             >
               <Mail className="h-5 w-5" /> Jetzt einreichen
@@ -560,19 +560,19 @@ function Footer() {
             <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
             <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
           </svg>
-          <span className="text-lg font-bold text-primary">B-Plan Engine</span>
+          <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </div>
         <p className="text-sm text-slate-text/50">Vom Flürstück zur Genehmigungsreife.</p>
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-text/50">
-          <a href="/bplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
-          <a href="/bplan-engine/anwendungsfaelle/portfolio-rollout" className="transition hover:text-primary">Portfolio-Rollout</a>
-          <a href="/bplan-engine/anwendungsfaelle/ankaufspruefung" className="transition hover:text-primary">Ankaufsprüfung</a>
-          <a href="/bplan-engine/anwendungsfaelle/serielle-planung" className="transition hover:text-primary">Serielle Planung</a>
-          <a href="/bplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
-          <a href="/bplan-engine/lizenzen" className="transition hover:text-primary">Lizenzen</a>
+          <a href="/uplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
+          <a href="/uplan-engine/anwendungsfaelle/portfolio-rollout" className="transition hover:text-primary">Portfolio-Rollout</a>
+          <a href="/uplan-engine/anwendungsfaelle/ankaufspruefung" className="transition hover:text-primary">Ankaufsprüfung</a>
+          <a href="/uplan-engine/anwendungsfaelle/serielle-planung" className="transition hover:text-primary">Serielle Planung</a>
+          <a href="/uplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
+          <a href="/uplan-engine/lizenzen" className="transition hover:text-primary">Lizenzen</a>
           <a href="#kontakt" className="transition hover:text-primary">Kontakt</a>
         </nav>
-        <p className="text-xs text-slate-text/30">© 2026 B-Plan Engine · Impressum · Datenschutz</p>
+        <p className="text-xs text-slate-text/30">© 2026 U-Plan Engine · Impressum · Datenschutz</p>
       </div>
     </footer>
   );

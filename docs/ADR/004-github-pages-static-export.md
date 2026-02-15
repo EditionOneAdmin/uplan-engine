@@ -24,7 +24,7 @@ Wir deployen als **Next.js Static Export** (`output: "export"`) auf **GitHub Pag
 // next.config.ts
 {
   output: "export",
-  basePath: "/bplan-engine",
+  basePath: "/uplan-engine",
   trailingSlash: true,        // PFLICHT für GitHub Pages
   images: { unoptimized: true } // Kein Image Optimization ohne Server
 }

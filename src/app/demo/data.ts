@@ -40,7 +40,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1890,
     tags: ["holzbau", "kfw40", "barrierefrei"],
     color: "#3B82F6",
-    rendering: "/bplan-engine/renderings/optimized/gropyus-riegel-36.jpg",
+    rendering: "/uplan-engine/renderings/optimized/gropyus-riegel-36.jpg",
   },
   {
     id: "gropyus-punkt-16",
@@ -61,7 +61,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 2150,
     tags: ["kfw40", "barrierefrei", "aufzug"],
     color: "#3B82F6",
-    rendering: "/bplan-engine/renderings/optimized/gropyus-punkt-16.jpg",
+    rendering: "/uplan-engine/renderings/optimized/gropyus-punkt-16.jpg",
   },
   {
     id: "gropyus-u-36",
@@ -82,7 +82,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1780,
     tags: ["kfw40", "innenhof"],
     color: "#3B82F6",
-    rendering: "/bplan-engine/renderings/optimized/gropyus-u-36.jpg",
+    rendering: "/uplan-engine/renderings/optimized/gropyus-u-36.jpg",
   },
   // ── Nokera (2) ──
   {
@@ -104,7 +104,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 2050,
     tags: ["holzbau", "kfw40", "passivhaus"],
     color: "#06B6D4",
-    rendering: "/bplan-engine/renderings/optimized/nokera-riegel-30.jpg",
+    rendering: "/uplan-engine/renderings/optimized/nokera-riegel-30.jpg",
   },
   {
     id: "nokera-l-24",
@@ -125,7 +125,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 2200,
     tags: ["holzbau", "passivhaus", "barrierefrei"],
     color: "#06B6D4",
-    rendering: "/bplan-engine/renderings/optimized/nokera-l-24.jpg",
+    rendering: "/uplan-engine/renderings/optimized/nokera-l-24.jpg",
   },
   // ── ALHO (2) ──
   {
@@ -147,7 +147,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1650,
     tags: ["modulbau", "stahl", "schnellbau"],
     color: "#F59E0B",
-    rendering: "/bplan-engine/renderings/optimized/alho-riegel-42.jpg",
+    rendering: "/uplan-engine/renderings/optimized/alho-riegel-42.jpg",
   },
   {
     id: "alho-t-32",
@@ -168,7 +168,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1580,
     tags: ["modulbau", "stahl"],
     color: "#F59E0B",
-    rendering: "/bplan-engine/renderings/optimized/alho-t-32.jpg",
+    rendering: "/uplan-engine/renderings/optimized/alho-t-32.jpg",
   },
   // ── Goldbeck (3) ──
   {
@@ -190,7 +190,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1720,
     tags: ["systembau", "kfw40"],
     color: "#EF4444",
-    rendering: "/bplan-engine/renderings/optimized/goldbeck-punkt-18.jpg",
+    rendering: "/uplan-engine/renderings/optimized/goldbeck-punkt-18.jpg",
   },
   {
     id: "goldbeck-doppel-12",
@@ -211,7 +211,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1950,
     tags: ["eigentum", "reihenbau"],
     color: "#EF4444",
-    rendering: "/bplan-engine/renderings/optimized/goldbeck-doppel-12.jpg",
+    rendering: "/uplan-engine/renderings/optimized/goldbeck-doppel-12.jpg",
   },
   {
     id: "goldbeck-u-30",
@@ -232,7 +232,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1620,
     tags: ["systembau", "innenhof"],
     color: "#EF4444",
-    rendering: "/bplan-engine/renderings/optimized/goldbeck-u-30.jpg",
+    rendering: "/uplan-engine/renderings/optimized/goldbeck-u-30.jpg",
   },
   // ── Max Bögl (2) ──
   {
@@ -254,7 +254,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1550,
     tags: ["betonfertigteil", "großserie"],
     color: "#8B5CF6",
-    rendering: "/bplan-engine/renderings/optimized/maxboegl-riegel-48.jpg",
+    rendering: "/uplan-engine/renderings/optimized/maxboegl-riegel-48.jpg",
   },
   {
     id: "maxboegl-l-28",
@@ -275,7 +275,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1680,
     tags: ["betonfertigteil", "kfw40"],
     color: "#8B5CF6",
-    rendering: "/bplan-engine/renderings/optimized/maxboegl-l-28.jpg",
+    rendering: "/uplan-engine/renderings/optimized/maxboegl-l-28.jpg",
   },
   // ── Nokera (3) ──
   {
@@ -297,7 +297,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1850,
     tags: ["holzmodulbau", "kfw40", "seriell", "barrierefrei"],
     color: "#06B6D4",
-    rendering: "/bplan-engine/renderings/optimized/nokera-riegel-40.jpg",
+    rendering: "/uplan-engine/renderings/optimized/nokera-riegel-40.jpg",
   },
   {
     id: "nokera-punkt-15",
@@ -318,7 +318,7 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 2050,
     tags: ["holzmodulbau", "kfw40", "nachverdichtung", "aufzug"],
     color: "#06B6D4",
-    rendering: "/bplan-engine/renderings/optimized/nokera-punkt-15.jpg",
+    rendering: "/uplan-engine/renderings/optimized/nokera-punkt-15.jpg",
   },
   {
     id: "nokera-riegel-54",
@@ -339,6 +339,6 @@ export const BUILDINGS: BuildingModule[] = [
     pricePerSqm: 1720,
     tags: ["holzmodulbau", "kfw40", "seriell", "großserie"],
     color: "#06B6D4",
-    rendering: "/bplan-engine/renderings/optimized/nokera-riegel-54.jpg",
+    rendering: "/uplan-engine/renderings/optimized/nokera-riegel-54.jpg",
   },
 ];

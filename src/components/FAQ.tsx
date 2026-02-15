@@ -7,12 +7,12 @@ import { ChevronDown } from "lucide-react";
 
 const faqs = [
   {
-    q: "Garantiert B-Plan Engine eine Baugenehmigung?",
-    a: "Nein. B-Plan Engine liefert eine fundierte, strukturierte und nachvollziehbare Grundlage für den Bauantrag. Die finale Verantwortung liegt beim bauvorlageberechtigten Entwurfsverfasser. Unser Ziel: weniger Nachforderungen, schnellere Bearbeitung, höhere Erstgenehmigungsquote.",
+    q: "Garantiert U-Plan Engine eine Baugenehmigung?",
+    a: "Nein. U-Plan Engine liefert eine fundierte, strukturierte und nachvollziehbare Grundlage für den Bauantrag. Die finale Verantwortung liegt beim bauvorlageberechtigten Entwurfsverfasser. Unser Ziel: weniger Nachforderungen, schnellere Bearbeitung, höhere Erstgenehmigungsquote.",
   },
   {
     q: "Wer trägt die Verantwortung für den Bauantrag?",
-    a: "Die Verantwortung verbleibt beim bauvorlageberechtigten Entwurfsverfasser — wie bei jedem konventionellen Verfahren. B-Plan Engine unterstützt mit automatisierten Prüfungen, ersetzt aber nicht die fachliche Freigabe.",
+    a: "Die Verantwortung verbleibt beim bauvorlageberechtigten Entwurfsverfasser — wie bei jedem konventionellen Verfahren. U-Plan Engine unterstützt mit automatisierten Prüfungen, ersetzt aber nicht die fachliche Freigabe.",
   },
   {
     q: "Wie funktioniert der Rollout neuer Kommunen?",
@@ -23,8 +23,8 @@ const faqs = [
     a: "Pro Projekt erhalten Sie: einen Variantenvergleich (A/B/C mit Kennzahlen), einen Compliance Report (Ampel-System mit Quellen und Empfehlungen) und ein strukturiertes SubmitPack mit Checkliste je Kommune-Profil.",
   },
   {
-    q: "Wie integriert sich B-Plan Engine in bestehende Prozesse?",
-    a: "Über eine RESTful API und strukturierte Exporte (PDF, IFC, BCF). B-Plan Engine ergänzt Ihren bestehenden Workflow — kein Systemwechsel nötig. Rollen- und Rechtekonzept ermöglicht nahtlose Einbindung ins Team.",
+    q: "Wie integriert sich U-Plan Engine in bestehende Prozesse?",
+    a: "Über eine RESTful API und strukturierte Exporte (PDF, IFC, BCF). U-Plan Engine ergänzt Ihren bestehenden Workflow — kein Systemwechsel nötig. Rollen- und Rechtekonzept ermöglicht nahtlose Einbindung ins Team.",
   },
 ];
 

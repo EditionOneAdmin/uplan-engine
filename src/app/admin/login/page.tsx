@@ -45,7 +45,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/20 mb-6 backdrop-blur-xl">
             <Building2 className="w-8 h-8 text-blue-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">B-Plan Engine</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">U-Plan Engine</h1>
           <p className="text-slate-500 text-sm">Katalog-Administration</p>
         </div>
 
@@ -86,7 +86,7 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-        <p className="text-center text-xs text-slate-600 mt-8">B-Plan Engine · Gebäude-Katalog Verwaltung</p>
+        <p className="text-center text-xs text-slate-600 mt-8">U-Plan Engine · Gebäude-Katalog Verwaltung</p>
       </div>
     </div>
   );

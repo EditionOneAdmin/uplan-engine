@@ -169,7 +169,7 @@ export default function ModulePage() {
               </div>
             </div>
 
-            <Input label="Rendering URL" value={editing.rendering || ""} onChange={(v) => upd({ rendering: v || undefined })} placeholder="/bplan-engine/renderings/..." />
+            <Input label="Rendering URL" value={editing.rendering || ""} onChange={(v) => upd({ rendering: v || undefined })} placeholder="/uplan-engine/renderings/..." />
             <ColorPicker label="Farbe" value={editing.color} onChange={(v) => upd({ color: v })} />
           </div>
 

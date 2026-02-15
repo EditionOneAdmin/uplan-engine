@@ -25,7 +25,7 @@ export default function Navbar() {
             </a>
           ))}
           <a
-            href="/bplan-engine/demo"
+            href="/uplan-engine/demo"
             className="bg-accent text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-accent-light transition-colors"
           >
             🚀 Live Demo
@@ -42,7 +42,7 @@ export default function Navbar() {
               {l.label}
             </a>
           ))}
-          <a href="/bplan-engine/demo" onClick={() => setOpen(false)} className="block bg-accent text-white text-sm font-medium px-5 py-2.5 rounded-lg text-center">
+          <a href="/uplan-engine/demo" onClick={() => setOpen(false)} className="block bg-accent text-white text-sm font-medium px-5 py-2.5 rounded-lg text-center">
             🚀 Live Demo
           </a>
         </div>

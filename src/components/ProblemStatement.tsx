@@ -35,7 +35,7 @@ export default function ProblemStatement() {
         <FadeIn>
           <div className="max-w-2xl mx-auto mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/bplan-engine/images/problem-documents.jpg" alt="Bauantrags-Dokumente mit Nachforderungen" className="rounded-2xl shadow-lg w-full h-48 object-cover" />
+            <img src="/uplan-engine/images/problem-documents.jpg" alt="Bauantrags-Dokumente mit Nachforderungen" className="rounded-2xl shadow-lg w-full h-48 object-cover" />
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-primary text-center tracking-tight">
             Genehmigungsverfahren bremsen Ihre Pipeline.

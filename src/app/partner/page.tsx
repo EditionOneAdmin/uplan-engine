@@ -52,21 +52,21 @@ function Nav() {
       transition={{ duration: 0.5 }}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <a href="/bplan-engine/" className="flex items-center gap-2">
+        <a href="/uplan-engine/" className="flex items-center gap-2">
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="32" height="32" rx="8" fill="#1E3A5F" />
             <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
             <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
           </svg>
-          <span className="text-lg font-bold text-primary">B-Plan Engine</span>
+          <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </a>
         <nav className="hidden items-center gap-6 text-sm font-medium text-slate-text/60 md:flex">
-          <a href="/bplan-engine/" className="transition hover:text-primary">Startseite</a>
-          <a href="/bplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
-          <a href="/bplan-engine/partner" className="font-semibold text-primary">Partner</a>
+          <a href="/uplan-engine/" className="transition hover:text-primary">Startseite</a>
+          <a href="/uplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
+          <a href="/uplan-engine/partner" className="font-semibold text-primary">Partner</a>
         </nav>
         <a
-          href="mailto:hello@bplan-engine.de"
+          href="mailto:hello@uplan-engine.de"
           className="hidden rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-light sm:inline-flex"
         >
           Partner werden
@@ -97,18 +97,18 @@ function Hero() {
               Tausende Projekte.
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-relaxed text-slate-text/70">
-              Integrieren Sie Ihre seriellen Module in B-Plan Engine und werden
+              Integrieren Sie Ihre seriellen Module in U-Plan Engine und werden
               Sie zur ersten Wahl bei der Konzepterstellung.
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <a
-                href="mailto:hello@bplan-engine.de"
+                href="mailto:hello@uplan-engine.de"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-lg shadow-accent/20 transition hover:bg-accent-light hover:shadow-xl hover:shadow-accent/30"
               >
                 <Mail className="h-4 w-4" /> Partner werden
               </a>
               <a
-                href="/bplan-engine/demo"
+                href="/uplan-engine/demo"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-border px-8 py-4 text-base font-semibold text-primary transition hover:border-primary/30 hover:bg-gray-bg"
               >
                 Demo ansehen <ArrowRight className="h-4 w-4" />
@@ -122,7 +122,7 @@ function Hero() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/bplan-engine/images/pages/optimized/partner-hero.jpg"
+              src="/uplan-engine/images/pages/optimized/partner-hero.jpg"
               alt="Partner Hero — Modulare Gebäude"
               className="w-full rounded-2xl shadow-2xl"
               loading="lazy"
@@ -293,7 +293,7 @@ function Checklist() {
           <FadeIn delay={0.15}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/bplan-engine/images/pages/optimized/partner-factory.jpg"
+              src="/uplan-engine/images/pages/optimized/partner-factory.jpg"
               alt="Modulare Fertigung"
               className="w-full rounded-2xl shadow-lg"
               loading="lazy"
@@ -320,7 +320,7 @@ function CTA() {
           </p>
           <div className="mt-10">
             <a
-              href="mailto:hello@bplan-engine.de"
+              href="mailto:hello@uplan-engine.de"
               className="inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-4 text-base font-semibold text-white shadow-lg shadow-accent/20 transition hover:bg-accent-light hover:shadow-xl hover:shadow-accent/30"
             >
               <Mail className="h-5 w-5" /> Jetzt Kontakt aufnehmen
@@ -344,17 +344,17 @@ function Footer() {
             <path d="M8 10h6a4 4 0 0 1 0 8H8V10z" fill="white" />
             <path d="M17 14h7a4 4 0 0 1 0 8h-7V14z" fill="#0D9488" />
           </svg>
-          <span className="text-lg font-bold text-primary">B-Plan Engine</span>
+          <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </div>
         <p className="text-sm text-slate-text/50">Vom Flürstück zur Genehmigungsreife.</p>
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-text/50">
-          <a href="/bplan-engine/" className="transition hover:text-primary">Startseite</a>
-          <a href="/bplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
-          <a href="/bplan-engine/partner" className="transition hover:text-primary">Partner</a>
-          <a href="/bplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
-          <a href="mailto:hello@bplan-engine.de" className="transition hover:text-primary">Kontakt</a>
+          <a href="/uplan-engine/" className="transition hover:text-primary">Startseite</a>
+          <a href="/uplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
+          <a href="/uplan-engine/partner" className="transition hover:text-primary">Partner</a>
+          <a href="/uplan-engine/technologie" className="transition hover:text-primary">Technologie</a>
+          <a href="mailto:hello@uplan-engine.de" className="transition hover:text-primary">Kontakt</a>
         </nav>
-        <p className="text-xs text-slate-text/30">© 2026 B-Plan Engine · Impressum · Datenschutz</p>
+        <p className="text-xs text-slate-text/30">© 2026 U-Plan Engine · Impressum · Datenschutz</p>
       </div>
     </footer>
   );

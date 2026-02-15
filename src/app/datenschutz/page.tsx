@@ -14,7 +14,7 @@ export default function Datenschutz() {
             und Zweck der Verarbeitung personenbezogener Daten auf dieser Website.
           </p>
           <h2 className="text-xl font-semibold text-primary">Verantwortlicher</h2>
-          <p>B-Plan Engine · hello@bplan-engine.de</p>
+          <p>U-Plan Engine · hello@uplan-engine.de</p>
           <h2 className="text-xl font-semibold text-primary">Hosting</h2>
           <p>Diese Website wird bei GitHub Pages gehostet. Details zur Datenverarbeitung durch GitHub finden Sie in der GitHub Privacy Policy.</p>
           <h2 className="text-xl font-semibold text-primary">Cookies</h2>

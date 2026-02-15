@@ -7,7 +7,7 @@ export function DemoHeader() {
     <header className="bg-[#1E3A5F] px-4 py-3 flex items-center justify-between border-b border-white/10 shrink-0">
       <div className="flex items-center gap-3">
         <a
-          href="/bplan-engine/"
+          href="/uplan-engine/"
           className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"
         >
           <ArrowLeft size={16} />
@@ -23,7 +23,7 @@ export function DemoHeader() {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-white/40 hidden sm:inline">B-Plan Engine v0.2 · Build 030</span>
+        <span className="text-xs text-white/40 hidden sm:inline">U-Plan Engine v0.2 · Build 030</span>
         <span className="w-2 h-2 rounded-full bg-[#0D9488] animate-pulse" />
       </div>
     </header>

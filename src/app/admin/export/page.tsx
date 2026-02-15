@@ -81,7 +81,7 @@ export default function ExportPage() {
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "bplan-data.json"; a.click();
+    a.href = url; a.download = "uplan-data.json"; a.click();
     URL.revokeObjectURL(url);
   };
 
