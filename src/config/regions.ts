@@ -111,13 +111,14 @@ export const regions: Record<string, RegionConfig> = {
         attribution: "© BORIS NRW – Bodenrichtwerte 2025",
         opacity: 0.5,
       },
-      immobilienrichtwerte: {
-        url: "https://www.wms.nrw.de/boris/wms_nw_irw",
-        layers: "12",
-        styles: "",
-        attribution: "© BORIS NRW – Immobilienrichtwerte (MFH)",
-        opacity: 0.5,
-      },
+      // IRW NRW: Daten erst ab Ende März 2025 verfügbar
+      // immobilienrichtwerte: {
+      //   url: "https://www.wms.nrw.de/boris/wms_nw_irw",
+      //   layers: "12",
+      //   styles: "",
+      //   attribution: "© BORIS NRW – Immobilienrichtwerte (MFH)",
+      //   opacity: 0.5,
+      // },
     },
     wfs: {
       flurstuecke: {
