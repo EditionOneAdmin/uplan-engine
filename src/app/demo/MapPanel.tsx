@@ -19,6 +19,8 @@ import "leaflet/dist/leaflet.css";
 import type { Baufeld, PlacedUnit } from "./types";
 import { BUILDINGS } from "./data";
 import PlacedBuildings, { GhostPolygon } from "./PlacedBuildings";
+import type { RegionConfig } from "../../config/regionTypes";
+import { RegionSelector } from "./RegionSelector";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -70,9 +72,24 @@ function MapInstanceExporter() {
   return null;
 }
 
+/* ── Fly to region on change ──────────────────────────────── */
+
+function FlyToRegion({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+  const prevRef = useRef<string>("");
+  useEffect(() => {
+    const key = `${center[0]},${center[1]},${zoom}`;
+    if (prevRef.current && prevRef.current !== key) {
+      map.flyTo(center, zoom, { duration: 1.5 });
+    }
+    prevRef.current = key;
+  }, [center, zoom, map]);
+  return null;
+}
+
 /* ── Address Search ───────────────────────────────────────── */
 
-function AddressSearch() {
+function AddressSearch({ regionName }: { regionName?: string }) {
   const map = useMap();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,8 +98,9 @@ function AddressSearch() {
     if (!query.trim()) return;
     setLoading(true);
     try {
+      const suffix = regionName || "Deutschland";
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", Berlin")}&limit=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ", " + suffix)}&limit=1`
       );
       const data = await res.json();
       if (data.length > 0) {
@@ -94,10 +112,10 @@ function AddressSearch() {
     } finally {
       setLoading(false);
     }
-  }, [query, map]);
+  }, [query, map, regionName]);
 
   return (
-    <div className="leaflet-top leaflet-left" style={{ top: 10, left: 60, position: "absolute", zIndex: 1000 }}>
+    <div className="leaflet-top leaflet-left" style={{ top: 10, left: 200, position: "absolute", zIndex: 1000 }}>
       <div style={{ display: "flex", gap: 4 }}>
         <input
           type="text"
@@ -149,7 +167,7 @@ const fmtEur = (n: number) => n.toFixed(2).replace(".", ",");
 
 /* ── GetFeatureInfo ───────────────────────────────────────── */
 
-function ClickFeatureInfo({ enabled }: { enabled: boolean }) {
+function ClickFeatureInfo({ enabled, region }: { enabled: boolean; region: RegionConfig }) {
   const map = useMap();
   const activeLayersRef = useRef<Set<string>>(new Set());
 
@@ -181,13 +199,15 @@ function ClickFeatureInfo({ enabled }: { enabled: boolean }) {
         <div style="color:#94a3b8;margin-bottom:4px;">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`;
 
       // --- Flurstück (WFS) ---
+      const wfsConfig = region.wfs?.flurstuecke;
       const d = 0.0002;
       const bbox = `${lat - d},${lng - d},${lat + d},${lng + d},urn:ogc:def:crs:EPSG::4326`;
-      const flurParams = new URLSearchParams({
-        SERVICE: "WFS", VERSION: "2.0.0", REQUEST: "GetFeature",
-        TYPENAMES: "flurstuecke", COUNT: "1", BBOX: bbox, OUTPUTFORMAT: "application/json",
-      });
-      const flurUrl = `https://gdi.berlin.de/services/wfs/alkis_flurstuecke?${flurParams}`;
+      const flurUrl = wfsConfig
+        ? `${wfsConfig.url}?${new URLSearchParams({
+            SERVICE: "WFS", VERSION: "2.0.0", REQUEST: "GetFeature",
+            TYPENAMES: wfsConfig.featureType, COUNT: "1", BBOX: bbox, OUTPUTFORMAT: "application/json",
+          })}`
+        : null;
 
       // --- WMS GetFeatureInfo helper ---
       const buildGetFeatureInfoUrl = (baseUrl: string, layerName: string) => {
@@ -218,23 +238,25 @@ function ClickFeatureInfo({ enabled }: { enabled: boolean }) {
       };
 
       // Fire all requests in parallel
-      const wohnlageActive = activeLayers.has("Wohnlagenkarte (Mietspiegel 2024)");
-      const borisActive = activeLayers.has("Bodenrichtwerte 2025 (BORIS)");
+      const wohnlageActive = activeLayers.has("Wohnlagenkarte (Mietspiegel 2024)") && !!region.featureInfo?.wohnlagen;
+      const borisActive = activeLayers.has("Bodenrichtwerte 2025 (BORIS)") && !!region.featureInfo?.bodenrichtwerte;
 
       const promises: Promise<any>[] = [
-        fetch(flurUrl).then(r => r.ok ? r.json() : null).catch(() => null),
+        flurUrl ? fetch(flurUrl).then(r => r.ok ? r.json() : null).catch(() => null) : Promise.resolve(null),
       ];
-      if (wohnlageActive) {
+      if (wohnlageActive && region.featureInfo?.wohnlagen) {
+        const fi = region.featureInfo.wohnlagen;
         promises.push(
-          fetch(buildGetFeatureInfoUrl("https://gdi.berlin.de/services/wms/wohnlagenadr2024", "wohnlagenadr2024"))
+          fetch(buildGetFeatureInfoUrl(fi.url, fi.layer))
             .then(r => r.ok ? r.text() : null).catch(() => null)
         );
       } else {
         promises.push(Promise.resolve(null));
       }
-      if (borisActive) {
+      if (borisActive && region.featureInfo?.bodenrichtwerte) {
+        const fi = region.featureInfo.bodenrichtwerte;
         promises.push(
-          fetch(buildGetFeatureInfoUrl("https://gdi.berlin.de/services/wms/brw2025", "brw2025"))
+          fetch(buildGetFeatureInfoUrl(fi.url, fi.layer))
             .then(r => r.ok ? r.text() : null).catch(() => null)
         );
       } else {
@@ -789,6 +811,9 @@ function DrawToolbar({
 /* ── Main MapPanel ────────────────────────────────────────── */
 
 interface Props {
+  region: RegionConfig;
+  selectedRegion: string;
+  onRegionChange: (id: string) => void;
   baufelder: Baufeld[];
   selectedBaufeld: string | null;
   selectedFloorplan: string | null;
@@ -805,6 +830,9 @@ interface Props {
 }
 
 export default function MapPanel({
+  region,
+  selectedRegion,
+  onRegionChange,
   baufelder,
   selectedBaufeld,
   selectedFloorplan,
@@ -821,7 +849,7 @@ export default function MapPanel({
   onPlaceOnMap,
   onCancelPlace,
 }: Props & { drawing?: boolean; onDrawingChange?: (d: boolean) => void }) {
-  const center: [number, number] = [52.52, 13.405];
+  const center = region.center;
 
   const [drawingInternal, setDrawingInternal] = useState(false);
   const drawing = drawingProp ?? drawingInternal;
@@ -883,8 +911,9 @@ export default function MapPanel({
 
   return (
     <>
-      <MapContainer center={center} zoom={16} className="w-full h-full" zoomControl={true} style={{ background: "#1a1a2e" }}>
+      <MapContainer center={center} zoom={region.zoom} className="w-full h-full" zoomControl={true} style={{ background: "#1a1a2e" }} key={region.id}>
         <MapInstanceExporter />
+        <FlyToRegion center={region.center} zoom={region.zoom} />
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="Dark (Standard)">
             <TileLayer
@@ -892,70 +921,109 @@ export default function MapPanel({
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
             />
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Luftbild 2024 (TrueOrtho)">
-            <WMSTileLayer
-              url="https://gdi.berlin.de/services/wms/truedop_2024"
-              layers="truedop_2024"
-              styles=""
-              format="image/png"
-              transparent={false}
-              version="1.1.1"
-              attribution="© Berlin GDI – TrueOrthophoto 2024"
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.Overlay checked name="Flurstücke (ALKIS)">
-            <WMSTileLayer
-              url="https://gdi.berlin.de/services/wms/alkis_flurstuecke"
-              layers="flurstuecke"
-              styles=""
-              format="image/png"
-              transparent={true}
-              opacity={0.7}
-              version="1.1.1"
-              attribution="© Berlin GDI"
-            />
-          </LayersControl.Overlay>
-          <LayersControl.Overlay checked name="Bebauungspläne">
-            <WMSTileLayer
-              url="https://gdi.berlin.de/services/wms/bplan"
-              layers="b_bp_fs"
-              styles=""
-              format="image/png"
-              transparent={true}
-              opacity={0.6}
-              version="1.1.1"
-              attribution="© Berlin GDI"
-            />
-          </LayersControl.Overlay>
-          <LayersControl.Overlay name="Wohnlagenkarte (Mietspiegel 2024)">
-            <WMSTileLayer
-              url="https://gdi.berlin.de/services/wms/wohnlagenadr2024"
-              layers="wohnlagenadr2024"
-              styles=""
-              format="image/png"
-              transparent={true}
-              opacity={0.5}
-              version="1.1.1"
-              attribution="© Berlin GDI – Mietspiegel 2024"
-            />
-          </LayersControl.Overlay>
-          <LayersControl.Overlay name="Bodenrichtwerte 2025 (BORIS)">
-            <WMSTileLayer
-              url="https://gdi.berlin.de/services/wms/brw2025"
-              layers="brw2025"
-              styles=""
-              format="image/png"
-              transparent={true}
-              opacity={0.5}
-              version="1.1.1"
-              attribution="© Berlin GDI – BORIS 2025"
-            />
-          </LayersControl.Overlay>
+          {region.layers.orthophotos && (
+            <LayersControl.BaseLayer name="Luftbild (Orthophoto)">
+              <WMSTileLayer
+                url={region.layers.orthophotos.url}
+                layers={region.layers.orthophotos.layers}
+                styles=""
+                format="image/png"
+                transparent={false}
+                version="1.1.1"
+                attribution={region.layers.orthophotos.attribution || ""}
+              />
+            </LayersControl.BaseLayer>
+          )}
+          {region.layers.flurstuecke && (
+            <LayersControl.Overlay checked name="Flurstücke (ALKIS)">
+              <WMSTileLayer
+                url={region.layers.flurstuecke.url}
+                layers={region.layers.flurstuecke.layers}
+                styles=""
+                format="image/png"
+                transparent={true}
+                opacity={region.layers.flurstuecke.opacity ?? 0.7}
+                version="1.1.1"
+                attribution={region.layers.flurstuecke.attribution || ""}
+              />
+            </LayersControl.Overlay>
+          )}
+          {region.layers.gebaeude && (
+            <LayersControl.Overlay checked name="Gebäude (ALKIS)">
+              <WMSTileLayer
+                url={region.layers.gebaeude.url}
+                layers={region.layers.gebaeude.layers}
+                styles=""
+                format="image/png"
+                transparent={true}
+                opacity={region.layers.gebaeude.opacity ?? 0.7}
+                version="1.1.1"
+                attribution={region.layers.gebaeude.attribution || ""}
+              />
+            </LayersControl.Overlay>
+          )}
+          {region.layers.bebauungsplaene && (
+            <LayersControl.Overlay checked name="Bebauungspläne">
+              <WMSTileLayer
+                url={region.layers.bebauungsplaene.url}
+                layers={region.layers.bebauungsplaene.layers}
+                styles=""
+                format="image/png"
+                transparent={true}
+                opacity={region.layers.bebauungsplaene.opacity ?? 0.6}
+                version="1.1.1"
+                attribution={region.layers.bebauungsplaene.attribution || ""}
+              />
+            </LayersControl.Overlay>
+          )}
+          {region.layers.wohnlagen && (
+            <LayersControl.Overlay name="Wohnlagenkarte (Mietspiegel 2024)">
+              <WMSTileLayer
+                url={region.layers.wohnlagen.url}
+                layers={region.layers.wohnlagen.layers}
+                styles=""
+                format="image/png"
+                transparent={true}
+                opacity={region.layers.wohnlagen.opacity ?? 0.5}
+                version="1.1.1"
+                attribution={region.layers.wohnlagen.attribution || ""}
+              />
+            </LayersControl.Overlay>
+          )}
+          {region.layers.bodenrichtwerte && (
+            <LayersControl.Overlay name="Bodenrichtwerte 2025 (BORIS)">
+              <WMSTileLayer
+                url={region.layers.bodenrichtwerte.url}
+                layers={region.layers.bodenrichtwerte.layers}
+                styles=""
+                format="image/png"
+                transparent={true}
+                opacity={region.layers.bodenrichtwerte.opacity ?? 0.5}
+                version="1.1.1"
+                attribution={region.layers.bodenrichtwerte.attribution || ""}
+              />
+            </LayersControl.Overlay>
+          )}
+          {region.layers.dgm && (
+            <LayersControl.Overlay name="Geländemodell (DGM)">
+              <WMSTileLayer
+                url={region.layers.dgm.url}
+                layers={region.layers.dgm.layers}
+                styles=""
+                format="image/png"
+                transparent={true}
+                opacity={region.layers.dgm.opacity ?? 0.6}
+                version="1.1.1"
+                attribution={region.layers.dgm.attribution || ""}
+              />
+            </LayersControl.Overlay>
+          )}
         </LayersControl>
 
         <ScaleControl position="bottomleft" imperial={false} />
-        <AddressSearch />
-        <ClickFeatureInfo enabled={!drawing} />
+        <RegionSelector selectedRegion={selectedRegion} onChange={onRegionChange} />
+        <AddressSearch regionName={region.name} />
+        <ClickFeatureInfo enabled={!drawing} region={region} />
 
         {/* Draw controls */}
         <DrawToolbar

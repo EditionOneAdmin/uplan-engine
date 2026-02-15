@@ -16,11 +16,14 @@ import { getBuildings } from "./catalogData";
 import { calculateMatch } from "./matchScore";
 import { exportProjectPlan } from "./exportPDF";
 import type { CostData } from "./exportPDF";
+import { regions, defaultRegionId } from "../../config/regions";
 
 const MapPanel = dynamic(() => import("./MapPanel"), { ssr: false });
 
 export default function DemoApp() {
   const buildings = useMemo(() => getBuildings(), []);
+  const [selectedRegion, setSelectedRegion] = useState(defaultRegionId);
+  const region = regions[selectedRegion];
   const [drawing, setDrawing] = useState(false);
   const [baufelder, setBaufelder] = useState<Baufeld[]>([]);
   const [selectedBaufeld, setSelectedBaufeld] = useState<string | null>(null);
@@ -287,6 +290,9 @@ export default function DemoApp() {
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
         <div className="flex-1 lg:w-[60%] min-h-[300px] lg:min-h-0 relative">
           <MapPanel
+            region={region}
+            selectedRegion={selectedRegion}
+            onRegionChange={setSelectedRegion}
             baufelder={baufelder}
             selectedBaufeld={selectedBaufeld}
             selectedFloorplan={placeMode ? selectedBuilding : null}
