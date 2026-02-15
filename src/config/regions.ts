@@ -74,7 +74,7 @@ export const regions: Record<string, RegionConfig> = {
     id: "nrw",
     name: "Nordrhein-Westfalen",
     shortName: "NRW",
-    center: [51.513, 7.465],  // Dortmund Innenstadt
+    center: [50.938, 6.960],  // Köln Innenstadt
     zoom: 17,
     layers: {
       flurstuecke: {

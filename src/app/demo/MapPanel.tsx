@@ -383,18 +383,64 @@ function ClickFeatureInfo({ enabled, region }: { enabled: boolean; region: Regio
 
       // --- Render Bodenrichtwert (BORIS) ---
       if (borisActive && borisHtml) {
-        const props = parseHtmlTable(borisHtml);
-        const hasData = Object.keys(props).length > 0;
+        // NRW BORIS returns a flat HTML table: <th> headers in one row, <td> values in next row
+        // Berlin BORIS uses key-value <th>/<td> pairs per row
+        const parser2 = new DOMParser();
+        const borisDoc = parser2.parseFromString(borisHtml, "text/html");
+        const ths = Array.from(borisDoc.querySelectorAll("th"));
+        const tds = Array.from(borisDoc.querySelectorAll("td"));
+        const borisProps: Record<string, string> = {};
+
+        if (ths.length > 1 && tds.length >= ths.length) {
+          // Flat table (NRW): headers row + values row
+          for (let i = 0; i < ths.length; i++) {
+            const key = (ths[i].textContent || "").trim();
+            const val = (tds[i]?.textContent || "").trim();
+            if (key && val) borisProps[key] = val;
+          }
+        } else {
+          // Key-value pairs (Berlin): each row has <th>Key</th><td>Value</td>
+          const rows2 = Array.from(borisDoc.querySelectorAll("tr"));
+          for (const row of rows2) {
+            const th = row.querySelector("th");
+            const td = row.querySelector("td");
+            if (th && td) {
+              const key = (th.textContent || "").trim();
+              const val = (td.textContent || "").trim();
+              if (key && val) borisProps[key] = val;
+            }
+          }
+        }
+
+        const hasData = Object.keys(borisProps).length > 0;
         if (hasData) {
+          // Find the Bodenrichtwert value (key varies by region)
+          const brwKey = Object.keys(borisProps).find(k => k.toLowerCase().includes("bodenrichtwert") && !k.toLowerCase().includes("nummer") && !k.toLowerCase().includes("zone"));
+          const brwVal = brwKey ? borisProps[brwKey] : null;
+          
           content += `<div style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;">
             <div style="font-weight:600;margin-bottom:4px;color:#FBBF24;">💰 Bodenrichtwert (BORIS 2025)</div>`;
-          const showKeys = ["Bodenrichtwert (in EURO/m²)", "Bezirk", "Art der Nutzung", "Stichtag", "Wertrelevante Geschossfläche", "Beitragsrechtlicher Zustand"];
-          for (const key of showKeys) {
-            if (props[key]) {
-              const val = key === "Bodenrichtwert (in EURO/m²)" 
-                ? `${Number(props[key]).toLocaleString("de-DE")} €/m²` 
-                : props[key];
-              content += `<div><span style="color:#94a3b8;">${key === "Bodenrichtwert (in EURO/m²)" ? "Bodenrichtwert" : key}:</span> ${val}</div>`;
+          
+          if (brwVal) {
+            const numVal = parseInt(brwVal.replace(/[^\d]/g, ""));
+            content += `<div style="font-size:16px;font-weight:700;color:#FBBF24;">${numVal ? numVal.toLocaleString("de-DE") + " €/m²" : brwVal}</div>`;
+          }
+
+          // Show relevant fields
+          const nrwShowMap: Record<string, string> = {
+            "Gemeindename": "Gemeinde", "Gemeinde": "Gemeinde",
+            "Postleitzahl": "PLZ", "ortsteilName": "Ortsteil",
+            "Vollgeschosszahl": "Geschosse", "Geschossflaechenzahl": "GFZ",
+            "Grundflächenzahl": "GRZ", "Tiefe": "Grundstückstiefe (m)",
+            "Nutzungsart": "Nutzungsart", "Entwicklungszustand": "Zustand",
+            "Stichtag": "Stichtag",
+            "Bezirk": "Bezirk", "Art der Nutzung": "Nutzung",
+            "Wertrelevante Geschossfläche": "Geschossfläche",
+            "Beitragsrechtlicher Zustand": "Zustand",
+          };
+          for (const [origKey, label] of Object.entries(nrwShowMap)) {
+            if (borisProps[origKey] && origKey !== brwKey) {
+              content += `<div><span style="color:#94a3b8;">${label}:</span> ${borisProps[origKey]}</div>`;
             }
           }
           content += `</div>`;
