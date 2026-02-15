@@ -184,9 +184,9 @@ function Hero() {
 const problems = [
   {
     icon: Layers3,
-    stat: "2 Bundesländer",
+    stat: "16 Bundesländer",
     highlight: "400+ Datenquellen",
-    desc: "Flurstücke, B-Pläne, Bodenrichtwerte, Mietspiegel, Orthophotos — live auf einer Karte. Weitere Regionen folgen.",
+    desc: "Flurstücke, B-Pläne, Bodenrichtwerte, Mietspiegel, Orthophotos — live auf einer Karte.",
   },
   {
     icon: Clock,
