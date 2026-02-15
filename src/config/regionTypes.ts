@@ -45,8 +45,11 @@ export interface RegionConfig {
     flurstuecke?: WFSConfig;
   };
   featureInfo?: {
+    flurstuecke?: FeatureInfoConfig;
     bodenrichtwerte?: FeatureInfoConfig;
     wohnlagen?: FeatureInfoConfig;
   };
+  /** WFS returns JSON (true) or GML/XML (false/undefined) */
+  wfsSupportsJson?: boolean;
   lbo: LBOConfig;
 }

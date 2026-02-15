@@ -49,6 +49,7 @@ export const regions: Record<string, RegionConfig> = {
         featureType: "alkis_flurstuecke",
       },
     },
+    wfsSupportsJson: true,
     featureInfo: {
       bodenrichtwerte: {
         url: "https://gdi.berlin.de/services/wms/brw2025",
@@ -74,14 +75,14 @@ export const regions: Record<string, RegionConfig> = {
     name: "Nordrhein-Westfalen",
     shortName: "NRW",
     center: [51.513, 7.465],  // Dortmund Innenstadt
-    zoom: 15,
+    zoom: 17,
     layers: {
       flurstuecke: {
         url: "https://www.wms.nrw.de/geobasis/wms_nw_alkis",
         layers: "adv_alkis_flurstuecke",
-        styles: "",
+        styles: "Gelb",
         attribution: "© GeoBasis NRW",
-        opacity: 0.7,
+        opacity: 0.8,
       },
       gebaeude: {
         url: "https://www.wms.nrw.de/geobasis/wms_nw_alkis",
@@ -108,6 +109,13 @@ export const regions: Record<string, RegionConfig> = {
       flurstuecke: {
         url: "https://www.wfs.nrw.de/geobasis/wfs_nw_alkis_vereinfacht",
         featureType: "ave:Flurstueck",
+      },
+    },
+    wfsSupportsJson: false,
+    featureInfo: {
+      flurstuecke: {
+        url: "https://www.wms.nrw.de/geobasis/wms_nw_alkis",
+        layer: "adv_alkis_flurstuecke",
       },
     },
     lbo: {

@@ -198,18 +198,7 @@ function ClickFeatureInfo({ enabled, region }: { enabled: boolean; region: Regio
       let content = `<div style="font-family:Inter,sans-serif;font-size:12px;max-height:400px;overflow-y:auto;">
         <div style="color:#94a3b8;margin-bottom:4px;">📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`;
 
-      // --- Flurstück (WFS) ---
-      const wfsConfig = region.wfs?.flurstuecke;
-      const d = 0.0002;
-      const bbox = `${lat - d},${lng - d},${lat + d},${lng + d},urn:ogc:def:crs:EPSG::4326`;
-      const flurUrl = wfsConfig
-        ? `${wfsConfig.url}?${new URLSearchParams({
-            SERVICE: "WFS", VERSION: "2.0.0", REQUEST: "GetFeature",
-            TYPENAMES: wfsConfig.featureType, COUNT: "1", BBOX: bbox, OUTPUTFORMAT: "application/json",
-          })}`
-        : null;
-
-      // --- WMS GetFeatureInfo helper ---
+      // --- WMS GetFeatureInfo helper (defined first, used below) ---
       const buildGetFeatureInfoUrl = (baseUrl: string, layerName: string) => {
         const delta = 0.0005;
         const wmsBbox = `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`;
@@ -237,12 +226,33 @@ function ClickFeatureInfo({ enabled, region }: { enabled: boolean; region: Regio
         return result;
       };
 
+      // --- Flurstück (WFS JSON or WMS GetFeatureInfo fallback) ---
+      const wfsConfig = region.wfs?.flurstuecke;
+      const useWfsJson = region.wfsSupportsJson !== false && wfsConfig;
+      const d = 0.0002;
+      const bbox = `${lat - d},${lng - d},${lat + d},${lng + d},urn:ogc:def:crs:EPSG::4326`;
+      const flurUrl = useWfsJson && wfsConfig
+        ? `${wfsConfig.url}?${new URLSearchParams({
+            SERVICE: "WFS", VERSION: "2.0.0", REQUEST: "GetFeature",
+            TYPENAMES: wfsConfig.featureType, COUNT: "1", BBOX: bbox, OUTPUTFORMAT: "application/json",
+          })}`
+        : null;
+      // Fallback: use WMS GetFeatureInfo for Flurstück (e.g. NRW)
+      const flurFeatureInfoConfig = region.featureInfo?.flurstuecke;
+      const flurFiUrl = !useWfsJson && flurFeatureInfoConfig
+        ? buildGetFeatureInfoUrl(flurFeatureInfoConfig.url, flurFeatureInfoConfig.layer)
+        : null;
+
       // Fire all requests in parallel
       const wohnlageActive = activeLayers.has("Wohnlagenkarte (Mietspiegel 2024)") && !!region.featureInfo?.wohnlagen;
       const borisActive = activeLayers.has("Bodenrichtwerte 2025 (BORIS)") && !!region.featureInfo?.bodenrichtwerte;
 
       const promises: Promise<any>[] = [
-        flurUrl ? fetch(flurUrl).then(r => r.ok ? r.json() : null).catch(() => null) : Promise.resolve(null),
+        flurUrl
+          ? fetch(flurUrl).then(r => r.ok ? r.json() : null).catch(() => null)
+          : flurFiUrl
+            ? fetch(flurFiUrl).then(r => r.ok ? r.text() : null).catch(() => null)
+            : Promise.resolve(null),
       ];
       if (wohnlageActive && region.featureInfo?.wohnlagen) {
         const fi = region.featureInfo.wohnlagen;
@@ -267,30 +277,58 @@ function ClickFeatureInfo({ enabled, region }: { enabled: boolean; region: Regio
 
       // --- Render Flurstück ---
       if (flurData) {
-        const features = flurData?.features || [];
-        if (features.length > 0) {
-          const props = features[0].properties || {};
-          content += `<div style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;">
-            <div style="font-weight:600;margin-bottom:4px;color:#0D9488;">Flurstück-Info</div>`;
-          const labelMap: Record<string, string> = {
-            fsko: "Kennzeichen", gmk: "Gemarkung", namgmk: "Gemarkung (Name)",
-            fln: "Flur", zae: "Zähler", nen: "Nenner", afl: "Fläche (m²)", namgem: "Gemeinde",
+        content += `<div style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;">
+          <div style="font-weight:600;margin-bottom:4px;color:#0D9488;">Flurstück-Info</div>`;
+
+        if (typeof flurData === "string") {
+          // WMS GetFeatureInfo HTML response (NRW etc.)
+          const parsed = parseHtmlTable(flurData);
+          const nrwLabelMap: Record<string, string> = {
+            "Flurstückskennzeichen": "Kennzeichen", "Gemarkungsname": "Gemarkung",
+            "Flurnummer": "Flur", "Flurstücksnummer": "Flurstück",
+            "Fläche": "Fläche", "Gemeindename": "Gemeinde", "Kreisname": "Kreis",
+            "Datenaktualität": "Stand",
           };
-          const keysToShow = Object.keys(labelMap).filter(k => props[k] != null && props[k] !== "");
-          if (keysToShow.length > 0) {
-            for (const key of keysToShow) {
-              const val = key === "afl" ? Number(props[key]).toLocaleString("de-DE") : props[key];
-              content += `<div><span style="color:#94a3b8;">${labelMap[key]}:</span> ${val}</div>`;
+          const keys = Object.keys(parsed);
+          if (keys.length > 0) {
+            for (const key of keys.slice(0, 10)) {
+              const label = nrwLabelMap[key] || key;
+              content += `<div><span style="color:#94a3b8;">${label}:</span> ${parsed[key]}</div>`;
             }
           } else {
-            for (const key of Object.keys(props).slice(0, 8)) {
-              content += `<div><span style="color:#94a3b8;">${key}:</span> ${props[key]}</div>`;
+            // Raw HTML fallback - show as-is (stripped)
+            const text = flurData.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
+            if (text.length > 20) {
+              content += `<div style="font-size:11px;">${text}</div>`;
+            } else {
+              content += `<div style="color:#64748b;font-style:italic;">Keine Details verfügbar</div>`;
             }
           }
-          content += `</div>`;
         } else {
-          content += `<div style="color:#64748b;margin-top:4px;font-style:italic;">Kein Flurstück gefunden</div>`;
+          // WFS JSON response (Berlin etc.)
+          const features = flurData?.features || [];
+          if (features.length > 0) {
+            const props = features[0].properties || {};
+            const labelMap: Record<string, string> = {
+              fsko: "Kennzeichen", gmk: "Gemarkung", namgmk: "Gemarkung (Name)",
+              fln: "Flur", zae: "Zähler", nen: "Nenner", afl: "Fläche (m²)", namgem: "Gemeinde",
+            };
+            const keysToShow = Object.keys(labelMap).filter(k => props[k] != null && props[k] !== "");
+            if (keysToShow.length > 0) {
+              for (const key of keysToShow) {
+                const val = key === "afl" ? Number(props[key]).toLocaleString("de-DE") : props[key];
+                content += `<div><span style="color:#94a3b8;">${labelMap[key]}:</span> ${val}</div>`;
+              }
+            } else {
+              for (const key of Object.keys(props).slice(0, 8)) {
+                content += `<div><span style="color:#94a3b8;">${key}:</span> ${props[key]}</div>`;
+              }
+            }
+          } else {
+            content += `<div style="color:#64748b;font-style:italic;">Kein Flurstück gefunden</div>`;
+          }
         }
+        content += `</div>`;
       }
 
       // --- Render Wohnlage (Mietspiegel) ---
