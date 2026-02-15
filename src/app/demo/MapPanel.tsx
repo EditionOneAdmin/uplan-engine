@@ -282,27 +282,33 @@ function ClickFeatureInfo({ enabled, region }: { enabled: boolean; region: Regio
 
         if (typeof flurData === "string") {
           // WMS GetFeatureInfo HTML response (NRW etc.)
-          const parsed = parseHtmlTable(flurData);
-          const nrwLabelMap: Record<string, string> = {
-            "Flurstückskennzeichen": "Kennzeichen", "Gemarkungsname": "Gemarkung",
-            "Flurnummer": "Flur", "Flurstücksnummer": "Flurstück",
-            "Fläche": "Fläche", "Gemeindename": "Gemeinde", "Kreisname": "Kreis",
-            "Datenaktualität": "Stand",
-          };
-          const keys = Object.keys(parsed);
-          if (keys.length > 0) {
-            for (const key of keys.slice(0, 10)) {
-              const label = nrwLabelMap[key] || key;
-              content += `<div><span style="color:#94a3b8;">${label}:</span> ${parsed[key]}</div>`;
+          // NRW uses <td><strong>Label:</strong></td><td>Value</td> pattern
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(flurData, "text/html");
+          const rows = Array.from(htmlDoc.querySelectorAll("tr"));
+          const entries: Array<[string, string]> = [];
+          for (const row of rows) {
+            const cells = Array.from(row.querySelectorAll("td"));
+            if (cells.length >= 2) {
+              const labelEl = cells[0];
+              const valueEl = cells[1];
+              const label = (labelEl.textContent || "").replace(/:/g, "").trim();
+              const value = (valueEl.textContent || "").trim();
+              if (label && value && label.length < 60 && !label.includes("{") && !label.includes("function")) {
+                entries.push([label, value]);
+              }
+            }
+          }
+          // Filter to relevant entries
+          const relevantKeys = ["Flurstückskennzeichen", "Gemarkung", "Gemarkungskennzeichen", "Flur", "Gemeinde", "Gemeindekennzeichen", "Amtliche Fläche in m²", "Lagebezeichnung", "Tatsächliche Nutzung/m²", "Aktualität des Flurstückes", "Datum"];
+          const filtered = entries.filter(([k]) => relevantKeys.some(rk => k.includes(rk) || k.toLowerCase().includes(rk.toLowerCase())));
+          const toShow = filtered.length > 0 ? filtered : entries.filter(([k]) => k.length > 2 && k.length < 50).slice(0, 10);
+          if (toShow.length > 0) {
+            for (const [label, value] of toShow.slice(0, 10)) {
+              content += `<div><span style="color:#94a3b8;">${label}:</span> ${value}</div>`;
             }
           } else {
-            // Raw HTML fallback - show as-is (stripped)
-            const text = flurData.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
-            if (text.length > 20) {
-              content += `<div style="font-size:11px;">${text}</div>`;
-            } else {
-              content += `<div style="color:#64748b;font-style:italic;">Keine Details verfügbar</div>`;
-            }
+            content += `<div style="color:#64748b;font-style:italic;">Keine Details verfügbar</div>`;
           }
         } else {
           // WFS JSON response (Berlin etc.)
