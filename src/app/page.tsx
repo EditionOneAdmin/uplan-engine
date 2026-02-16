@@ -309,52 +309,6 @@ function USPSection() {
         title="Nicht bei null anfangen."
         subtitle="Platzieren Sie real gebaute, seriell gefertigte Gebäude direkt auf Ihr Grundstück — mit echten Grundrissen, geprüften Maßen und kalkulierbaren Kosten."
       />
-      {/* Vorher / Nachher Visual */}
-      <FadeIn className="mb-16">
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Vorher */}
-          <div className="rounded-2xl border border-gray-border bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">Vorher</span>
-              <span className="text-xs text-slate-text/50">Leeres Flurstück — keine Planung</span>
-            </div>
-            <div className="relative h-48 rounded-xl bg-[#2a3a4a] overflow-hidden">
-              <div className="absolute inset-0 opacity-20" style={{backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)", backgroundSize: "30px 30px"}} />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-28 border-2 border-dashed border-red-400/50 bg-red-400/5 rounded">
-                <div className="absolute -top-5 left-1 text-[9px] text-red-300/70 font-mono">Flurstück 12/345 · 1.247 m²</div>
-                <div className="flex items-center justify-center h-full text-white/20 text-xs">?</div>
-              </div>
-            </div>
-          </div>
-          {/* Nachher */}
-          <div className="rounded-2xl border-2 border-accent/30 bg-white p-4 shadow-lg">
-            <div className="mb-3 flex items-center gap-2">
-              <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold text-teal-700">Nachher</span>
-              <span className="text-xs text-slate-text/50">Konzept in 5 Minuten</span>
-            </div>
-            <div className="relative h-48 rounded-xl bg-[#2a3a4a] overflow-hidden">
-              <div className="absolute inset-0 opacity-20" style={{backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)", backgroundSize: "30px 30px"}} />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-28 border-2 border-teal-400/60 bg-teal-400/10 rounded">
-                <div className="absolute -top-5 left-1 text-[9px] text-teal-300/80 font-mono">Flurstück 12/345 · 1.247 m²</div>
-                {/* Buildings placed */}
-                <div className="absolute top-2 left-2 w-24 h-8 bg-teal-500/30 border border-teal-400/60 rounded-sm">
-                  <div className="text-[7px] text-teal-300 p-0.5 font-bold">Riegel R-36 · 4 Gesch.</div>
-                </div>
-                <div className="absolute bottom-2 right-2 w-14 h-10 bg-blue-500/30 border border-blue-400/60 rounded-sm">
-                  <div className="text-[7px] text-blue-300 p-0.5 font-bold">Punkt P-16</div>
-                </div>
-              </div>
-              {/* Stats */}
-              <div className="absolute bottom-2 right-2 bg-[#0F172A]/90 rounded-lg p-2 text-[9px] space-y-0.5 backdrop-blur-sm border border-white/10">
-                <div className="text-green-400 font-bold">✓ GRZ 0.38 · GFZ 1.52</div>
-                <div className="text-white/70">36 WE · 2.880 m² BGF</div>
-                <div className="text-white/70">ab €5.4M Baukosten</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </FadeIn>
-
       <div className="grid gap-8 sm:grid-cols-2">
         {uspFeatures.map((f, i) => (
           <FadeIn key={i} delay={i * 0.1}>
