@@ -374,6 +374,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   const [strategy, setStrategy] = useState<"hold" | "sell">(filters.strategy);
   const [mietOverride, setMietOverride] = useState<number | null>(null);
   const [verkaufOverride, setVerkaufOverride] = useState<number | null>(null);
+  const [grundstueckspreis, setGrundstueckspreis] = useState<number | null>(null);
 
   // Toggles for cost groups
   const [kg100On, setKg100On] = useState(true);
@@ -430,10 +431,10 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     const totalBGF = placedUnits.reduce((s, u) => s + u.area, 0);
     const totalWohnflaeche = placedUnits.reduce((s, u) => s + Math.round(u.area * (u.wfEffizienz || 75) / 100), 0);
 
-    // KG 100: Grundstück
+    // KG 100: Grundstück (manueller Override oder Bodenrichtwert)
     const kg100 = baufelder.reduce((sum, bf) => {
-      const brw = bf.borisBodenrichtwert || 0;
-      return sum + brw * bf.grundstuecksflaecheM2;
+      const pricePerSqm = grundstueckspreis !== null ? grundstueckspreis : (bf.borisBodenrichtwert || 0);
+      return sum + pricePerSqm * bf.grundstuecksflaecheM2;
     }, 0);
 
     // KG 200
@@ -691,15 +692,35 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       {/* ── Kostengruppen ────────────────────────────────── */}
       <Section title="Kosten" color="#F59E0B">
         <CostRow label="KG 100 · Grundstück" value={calc.kg100} enabled={kg100On} onToggle={setKg100On}>
-          <div className="text-[10px] text-white/30">
-            {baufelder.map(bf => (
-              <div key={bf.id}>
-                {bf.name}: {(bf.borisBodenrichtwert || 0).toLocaleString("de-DE")} €/m² × {bf.grundstuecksflaecheM2.toLocaleString("de-DE")} m²
-              </div>
-            ))}
-            {baufelder.some(bf => !bf.borisBodenrichtwert) && (
-              <div className="text-amber-500/60">⚠ BORIS-Daten fehlen für einige Baufelder</div>
-            )}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-white/50 shrink-0">Preis €/m²:</span>
+              <input
+                type="number"
+                value={grundstueckspreis !== null ? grundstueckspreis : ""}
+                placeholder={baufelder.length > 0 ? `${(baufelder[0].borisBodenrichtwert || 0).toLocaleString("de-DE")} (BORIS)` : "BORIS"}
+                onChange={(e) => setGrundstueckspreis(e.target.value ? Number(e.target.value) : null)}
+                className="w-28 bg-white/10 border border-white/20 rounded px-2 py-0.5 text-[10px] text-white placeholder-white/30 focus:border-teal-500/50 focus:outline-none"
+              />
+              {grundstueckspreis !== null && (
+                <button onClick={() => setGrundstueckspreis(null)} className="text-[9px] text-white/30 hover:text-white/60">✕ Reset</button>
+              )}
+            </div>
+            <div className="text-[10px] text-white/30">
+              {baufelder.map(bf => {
+                const priceUsed = grundstueckspreis !== null ? grundstueckspreis : (bf.borisBodenrichtwert || 0);
+                return (
+                  <div key={bf.id}>
+                    {bf.name}: {priceUsed.toLocaleString("de-DE")} €/m² × {bf.grundstuecksflaecheM2.toLocaleString("de-DE")} m²
+                    {grundstueckspreis === null && " (BORIS)"}
+                    {grundstueckspreis !== null && " (manuell)"}
+                  </div>
+                );
+              })}
+              {grundstueckspreis === null && baufelder.some(bf => !bf.borisBodenrichtwert) && (
+                <div className="text-amber-500/60">⚠ BORIS-Daten fehlen für einige Baufelder</div>
+              )}
+            </div>
           </div>
         </CostRow>
 
