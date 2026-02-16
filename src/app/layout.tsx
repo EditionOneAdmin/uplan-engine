@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "U-Plan Engine — Vom Flürstück zur Machbarkeitsentscheidung",
+  title: "U-Plan Engine — Machbarkeitsentscheidung in Minuten",
   description:
     "U-Plan Engine automatisiert die Machbarkeitsprüfung, Variantenplanung und Bauantragsaufbereitung — nachvollziehbar, versioniert und auditierbar.",
 };

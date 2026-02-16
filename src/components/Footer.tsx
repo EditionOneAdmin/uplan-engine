@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3">
           <Logo />
-          <span className="text-sm text-slate-text/40">Vom Flürstück zur Machbarkeitsentscheidung.</span>
+          <span className="text-sm text-slate-text/40">Vom Flürstück zur Machbarkeitsentscheidung — in Minuten.</span>
         </div>
 
         <nav className="flex gap-6 text-sm text-slate-text/50">

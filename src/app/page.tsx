@@ -31,6 +31,11 @@ import {
   Menu,
   X,
   ChevronRight,
+  MousePointerClick,
+  Calculator,
+  Zap,
+  LayoutGrid,
+  Timer,
 } from "lucide-react";
 
 /* ─── Helpers ──────────────────────────────────────────── */
@@ -118,7 +123,7 @@ function Hero() {
           <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-primary sm:text-5xl md:text-6xl lg:text-7xl">
             Vom Flürstück zur
             <br />
-            Machbarkeitsentscheidung.
+            Machbarkeitsentscheidung — in Minuten.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-text/70 md:text-xl">
             U-Plan Engine automatisiert die Machbarkeitsprüfung,
@@ -284,6 +289,78 @@ function HowItWorks() {
           Alle Module im Detail <ArrowRight className="h-4 w-4" />
         </a>
       </FadeIn>
+    </Section>
+  );
+}
+
+/* ─── 3b. USP — Nicht bei null anfangen ────────────────── */
+
+const uspFeatures = [
+  { icon: Building2, title: "Katalog serieller Hersteller", desc: "GROPYUS, Nokera, ALHO, Goldbeck, Max Bögl — reale Gebäudemodule mit echten Grundrissen." },
+  { icon: MousePointerClick, title: "Drag & Drop aufs Grundstück", desc: "Gebäude direkt auf das Flurstück platzieren. GRZ, GFZ, Abstandsflächen und Wohneinheiten sofort berechnet." },
+  { icon: Calculator, title: "Sofortige Wirtschaftlichkeit", desc: "Baukosten, Mieteinnahmen und Rendite — kalkuliert auf Basis realer Herstellerpreise." },
+  { icon: Zap, title: "Planung beschleunigt", desc: "Kein leeres Blatt Papier. Starten Sie mit erprobten Konzepten, die bereits gebaut wurden." },
+];
+
+function USPSection() {
+  return (
+    <Section id="usp" gray>
+      <SectionHeading
+        title="Nicht bei null anfangen."
+        subtitle="Platzieren Sie real gebaute, seriell gefertigte Gebäude direkt auf Ihr Grundstück — mit echten Grundrissen, geprüften Maßen und kalkulierbaren Kosten."
+      />
+      <div className="grid gap-8 sm:grid-cols-2">
+        {uspFeatures.map((f, i) => (
+          <FadeIn key={i} delay={i * 0.1}>
+            <div className="rounded-2xl border border-gray-border bg-white p-8 shadow-sm transition hover:shadow-md">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-accent/10">
+                <f.icon className="h-7 w-7 text-accent" />
+              </div>
+              <h3 className="text-lg font-bold text-primary">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-text/70">{f.desc}</p>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
+      <FadeIn delay={0.5} className="mt-12">
+        <div className="rounded-2xl border border-accent/20 bg-accent/5 p-8 text-center">
+          <p className="text-lg font-semibold text-primary md:text-xl">
+            &ldquo;Andere Tools zeigen Ihnen Daten. Wir zeigen Ihnen ein fertiges Konzept.&rdquo;
+          </p>
+        </div>
+      </FadeIn>
+    </Section>
+  );
+}
+
+/* ─── 3c. PIPELINE DASHBOARD ──────────────────────────── */
+
+const pipelineFeatures = [
+  { icon: LayoutGrid, title: "Portfolio-Analyse", desc: "Vom Einzelgrundstück zur Gesamtbewertung. Alle Standorte auf einen Blick." },
+  { icon: BarChart3, title: "Automatisches Ranking", desc: "Sortiert nach Score — die besten Grundstücke sofort identifiziert." },
+  { icon: Timer, title: "Parallele Bewertung", desc: "Was einzeln Wochen dauert, erledigen Sie für Ihr gesamtes Portfolio in Minuten." },
+];
+
+function PipelineSection() {
+  return (
+    <Section id="pipeline-dashboard">
+      <SectionHeading
+        title="Ihre gesamte Pipeline. Ein Dashboard."
+        subtitle="Bewerten Sie 50+ Standorte parallel — mit automatischem Ranking nach Machbarkeit, Wirtschaftlichkeit und Risiko."
+      />
+      <div className="grid gap-8 md:grid-cols-3">
+        {pipelineFeatures.map((f, i) => (
+          <FadeIn key={i} delay={i * 0.12}>
+            <div className="rounded-2xl border border-gray-border bg-white p-8 text-center shadow-sm transition hover:shadow-md">
+              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-accent/10">
+                <f.icon className="h-7 w-7 text-accent" />
+              </div>
+              <h3 className="text-lg font-bold text-primary">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-text/70">{f.desc}</p>
+            </div>
+          </FadeIn>
+        ))}
+      </div>
     </Section>
   );
 }
@@ -652,7 +729,7 @@ function Footer() {
           <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </div>
         <p className="text-sm text-slate-text/50">
-          Vom Flurstück zur Machbarkeitsentscheidung.
+          Vom Flurstück zur Machbarkeitsentscheidung — in Minuten.
         </p>
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-text/50">
           <a href="/uplan-engine/produkt" className="transition hover:text-primary">Produkt</a>
@@ -810,6 +887,8 @@ export default function Home() {
         <Hero />
         <Problem />
         <HowItWorks />
+        <USPSection />
+        <PipelineSection />
         <ProductShowcase />
         <UseCases />
         <Audience />

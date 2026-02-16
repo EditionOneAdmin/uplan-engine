@@ -535,7 +535,7 @@ function Footer() {
           <span className="text-lg font-bold text-primary">U-Plan Engine</span>
         </div>
         <p className="text-sm text-slate-text/50">
-          Vom Flurstück zur Machbarkeitsentscheidung.
+          Vom Flurstück zur Machbarkeitsentscheidung — in Minuten.
         </p>
         <nav className="flex gap-6 text-sm text-slate-text/50">
           <a href="/uplan-engine/" className="transition hover:text-primary">Startseite</a>
