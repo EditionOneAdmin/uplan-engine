@@ -159,56 +159,19 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          {/* Browser Mockup */}
-          <div className="relative overflow-hidden rounded-2xl border border-gray-border shadow-2xl bg-[#1E293B]">
-            {/* Browser chrome */}
-            <div className="flex items-center gap-2 bg-[#0F172A] px-4 py-3 border-b border-white/10">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-400/80" />
-                <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
-                <div className="w-3 h-3 rounded-full bg-green-400/80" />
-              </div>
-              <div className="flex-1 mx-3 bg-white/10 rounded-lg px-4 py-1.5 text-xs text-white/50 font-mono">
-                uplan-engine.de/demo
-              </div>
-            </div>
-            {/* Demo screenshot mockup */}
-            <div className="flex h-[320px] md:h-[420px]">
-              {/* Sidebar - Gebäudekatalog */}
-              <div className="w-1/3 border-r border-white/10 p-3 overflow-hidden">
-                <div className="text-xs font-bold text-white/80 mb-2">🏗️ Gebäude-Katalog</div>
-                {["Riegel R-36", "Punkt P-16", "U-Block U-36", "Riegel R-30", "L-Block L-24"].map((name, i) => (
-                  <div key={i} className={`rounded-lg p-2 mb-1.5 text-[10px] ${i === 0 ? "bg-teal-500/20 border border-teal-500/40" : "bg-white/5 border border-white/10"}`}>
-                    <div className="h-10 rounded bg-white/10 mb-1" />
-                    <div className="font-bold text-white/80">{name}</div>
-                    <div className="text-white/40">GROPYUS · 12×36m</div>
-                  </div>
-                ))}
-              </div>
-              {/* Map area */}
-              <div className="flex-1 relative bg-[#2a3a4a]">
-                {/* Fake map grid */}
-                <div className="absolute inset-0 opacity-20" style={{backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)", backgroundSize: "40px 40px"}} />
-                {/* Flurstück outline */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-32 md:w-64 md:h-44 border-2 border-red-400/60 bg-red-400/10 rounded">
-                  <div className="absolute -top-5 left-1 text-[9px] text-red-300/80 font-mono">Flurstück 12/345</div>
-                  {/* Placed building */}
-                  <div className="absolute top-3 left-3 w-20 h-10 md:w-28 md:h-14 bg-teal-500/30 border border-teal-400 rounded-sm">
-                    <div className="text-[8px] text-teal-300 p-1 font-bold">Riegel R-36</div>
-                  </div>
-                </div>
-                {/* Stats overlay */}
-                <div className="absolute bottom-3 right-3 bg-[#0F172A]/90 rounded-lg p-2.5 text-[10px] space-y-1 backdrop-blur-sm border border-white/10">
-                  <div className="text-white/50">GRZ <span className="text-green-400 font-bold">0.32</span> ✓</div>
-                  <div className="text-white/50">GFZ <span className="text-green-400 font-bold">1.28</span> ✓</div>
-                  <div className="text-white/50">WE <span className="text-white font-bold">24</span></div>
-                  <div className="text-white/50">BGF <span className="text-white font-bold">1.536 m²</span></div>
-                </div>
-                {/* Region label */}
-                <div className="absolute top-3 left-3 bg-[#0F172A]/80 rounded px-2 py-1 text-[10px] text-white/60 backdrop-blur-sm">
-                  📍 Berlin · NRW
-                </div>
-              </div>
+          <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full"
+              poster="/uplan-engine/images/hero-cityscape.jpg"
+            >
+              <source src="/uplan-engine/videos/hero-planning.mp4" type="video/mp4" />
+            </video>
+            <div className="absolute bottom-4 left-4 rounded-lg bg-black/50 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-sm">
+              Von der digitalen Planung zum fertigen Haus
             </div>
           </div>
         </motion.div>
