@@ -11,7 +11,7 @@ export default function CTA() {
       <div className="max-w-3xl mx-auto text-center relative z-10">
         <FadeIn>
           <h2 className="text-3xl md:text-5xl font-extrabold text-primary tracking-tight">
-            Bereit für schnellere Genehmigungen?
+            Bereit für schnellere Machbarkeitsprüfungen?
           </h2>
           <p className="mt-6 text-lg text-slate-text/70 leading-relaxed">
             Vereinbaren Sie eine Demo und sehen Sie U-Plan Engine mit Ihren eigenen Projekten.

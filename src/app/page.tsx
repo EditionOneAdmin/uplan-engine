@@ -600,7 +600,7 @@ function CTA() {
       <img src="/uplan-engine/images/cta-background.jpg" alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
       <FadeIn className="text-center relative z-10">
         <h2 className="text-3xl font-bold tracking-tight text-primary md:text-4xl lg:text-5xl">
-          Bereit für schnellere Genehmigungen?
+          Bereit für schnellere Machbarkeitsprüfungen?
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-lg text-slate-text/70">
           Vereinbaren Sie eine Demo und sehen Sie U-Plan Engine mit Ihren
