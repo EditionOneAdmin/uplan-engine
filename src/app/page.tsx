@@ -159,19 +159,56 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full"
-              poster="/uplan-engine/images/hero-cityscape.jpg"
-            >
-              <source src="/uplan-engine/videos/hero-planning.mp4" type="video/mp4" />
-            </video>
-            <div className="absolute bottom-4 left-4 rounded-lg bg-black/50 px-3 py-1.5 text-xs font-medium text-white/80 backdrop-blur-sm">
-              Von der digitalen Planung zum fertigen Haus
+          {/* Browser Mockup */}
+          <div className="relative overflow-hidden rounded-2xl border border-gray-border shadow-2xl bg-[#1E293B]">
+            {/* Browser chrome */}
+            <div className="flex items-center gap-2 bg-[#0F172A] px-4 py-3 border-b border-white/10">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-400/80" />
+                <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
+                <div className="w-3 h-3 rounded-full bg-green-400/80" />
+              </div>
+              <div className="flex-1 mx-3 bg-white/10 rounded-lg px-4 py-1.5 text-xs text-white/50 font-mono">
+                uplan-engine.de/demo
+              </div>
+            </div>
+            {/* Demo screenshot mockup */}
+            <div className="flex h-[320px] md:h-[420px]">
+              {/* Sidebar - Gebäudekatalog */}
+              <div className="w-1/3 border-r border-white/10 p-3 overflow-hidden">
+                <div className="text-xs font-bold text-white/80 mb-2">🏗️ Gebäude-Katalog</div>
+                {["Riegel R-36", "Punkt P-16", "U-Block U-36", "Riegel R-30", "L-Block L-24"].map((name, i) => (
+                  <div key={i} className={`rounded-lg p-2 mb-1.5 text-[10px] ${i === 0 ? "bg-teal-500/20 border border-teal-500/40" : "bg-white/5 border border-white/10"}`}>
+                    <div className="h-10 rounded bg-white/10 mb-1" />
+                    <div className="font-bold text-white/80">{name}</div>
+                    <div className="text-white/40">GROPYUS · 12×36m</div>
+                  </div>
+                ))}
+              </div>
+              {/* Map area */}
+              <div className="flex-1 relative bg-[#2a3a4a]">
+                {/* Fake map grid */}
+                <div className="absolute inset-0 opacity-20" style={{backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)", backgroundSize: "40px 40px"}} />
+                {/* Flurstück outline */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-32 md:w-64 md:h-44 border-2 border-red-400/60 bg-red-400/10 rounded">
+                  <div className="absolute -top-5 left-1 text-[9px] text-red-300/80 font-mono">Flurstück 12/345</div>
+                  {/* Placed building */}
+                  <div className="absolute top-3 left-3 w-20 h-10 md:w-28 md:h-14 bg-teal-500/30 border border-teal-400 rounded-sm">
+                    <div className="text-[8px] text-teal-300 p-1 font-bold">Riegel R-36</div>
+                  </div>
+                </div>
+                {/* Stats overlay */}
+                <div className="absolute bottom-3 right-3 bg-[#0F172A]/90 rounded-lg p-2.5 text-[10px] space-y-1 backdrop-blur-sm border border-white/10">
+                  <div className="text-white/50">GRZ <span className="text-green-400 font-bold">0.32</span> ✓</div>
+                  <div className="text-white/50">GFZ <span className="text-green-400 font-bold">1.28</span> ✓</div>
+                  <div className="text-white/50">WE <span className="text-white font-bold">24</span></div>
+                  <div className="text-white/50">BGF <span className="text-white font-bold">1.536 m²</span></div>
+                </div>
+                {/* Region label */}
+                <div className="absolute top-3 left-3 bg-[#0F172A]/80 rounded px-2 py-1 text-[10px] text-white/60 backdrop-blur-sm">
+                  📍 Berlin · NRW
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -309,6 +346,52 @@ function USPSection() {
         title="Nicht bei null anfangen."
         subtitle="Platzieren Sie real gebaute, seriell gefertigte Gebäude direkt auf Ihr Grundstück — mit echten Grundrissen, geprüften Maßen und kalkulierbaren Kosten."
       />
+      {/* Vorher / Nachher Visual */}
+      <FadeIn className="mb-16">
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Vorher */}
+          <div className="rounded-2xl border border-gray-border bg-white p-4 shadow-sm">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600">Vorher</span>
+              <span className="text-xs text-slate-text/50">Leeres Flurstück — keine Planung</span>
+            </div>
+            <div className="relative h-48 rounded-xl bg-[#2a3a4a] overflow-hidden">
+              <div className="absolute inset-0 opacity-20" style={{backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)", backgroundSize: "30px 30px"}} />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-28 border-2 border-dashed border-red-400/50 bg-red-400/5 rounded">
+                <div className="absolute -top-5 left-1 text-[9px] text-red-300/70 font-mono">Flurstück 12/345 · 1.247 m²</div>
+                <div className="flex items-center justify-center h-full text-white/20 text-xs">?</div>
+              </div>
+            </div>
+          </div>
+          {/* Nachher */}
+          <div className="rounded-2xl border-2 border-accent/30 bg-white p-4 shadow-lg">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold text-teal-700">Nachher</span>
+              <span className="text-xs text-slate-text/50">Konzept in 5 Minuten</span>
+            </div>
+            <div className="relative h-48 rounded-xl bg-[#2a3a4a] overflow-hidden">
+              <div className="absolute inset-0 opacity-20" style={{backgroundImage: "linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)", backgroundSize: "30px 30px"}} />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-28 border-2 border-teal-400/60 bg-teal-400/10 rounded">
+                <div className="absolute -top-5 left-1 text-[9px] text-teal-300/80 font-mono">Flurstück 12/345 · 1.247 m²</div>
+                {/* Buildings placed */}
+                <div className="absolute top-2 left-2 w-24 h-8 bg-teal-500/30 border border-teal-400/60 rounded-sm">
+                  <div className="text-[7px] text-teal-300 p-0.5 font-bold">Riegel R-36 · 4 Gesch.</div>
+                </div>
+                <div className="absolute bottom-2 right-2 w-14 h-10 bg-blue-500/30 border border-blue-400/60 rounded-sm">
+                  <div className="text-[7px] text-blue-300 p-0.5 font-bold">Punkt P-16</div>
+                </div>
+              </div>
+              {/* Stats */}
+              <div className="absolute bottom-2 right-2 bg-[#0F172A]/90 rounded-lg p-2 text-[9px] space-y-0.5 backdrop-blur-sm border border-white/10">
+                <div className="text-green-400 font-bold">✓ GRZ 0.38 · GFZ 1.52</div>
+                <div className="text-white/70">36 WE · 2.880 m² BGF</div>
+                <div className="text-white/70">ab €5.4M Baukosten</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
       <div className="grid gap-8 sm:grid-cols-2">
         {uspFeatures.map((f, i) => (
           <FadeIn key={i} delay={i * 0.1}>
@@ -348,6 +431,53 @@ function PipelineSection() {
         title="Ihre gesamte Pipeline. Ein Dashboard."
         subtitle="Bewerten Sie 50+ Standorte parallel — mit automatischem Ranking nach Machbarkeit, Wirtschaftlichkeit und Risiko."
       />
+      {/* Dashboard Mockup */}
+      <FadeIn className="mb-12">
+        <div className="overflow-hidden rounded-2xl border border-gray-border bg-white shadow-lg">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-border bg-gray-bg">
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-text/60 uppercase tracking-wider">#</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-text/60 uppercase tracking-wider">Standort</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-text/60 uppercase tracking-wider">Fläche</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-text/60 uppercase tracking-wider">Score</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-text/60 uppercase tracking-wider">WE</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-text/60 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { rank: 1, name: "Berlin Mitte · Flurstück 12/345", area: "1.247 m²", score: 94, we: 36, status: "green" },
+                  { rank: 2, name: "Köln Ehrenfeld · Flurstück 8/201", area: "2.100 m²", score: 87, we: 48, status: "green" },
+                  { rank: 3, name: "Berlin Pankow · Flurstück 5/112", area: "890 m²", score: 72, we: 18, status: "yellow" },
+                  { rank: 4, name: "Düsseldorf Bilk · Flurstück 3/44", area: "1.560 m²", score: 65, we: 28, status: "yellow" },
+                  { rank: 5, name: "Berlin Spandau · Flurstück 9/78", area: "3.200 m²", score: 41, we: 12, status: "red" },
+                ].map((row) => (
+                  <tr key={row.rank} className="border-b border-gray-border/50 hover:bg-gray-bg/50 transition">
+                    <td className="px-4 py-3 text-xs font-bold text-slate-text/40">{row.rank}</td>
+                    <td className="px-4 py-3 font-medium text-primary">{row.name}</td>
+                    <td className="px-4 py-3 text-slate-text/70">{row.area}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-16 rounded-full bg-gray-border overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${row.score}%`, backgroundColor: row.status === "green" ? "#0D9488" : row.status === "yellow" ? "#F59E0B" : "#EF4444" }} />
+                        </div>
+                        <span className="text-xs font-bold" style={{ color: row.status === "green" ? "#0D9488" : row.status === "yellow" ? "#F59E0B" : "#EF4444" }}>{row.score}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-slate-text/70">{row.we}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block w-2 h-2 rounded-full ${row.status === "green" ? "bg-teal-500" : row.status === "yellow" ? "bg-yellow-500" : "bg-red-500"}`} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </FadeIn>
+
       <div className="grid gap-8 md:grid-cols-3">
         {pipelineFeatures.map((f, i) => (
           <FadeIn key={i} delay={i * 0.12}>
