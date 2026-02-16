@@ -422,8 +422,8 @@ function ClickFeatureInfo({ enabled, region }: { enabled: boolean; region: Regio
             <div style="font-weight:600;margin-bottom:4px;color:#FBBF24;">💰 Bodenrichtwert (BORIS 2025)</div>`;
           
           if (brwVal) {
-            const numVal = parseInt(brwVal.replace(/[^\d]/g, ""));
-            content += `<div style="font-size:16px;font-weight:700;color:#FBBF24;">${numVal ? numVal.toLocaleString("de-DE") + " €/m²" : brwVal}</div>`;
+            const numVal = parseFloat(brwVal.replace(/[^\d.]/g, ""));
+            content += `<div style="font-size:16px;font-weight:700;color:#FBBF24;">${numVal ? Math.round(numVal).toLocaleString("de-DE") + " €/m²" : brwVal}</div>`;
           }
 
           // Show relevant fields
