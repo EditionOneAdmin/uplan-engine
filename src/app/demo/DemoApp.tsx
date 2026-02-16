@@ -189,8 +189,11 @@ export default function DemoApp() {
           const props: Record<string, string> = {};
           headers.forEach((h, i) => { if (h && cells[i]) props[h] = cells[i]; });
           const brw = parseFloat(props["Bodenrichtwert (in EURO/m²)"] || "");
+          const bezirk = props["Bezirk"] || "";
           if (!isNaN(brw)) {
-            setBaufelder(prev => prev.map(b => b.id === bf.id ? { ...b, borisBodenrichtwert: brw } : b));
+            setBaufelder(prev => prev.map(b => b.id === bf.id ? { ...b, borisBodenrichtwert: brw, ...(bezirk ? { bezirk } : {}) } : b));
+          } else if (bezirk) {
+            setBaufelder(prev => prev.map(b => b.id === bf.id ? { ...b, bezirk } : b));
           }
         })
         .catch(() => {});

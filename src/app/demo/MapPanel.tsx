@@ -22,6 +22,7 @@ import PlacedBuildings, { GhostPolygon } from "./PlacedBuildings";
 import type { RegionConfig } from "../../config/regionTypes";
 import { RegionSelector } from "./RegionSelector";
 import { getMietspiegel } from "../../data/mietspiegel";
+import { findDemographicProfile } from "./demographicData";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -799,7 +800,7 @@ function BaufeldPolygon({
   onClick: () => void;
   onDelete: () => void;
 }) {
-  const [borisData, setBorisData] = useState<{ brw: number; nutzung: string } | null>(null);
+  const [borisData, setBorisData] = useState<{ brw: number; nutzung: string; bezirk: string } | null>(null);
   const [borisLoading, setBorisLoading] = useState(false);
   const fetchedRef = useRef(false);
 
@@ -833,8 +834,9 @@ function BaufeldPolygon({
         headers.forEach((h, i) => { if (h && cells[i]) props[h] = cells[i]; });
         const brwStr = props["Bodenrichtwert (in EURO/m²)"] || "";
         const brw = parseFloat(brwStr);
+        const bezirk = props["Bezirk"] || props["Gemeindename"] || props["Gemeinde"] || "";
         if (!isNaN(brw)) {
-          setBorisData({ brw, nutzung: props["Art der Nutzung"] || "" });
+          setBorisData({ brw, nutzung: props["Art der Nutzung"] || "", bezirk });
         }
       })
       .catch(() => {})
@@ -887,6 +889,37 @@ function BaufeldPolygon({
               {borisData.nutzung && <div className="text-xs text-gray-400 mt-1">{borisData.nutzung}</div>}
             </div>
           )}
+          {/* Demografisches Standort-Profil */}
+          {(bf.bezirk || borisData?.bezirk) && (() => {
+            const demo = findDemographicProfile(bf.bezirk || borisData?.bezirk || "");
+            if (!demo) return null;
+            const { profile: d, name: dName } = demo;
+            const trendColor = d.trend === "wachsend" ? "#22C55E" : d.trend === "schrumpfend" ? "#EF4444" : "#FBBF24";
+            return (
+              <div className="mt-2 pt-2 border-t">
+                <div className="text-xs font-semibold text-indigo-400 mb-1">📊 Standort-Profil: {dName}</div>
+                <table className="w-full text-xs">
+                  <tbody>
+                    <tr className="border-b"><td className="py-0.5 text-gray-500">Einwohner</td><td className="py-0.5 font-medium text-right">{d.einwohner.toLocaleString("de-DE")}</td></tr>
+                    <tr className="border-b"><td className="py-0.5 text-gray-500">Ø Alter</td><td className="py-0.5 font-medium text-right">{d.durchschnittsalter} J.</td></tr>
+                    <tr className="border-b"><td className="py-0.5 text-gray-500">Kaufkraftindex</td><td className="py-0.5 font-medium text-right">{d.kaufkraftindex} <span className="text-gray-400">(DE=100)</span></td></tr>
+                    <tr className="border-b"><td className="py-0.5 text-gray-500">Ø Einkommen</td><td className="py-0.5 font-medium text-right">{d.durchschnittsEinkommenMonat.toLocaleString("de-DE")} €</td></tr>
+                    <tr className="border-b"><td className="py-0.5 text-gray-500">Arbeitslosenquote</td><td className="py-0.5 font-medium text-right">{d.arbeitslosenquote}%</td></tr>
+                    <tr className="border-b"><td className="py-0.5 text-gray-500">Familien</td><td className="py-0.5 font-medium text-right">{d.anteilFamilien}%</td></tr>
+                    <tr className="border-b"><td className="py-0.5 text-gray-500">Senioren (65+)</td><td className="py-0.5 font-medium text-right">{d.anteilSenioren}%</td></tr>
+                    <tr><td className="py-0.5 text-gray-500">Leerstand</td><td className="py-0.5 font-medium text-right">{d.wohnungsleerstand}%</td></tr>
+                  </tbody>
+                </table>
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: trendColor }} />
+                  <span className="text-[10px]" style={{ color: trendColor }}>{d.trendLabel}</span>
+                </div>
+                <div className="mt-1.5 text-[10px] text-gray-400">
+                  Empf. Wohnungsmix: {d.wohnungsmixEmpfehlung.einZimmer}% 1-Zi · {d.wohnungsmixEmpfehlung.zweiZimmer}% 2-Zi · {d.wohnungsmixEmpfehlung.dreiZimmer}% 3-Zi · {d.wohnungsmixEmpfehlung.vierPlusZimmer}% 4+Zi
+                </div>
+              </div>
+            );
+          })()}
           {unitCount > 0 && (
             <div className="mt-2 pt-2 border-t text-xs text-teal-600 font-medium">{unitCount} WE platziert</div>
           )}

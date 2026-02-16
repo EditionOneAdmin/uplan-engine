@@ -13,6 +13,7 @@ export interface Baufeld {
   grundstuecksflaecheM2: number;
   borisBodenrichtwert?: number;
   wohnlage?: string;
+  bezirk?: string;
 }
 
 export type BuildingShape = "riegel" | "l-winkel" | "u-form" | "punkthaus" | "t-form" | "doppelhaus";
