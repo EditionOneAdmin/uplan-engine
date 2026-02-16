@@ -1042,7 +1042,7 @@ export default function MapPanel({
 
   return (
     <>
-      <MapContainer center={center} zoom={region.zoom} maxZoom={22} className="w-full h-full" zoomControl={true} style={{ background: "#1a1a2e" }} key={region.id}>
+      <MapContainer center={center} zoom={region.zoom} maxZoom={24} className="w-full h-full" zoomControl={true} style={{ background: "#1a1a2e" }} key={region.id}>
         <MapInstanceExporter />
         <FlyToRegion center={region.center} zoom={region.zoom} />
         <LayersControl position="topright">
@@ -1050,7 +1050,7 @@ export default function MapPanel({
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-              maxZoom={22}
+              maxZoom={24}
               maxNativeZoom={20}
             />
           </LayersControl.BaseLayer>
