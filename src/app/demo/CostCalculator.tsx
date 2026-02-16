@@ -322,6 +322,128 @@ function CashflowChart({
   );
 }
 
+/* ── Restschuld Chart (SVG) ────────────────────────────────── */
+
+function RestschuldChart({
+  restschuldVerlauf,
+  fkVolumen,
+  bauende,
+}: {
+  restschuldVerlauf: number[];
+  fkVolumen: number;
+  bauende: number;
+}) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  if (restschuldVerlauf.length === 0 || fkVolumen <= 0) return null;
+
+  const W = 600;
+  const H = 120;
+  const PAD_L = 30;
+  const PAD_R = 10;
+  const PAD_T = 10;
+  const PAD_B = 20;
+  const chartW = W - PAD_L - PAD_R;
+  const chartH = H - PAD_T - PAD_B;
+
+  const n = restschuldVerlauf.length;
+  const gap = chartW / Math.max(n - 1, 1);
+
+  // Area fill: Restschuld (red, top) + Equity (green, bottom)
+  const restPoints = restschuldVerlauf.map((rs, i) => {
+    const x = PAD_L + i * gap;
+    const y = PAD_T + (1 - rs / fkVolumen) * chartH;
+    return `${x},${y}`;
+  });
+
+  // Equity area (filled from bottom)
+  const equityPath = [
+    `M ${PAD_L},${PAD_T + chartH}`,
+    ...restschuldVerlauf.map((rs, i) => {
+      const x = PAD_L + i * gap;
+      const y = PAD_T + (rs / fkVolumen) * chartH;
+      return `L ${x},${y}`;
+    }),
+    `L ${PAD_L + (n - 1) * gap},${PAD_T + chartH}`,
+    "Z",
+  ].join(" ");
+
+  // Restschuld area (filled from top)
+  const restPath = [
+    `M ${PAD_L},${PAD_T}`,
+    ...restschuldVerlauf.map((rs, i) => {
+      const x = PAD_L + i * gap;
+      const y = PAD_T + (1 - rs / fkVolumen) * chartH;
+      return `L ${x},${y}`;
+    }),
+    `L ${PAD_L + (n - 1) * gap},${PAD_T}`,
+    "Z",
+  ].join(" ");
+
+  // Year markers
+  const yearMarkers: { month: number; label: string }[] = [];
+  for (let m = 0; m < n; m += 12) {
+    yearMarkers.push({ month: m, label: `${Math.round(m / 12)}J` });
+  }
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 120 }}>
+      {/* Equity area (green) */}
+      <path d={equityPath} fill="#22C55E" opacity={0.2} />
+      {/* Restschuld area (red/amber) */}
+      <path d={restPath} fill="#F59E0B" opacity={0.15} />
+
+      {/* Restschuld line */}
+      <polyline points={restPoints.join(" ")} fill="none" stroke="#F59E0B" strokeWidth={2} opacity={0.8} />
+
+      {/* Hover areas */}
+      {restschuldVerlauf.map((_, i) => (
+        <rect
+          key={i}
+          x={PAD_L + (i - 0.5) * gap} y={PAD_T} width={gap} height={chartH}
+          fill="transparent"
+          onMouseEnter={() => setHoverIdx(i)}
+          onMouseLeave={() => setHoverIdx(null)}
+          style={{ cursor: "crosshair" }}
+        />
+      ))}
+
+      {/* Hover tooltip */}
+      {hoverIdx !== null && (() => {
+        const rs = restschuldVerlauf[hoverIdx];
+        const eq = fkVolumen - rs;
+        const x = Math.min(Math.max(PAD_L + hoverIdx * gap, 90), W - 100);
+        const lineX = PAD_L + hoverIdx * gap;
+        return (
+          <g>
+            <line x1={lineX} y1={PAD_T} x2={lineX} y2={PAD_T + chartH} stroke="white" strokeOpacity={0.3} strokeWidth={0.5} strokeDasharray="2 2" />
+            <rect x={x - 70} y={4} width={140} height={42} rx={4} fill="#0F172A" stroke="white" strokeOpacity={0.2} strokeWidth={0.5} />
+            <text x={x} y={16} textAnchor="middle" fill="white" fontSize={8} fontWeight="bold">
+              Monat {hoverIdx} ({(hoverIdx / 12).toFixed(1)} J.)
+            </text>
+            <text x={x - 62} y={28} fill="#F59E0B" fontSize={7}>
+              Restschuld: {Math.round(rs).toLocaleString("de-DE")} €
+            </text>
+            <text x={x - 62} y={38} fill="#22C55E" fontSize={7}>
+              Equity: {Math.round(eq).toLocaleString("de-DE")} €
+            </text>
+          </g>
+        );
+      })()}
+
+      {/* X-axis year labels */}
+      {yearMarkers.map(({ month, label }) => (
+        <text key={month} x={PAD_L + month * gap} y={H - 4} textAnchor="middle" fill="white" fillOpacity={0.3} fontSize={8}>
+          {label}
+        </text>
+      ))}
+
+      {/* Y labels */}
+      <text x={PAD_L - 4} y={PAD_T + 8} textAnchor="end" fill="#22C55E" fillOpacity={0.4} fontSize={6}>EQ</text>
+      <text x={PAD_L - 4} y={H - PAD_B - 2} textAnchor="end" fill="#F59E0B" fillOpacity={0.4} fontSize={6}>RS</text>
+    </svg>
+  );
+}
+
 /* ── Dual Range Slider ────────────────────────────────────── */
 
 function DualRangeSlider({
@@ -733,7 +855,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       grundstuecksanteil, baukostenProM2,
       monthlyCashflows, breakEvenMonth, peakCapital,
       effectivePerSqm, totalGrundstuecksflaeche,
-      restschuldEnde, equityBuildup, nettomieteJahr,
+      restschuldEnde, equityBuildup, nettomieteJahr, restschuldVerlauf,
     };
   }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, planungStart, planungEnde, baustart, bauende, vertriebsstart, vertriebsende, auszahlungskurve, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride, strategy, grundstueckspreisPerSqm, grundstueckspreisGesamt, grundstueckspreisMode, betrachtungJahre, bewirtschaftungPct, mietsteigerungPa]);
 
@@ -1165,6 +1287,20 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             <span className="text-[9px] text-green-400/60">■ Einnahmen</span>
           </div>
         </div>
+
+        {/* Restschuld-Chart (nur im Hold-Modus mit Finanzierung) */}
+        {strategy === "hold" && finanzierungAktiv && calc.fkVolumen > 0 && (
+          <div className="mt-3">
+            <div className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Kredit & Equity</div>
+            <div className="border border-white/5 rounded-lg overflow-hidden">
+              <RestschuldChart restschuldVerlauf={calc.restschuldVerlauf} fkVolumen={calc.fkVolumen} bauende={bauende} />
+              <div className="flex justify-between px-2 pb-1.5">
+                <span className="text-[9px] text-amber-400/60">━ Restschuld</span>
+                <span className="text-[9px] text-green-400/40">▓ Equity</span>
+              </div>
+            </div>
+          </div>
+        )}
       </Section>
 
       {/* ── Strategie-Tabs ─────────────────────────────── */}
