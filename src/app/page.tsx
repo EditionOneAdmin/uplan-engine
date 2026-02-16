@@ -886,7 +886,6 @@ export default function Home() {
       <main>
         <Hero />
         <Problem />
-        <HowItWorks />
         <USPSection />
         <PipelineSection />
         <ProductShowcase />
