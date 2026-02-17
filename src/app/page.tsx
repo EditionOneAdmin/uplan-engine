@@ -345,7 +345,7 @@ function PipelineSection() {
     <Section id="pipeline-dashboard">
       <SectionHeading
         title="Ihre gesamte Pipeline. Ein Dashboard."
-        subtitle="Bewerten Sie beliebig viele Standorte parallel — mit automatischem Ranking nach Machbarkeit, Wirtschaftlichkeit und Risiko."
+        subtitle="Bewerten Sie beliebig viele Standorte parallel — mit automatischem Ranking nach Machbarkeit und Wirtschaftlichkeit."
       />
       {/* Dashboard Mockup */}
       <FadeIn className="mb-12">
