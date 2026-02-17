@@ -15,6 +15,8 @@ import type { Project, Baufeld, Variante } from "@/types/pipeline";
 import BaufeldSection from "../components/BaufeldSection";
 import CreateBaufeldModal from "../components/CreateBaufeldModal";
 import KPIBar from "../components/KPIBar";
+import ProjektZusammenfassung from "../components/ProjektZusammenfassung";
+import { extractKPIs } from "@/lib/pipeline-kpis";
 
 /* ─── Helpers ──────────────────────────────────────────── */
 
@@ -198,19 +200,24 @@ export default function ProjectDetailClient() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Aggregated KPIs
+  // Aggregated KPIs — prefer favorite variante per Baufeld, else first
   const allVarianten = Object.values(variantenMap).flat();
+  const representativeVarianten = baufelder.map(bf => {
+    const vars = variantenMap[bf.id] || [];
+    return vars.find(v => v.is_favorite) || vars[0];
+  }).filter(Boolean) as Variante[];
+
   let gesamtBGF = 0, gesamtInvestment = 0, renditeSum = 0, renditeCount = 0;
-  for (const v of allVarianten) {
-    const w = v.wirtschaftlichkeit as Record<string, number> | null;
-    if (w) {
-      const bgf = w.bgf ?? w.BGF;
-      const inv = w.investment ?? w.Investment;
-      const ren = w.rendite ?? w.Rendite;
-      if (bgf) gesamtBGF += Number(bgf);
-      if (inv) gesamtInvestment += Number(inv);
-      if (ren) { renditeSum += Number(ren); renditeCount++; }
-    }
+  let gesamtWF = 0, gesamtWE = 0, gesamtCashflow = 0;
+  for (const v of representativeVarianten) {
+    const k = extractKPIs(v);
+    if (k.bgf) gesamtBGF += k.bgf;
+    if (k.wohnflaeche) gesamtWF += k.wohnflaeche;
+    if (k.units) gesamtWE += k.units;
+    if (k.gesamtinvestition) gesamtInvestment += k.gesamtinvestition;
+    if (k.jahresmiete) gesamtCashflow += k.jahresmiete;
+    const r = k.niy ?? k.marge ?? k.rendite;
+    if (r !== null) { renditeSum += r; renditeCount++; }
   }
 
   const handleStatusChange = async (status: Project["status"]) => {
@@ -352,6 +359,9 @@ export default function ProjectDetailClient() {
                 gesamtBGF={gesamtBGF}
                 gesamtInvestment={gesamtInvestment}
                 avgRendite={renditeCount > 0 ? renditeSum / renditeCount : 0}
+                gesamtWF={gesamtWF}
+                gesamtWE={gesamtWE}
+                gesamtCashflow={gesamtCashflow}
               />
             </div>
           </FadeIn>
@@ -389,6 +399,13 @@ export default function ProjectDetailClient() {
               ))
             )}
           </div>
+          {baufelder.length > 0 && (
+            <FadeIn delay={0.2}>
+              <div className="mt-8">
+                <ProjektZusammenfassung baufelder={baufelder} variantenMap={variantenMap} />
+              </div>
+            </FadeIn>
+          )}
         </div>
       </main>
 
