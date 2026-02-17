@@ -1,5 +1,12 @@
 import type { Variante } from "@/types/pipeline";
 
+export interface MonthlyCashflow {
+  month: number;
+  cashOut: number;
+  cashIn: number;
+  cumulative: number;
+}
+
 export interface ExtractedKPIs {
   // Flächen & Gebäude
   wohnflaeche: number | null;
@@ -17,6 +24,13 @@ export interface ExtractedKPIs {
   euroProM2BGF: number | null;
   euroProM2WF: number | null;
   ekBedarf: number | null;
+  fkVolumen: number | null;
+  ekQuote: number | null;
+  annuitaetJahr: number | null;
+  bauzeit: number | null;
+  kg700: number | null;
+  finanzierungskosten: number | null;
+  grundstuecksanteil: number | null; // % of total
 
   // Rendite & Cashflow
   strategy: "hold" | "sell" | null;
@@ -33,6 +47,10 @@ export interface ExtractedKPIs {
   ekRenditeSell: number | null;
   breakEvenMonth: number | null;
   rendite: number | null;
+  ekMultiplikator: number | null;
+  irr: number | null;
+  monthlyCashflows: MonthlyCashflow[] | null;
+  peakCapital: number | null;
 }
 
 function num(val: unknown): number | null {
@@ -51,7 +69,6 @@ export function extractKPIs(variante: Variante): ExtractedKPIs {
   const cd = (w.costData || {}) as Record<string, unknown>;
   const gc = (variante.gebaeude_config || {}) as Record<string, unknown>;
 
-  // Helper: try wirtschaftlichkeit top-level, then costData, then gebaeude_config
   const get = (keys: string[]): unknown => {
     for (const k of keys) {
       if (w[k] !== undefined && w[k] !== null) return w[k];
@@ -64,6 +81,10 @@ export function extractKPIs(variante: Variante): ExtractedKPIs {
   const wf = num(get(["total_wohnflaeche", "totalWohnflaeche", "wohnflaeche", "Wohnflaeche"]));
   const bgf = num(get(["total_bgf", "totalBGF", "bgf", "BGF"]));
   const invest = num(get(["total_investment", "gesamtkosten", "investment", "Investment"]));
+  const ekBedarf = num(get(["ekBedarf"]));
+  const jahresmiete = num(get(["jahresmiete"]));
+  const verkaufserloes = num(get(["verkaufserloes"]));
+  const kg100 = num(get(["kg100", "grundstuecksanteil"]));
 
   const kg200 = num(get(["kg200"]));
   const kg300 = num(get(["kg300"]));
@@ -71,6 +92,28 @@ export function extractKPIs(variante: Variante): ExtractedKPIs {
   const baukosten = (kg200 !== null || kg300 !== null || kg500 !== null)
     ? (kg200 || 0) + (kg300 || 0) + (kg500 || 0)
     : null;
+
+  const strategy = (str(get(["strategy"])) as "hold" | "sell") || null;
+  const irrHold = num(get(["irrHold"]));
+  const irrSell = num(get(["irrSell"]));
+
+  // Derived fields
+  const fkVolumen = num(get(["fkVolumen"])) ?? ((invest !== null && ekBedarf !== null) ? invest - ekBedarf : null);
+  const ekQuote = (ekBedarf !== null && invest !== null && invest > 0) ? (ekBedarf / invest) * 100 : null;
+  const grundstuecksanteil = (kg100 !== null && invest !== null && invest > 0) ? (kg100 / invest) * 100 : null;
+
+  let ekMultiplikator: number | null = null;
+  if (strategy === "hold" && jahresmiete !== null && ekBedarf !== null && ekBedarf > 0) {
+    ekMultiplikator = (jahresmiete * 10) / ekBedarf;
+  } else if (strategy === "sell" && verkaufserloes !== null && ekBedarf !== null && ekBedarf > 0) {
+    ekMultiplikator = verkaufserloes / ekBedarf;
+  }
+
+  const irr = strategy === "hold" ? irrHold : (strategy === "sell" ? irrSell : null);
+
+  const rawCashflows = cd.monthlyCashflows;
+  const monthlyCashflows: MonthlyCashflow[] | null = Array.isArray(rawCashflows) ? rawCashflows as MonthlyCashflow[] : null;
+  const peakCapital = num(get(["peakCapital"]));
 
   return {
     wohnflaeche: wf,
@@ -81,28 +124,51 @@ export function extractKPIs(variante: Variante): ExtractedKPIs {
     compliant: w.compliant != null ? Boolean(w.compliant) : (gc.compliant != null ? Boolean(gc.compliant) : null),
     parkingNeeded: num(get(["parkingNeeded"])),
 
-    grundstueckskosten: num(get(["kg100", "grundstuecksanteil"])),
+    grundstueckskosten: kg100,
     baukosten,
     gesamtinvestition: invest,
     euroProM2BGF: (invest && bgf && bgf > 0) ? invest / bgf : num(get(["baukostenProM2"])),
     euroProM2WF: (invest && wf && wf > 0) ? invest / wf : null,
-    ekBedarf: num(get(["ekBedarf"])),
+    ekBedarf,
+    fkVolumen,
+    ekQuote,
+    annuitaetJahr: num(get(["annuitaetJahr", "annuitaet"])),
+    bauzeit: num(get(["bauzeit"])),
+    kg700: num(get(["kg700"])),
+    finanzierungskosten: num(get(["finanzierungskosten"])),
+    grundstuecksanteil,
 
-    strategy: (str(get(["strategy"])) as "hold" | "sell") || null,
+    strategy,
     niy: num(get(["niy"])),
     marge: num(get(["marge"])),
     cashOnCash: num(get(["cashOnCash"])),
     dscr: num(get(["dscr"])),
-    jahresmiete: num(get(["jahresmiete"])),
+    jahresmiete,
     mieteProM2: num(get(["mieteProM2"])),
-    verkaufserloes: num(get(["verkaufserloes"])),
+    verkaufserloes,
     verkaufProM2: num(get(["verkaufProM2"])),
-    irrHold: num(get(["irrHold"])),
-    irrSell: num(get(["irrSell"])),
+    irrHold,
+    irrSell,
     ekRenditeSell: num(get(["ekRenditeSell"])),
     breakEvenMonth: num(get(["breakEvenMonth"])),
     rendite: num(get(["rendite", "Rendite"])),
+    ekMultiplikator,
+    irr,
+    monthlyCashflows,
+    peakCapital,
   };
+}
+
+// Health score
+export function healthScore(kpis: ExtractedKPIs): "green" | "yellow" | "red" {
+  const irr = kpis.irr;
+  const dscr = kpis.dscr;
+  const compliant = kpis.compliant;
+  if (compliant === false) return "red";
+  if (irr !== null && irr < 4) return "red";
+  if (dscr !== null && dscr < 1.0) return "red";
+  if (irr !== null && irr >= 8 && (dscr === null || dscr >= 1.3)) return "green";
+  return "yellow";
 }
 
 // Formatting helpers

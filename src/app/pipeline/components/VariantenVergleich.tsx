@@ -12,15 +12,28 @@ interface Props {
   onClose: () => void;
 }
 
-type KPIGetter = (k: ExtractedKPIs) => number | null;
+type ValGetter = (k: ExtractedKPIs, v: Variante) => number | null;
 type KPIFormatter = (val: number | null) => string;
 
 interface KPIRowDef {
   label: string;
-  get: KPIGetter;
+  get: ValGetter;
   fmt: KPIFormatter;
-  higher: boolean; // true = higher is better
+  higher: boolean;
   section?: string;
+}
+
+// Safe accessor helpers for fields not yet in extractKPIs
+function cd(v: Variante): Record<string, unknown> {
+  return ((v.wirtschaftlichkeit as Record<string, unknown> | undefined)?.costData as Record<string, unknown>) ?? {};
+}
+function wirt(v: Variante): Record<string, unknown> {
+  return (v.wirtschaftlichkeit as Record<string, unknown>) ?? {};
+}
+function safeNum(val: unknown): number | null {
+  if (val === null || val === undefined) return null;
+  const n = Number(val);
+  return isNaN(n) ? null : n;
 }
 
 const kpiDefs: KPIRowDef[] = [
@@ -31,26 +44,52 @@ const kpiDefs: KPIRowDef[] = [
   { label: "GRZ", get: k => k.grzUsage, fmt: v => v !== null ? v.toLocaleString("de-DE", { maximumFractionDigits: 2 }) : "—", higher: false },
   { label: "GFZ", get: k => k.gfzUsage, fmt: v => v !== null ? v.toLocaleString("de-DE", { maximumFractionDigits: 2 }) : "—", higher: true },
   { label: "Stellplätze", get: k => k.parkingNeeded, fmt: v => fmtNum(v), higher: false },
-  // Kosten
+
+  // Kosten — expanded
   { section: "Kosten", label: "Gesamtinvestition", get: k => k.gesamtinvestition, fmt: v => fmtCurrency(v), higher: false },
+  { label: "Grundstück (KG 100)", get: k => k.grundstueckskosten, fmt: v => fmtCurrency(v), higher: false },
+  { label: "Baukosten (KG 200-500)", get: k => k.baukosten, fmt: v => fmtCurrency(v), higher: false },
+  { label: "Nebenkosten (KG 700)", get: (_k, v) => safeNum(cd(v).kg700), fmt: v => fmtCurrency(v), higher: false },
+  { label: "Finanzierungskosten", get: (_k, v) => {
+    const c = cd(v);
+    const parts = [safeNum(c.finanz), safeNum(c.bauzinsen), safeNum(c.bereitstellungszinsen)];
+    const valid = parts.filter((p): p is number => p !== null);
+    return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) : null;
+  }, fmt: v => fmtCurrency(v), higher: false },
+  { label: "Grundstücksanteil (%)", get: (k) => {
+    if (k.grundstueckskosten && k.gesamtinvestition && k.gesamtinvestition > 0)
+      return (k.grundstueckskosten / k.gesamtinvestition) * 100;
+    return null;
+  }, fmt: v => fmtPercent(v), higher: false },
   { label: "€/m² BGF", get: k => k.euroProM2BGF, fmt: v => fmtEuroM2(v), higher: false },
   { label: "€/m² WF", get: k => k.euroProM2WF, fmt: v => fmtEuroM2(v), higher: false },
   { label: "EK-Bedarf", get: k => k.ekBedarf, fmt: v => fmtCurrency(v), higher: false },
-  { label: "Grundstück", get: k => k.grundstueckskosten, fmt: v => fmtCurrency(v), higher: false },
-  { label: "Baukosten (KG 200-500)", get: k => k.baukosten, fmt: v => fmtCurrency(v), higher: false },
-  // Rendite
-  { section: "Rendite & Cashflow", label: "NIY", get: k => k.niy, fmt: v => fmtPercent(v), higher: true },
-  { label: "Marge", get: k => k.marge, fmt: v => fmtPercent(v), higher: true },
+  { label: "FK-Volumen", get: (_k, v) => safeNum(cd(v).fkVolumen), fmt: v => fmtCurrency(v), higher: false },
+  { label: "EK-Quote (%)", get: (k) => {
+    if (k.ekBedarf && k.gesamtinvestition && k.gesamtinvestition > 0)
+      return (k.ekBedarf / k.gesamtinvestition) * 100;
+    return null;
+  }, fmt: v => fmtPercent(v), higher: false },
+  { label: "Annuität p.a.", get: (_k, v) => safeNum(cd(v).annuitaetJahr), fmt: v => fmtCurrency(v), higher: false },
+
+  // Rendite — expanded
+  { section: "Rendite & Cashflow", label: "NIY (Hold)", get: k => k.niy, fmt: v => fmtPercent(v), higher: true },
+  { label: "Marge (Sell)", get: k => k.marge, fmt: v => fmtPercent(v), higher: true },
   { label: "IRR (Hold)", get: k => k.irrHold, fmt: v => fmtPercent(v), higher: true },
   { label: "IRR (Sell)", get: k => k.irrSell, fmt: v => fmtPercent(v), higher: true },
   { label: "Cash-on-Cash", get: k => k.cashOnCash, fmt: v => fmtPercent(v), higher: true },
   { label: "EK-Rendite (Sell)", get: k => k.ekRenditeSell, fmt: v => fmtPercent(v), higher: true },
   { label: "DSCR", get: k => k.dscr, fmt: v => v !== null ? v.toLocaleString("de-DE", { minimumFractionDigits: 2 }) : "—", higher: true },
   { label: "Jahresmiete", get: k => k.jahresmiete, fmt: v => fmtCurrency(v), higher: true },
-  { label: "Miete/m²", get: k => k.mieteProM2, fmt: v => fmtEuroM2(v), higher: true },
   { label: "Verkaufserlös", get: k => k.verkaufserloes, fmt: v => fmtCurrency(v), higher: true },
-  { label: "Verkauf/m²", get: k => k.verkaufProM2, fmt: v => fmtEuroM2(v), higher: true },
-  { label: "Break-Even", get: k => k.breakEvenMonth, fmt: v => v !== null ? `Monat ${v}` : "—", higher: false },
+  { label: "€/m² Miete", get: k => k.mieteProM2, fmt: v => fmtEuroM2(v), higher: true },
+  { label: "€/m² Verkauf", get: k => k.verkaufProM2, fmt: v => fmtEuroM2(v), higher: true },
+  { label: "Break-Even (Monat)", get: k => k.breakEvenMonth, fmt: v => v !== null ? `Monat ${v}` : "—", higher: false },
+  { label: "Bauzeit (Monate)", get: (_k, v) => safeNum(cd(v).bauzeit) ?? safeNum(wirt(v).bauzeit), fmt: v => v !== null ? `${v} Mo.` : "—", higher: false },
+
+  // Markt-Kontext — new
+  { section: "Markt-Kontext", label: "BORIS Bodenrichtwert", get: (_k, v) => safeNum(wirt(v).borisBodenrichtwert) ?? safeNum((wirt(v).bauplan_config as Record<string, unknown> | undefined)?.borisBodenrichtwert), fmt: v => fmtEuroM2(v), higher: false },
+  { label: "Mietspiegel-Referenz", get: (_k, v) => safeNum(wirt(v).mietspiegel) ?? safeNum(wirt(v).mietspiegelReferenz), fmt: v => v !== null ? `${v.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €/m²` : "—", higher: false },
 ];
 
 export default function VariantenVergleich({ varianten, baufeldName, onClose }: Props) {
@@ -60,7 +99,7 @@ export default function VariantenVergleich({ varianten, baufeldName, onClose }: 
 
   // Filter rows: only show rows where at least one variante has data
   const visibleRows = kpiDefs.filter(row =>
-    allKPIs.some(k => row.get(k) !== null)
+    varianten.some((v, i) => row.get(allKPIs[i], v) !== null)
   );
 
   return (
@@ -123,8 +162,8 @@ export default function VariantenVergleich({ varianten, baufeldName, onClose }: 
                 </thead>
                 <tbody>
                   {visibleRows.map((row, idx) => {
-                    const vals = allKPIs.map(k => row.get(k));
-                    const numVals = vals.filter(v => v !== null) as number[];
+                    const vals = varianten.map((v, i) => row.get(allKPIs[i], v));
+                    const numVals = vals.filter((v): v is number => v !== null);
                     const best = numVals.length > 1
                       ? (row.higher ? Math.max(...numVals) : Math.min(...numVals))
                       : null;
@@ -132,38 +171,39 @@ export default function VariantenVergleich({ varianten, baufeldName, onClose }: 
                       ? (row.higher ? Math.min(...numVals) : Math.max(...numVals))
                       : null;
 
-                    return (
-                      <>
-                        {row.section && (
-                          <tr key={`section-${row.section}`}>
-                            <td colSpan={varianten.length + 1} className="pt-4 pb-1 px-0">
-                              <div className="text-[10px] font-bold text-slate-text/40 uppercase tracking-wider border-b border-gray-border/50 pb-1">
-                                {row.section}
-                              </div>
+                    const sectionRow = row.section ? (
+                      <tr key={`section-${row.section}`}>
+                        <td colSpan={varianten.length + 1} className="pt-4 pb-1 px-0">
+                          <div className="text-[10px] font-bold text-slate-text/40 uppercase tracking-wider border-b border-gray-border/50 pb-1">
+                            {row.section}
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null;
+
+                    const dataRow = (
+                      <tr key={`row-${idx}`} className="border-b border-gray-border/30 hover:bg-gray-bg/30 transition-colors">
+                        <td className="sticky left-0 bg-white py-2 pr-4 text-xs text-slate-text/70 font-medium">{row.label}</td>
+                        {vals.map((val, i) => {
+                          const isBest = val !== null && best !== null && val === best && numVals.length > 1;
+                          const isWorst = val !== null && worst !== null && val === worst && numVals.length > 1 && best !== worst;
+                          return (
+                            <td
+                              key={varianten[i].id}
+                              className={`text-right py-2 px-3 text-xs font-medium transition-colors ${
+                                isBest ? "text-green-700 font-bold bg-green-50/60" :
+                                isWorst ? "text-red-600/80 bg-red-50/40" :
+                                "text-primary"
+                              }`}
+                            >
+                              {row.fmt(val)}
                             </td>
-                          </tr>
-                        )}
-                        <tr key={`row-${idx}`} className="border-b border-gray-border/30 hover:bg-gray-bg/30 transition-colors">
-                          <td className="sticky left-0 bg-white py-2 pr-4 text-xs text-slate-text/70 font-medium">{row.label}</td>
-                          {vals.map((val, i) => {
-                            const isBest = val !== null && best !== null && val === best && numVals.length > 1;
-                            const isWorst = val !== null && worst !== null && val === worst && numVals.length > 1 && best !== worst;
-                            return (
-                              <td
-                                key={varianten[i].id}
-                                className={`text-right py-2 px-3 text-xs font-medium transition-colors ${
-                                  isBest ? "text-green-700 font-bold bg-green-50/60" :
-                                  isWorst ? "text-red-600/80 bg-red-50/40" :
-                                  "text-primary"
-                                }`}
-                              >
-                                {row.fmt(val)}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      </>
+                          );
+                        })}
+                      </tr>
                     );
+
+                    return sectionRow ? <>{sectionRow}{dataRow}</> : dataRow;
                   })}
                 </tbody>
               </table>

@@ -3,19 +3,19 @@
 import { motion } from "framer-motion";
 import { Star, Trash2, MapPin, ExternalLink } from "lucide-react";
 import type { Variante } from "@/types/pipeline";
-import { extractKPIs, fmtArea, fmtCurrency, fmtPercent, fmtEuroM2, fmtNum, renditeColor, dscrColor } from "@/lib/pipeline-kpis";
+import { extractKPIs, healthScore, fmtArea, fmtCurrency, fmtPercent, fmtEuroM2, renditeColor, dscrColor } from "@/lib/pipeline-kpis";
 
 interface Props {
   variante: Variante;
   onSetFavorite: () => void;
   onDelete: () => void;
+  isTopPerformer?: boolean;
 }
 
 function CompBadge({ val, compliant }: { val: number | null; compliant?: boolean | null }) {
   if (val === null) return <span className="text-slate-text/30">—</span>;
-  const icon = compliant === true ? "✅" : compliant === false ? "⚠️" : "";
   const color = compliant === true ? "text-green-600" : compliant === false ? "text-red-600" : "text-primary";
-  return <span className={color}>{val.toLocaleString("de-DE", { maximumFractionDigits: 2 })} {icon}</span>;
+  return <span className={color}>{val.toLocaleString("de-DE", { maximumFractionDigits: 2 })} {compliant === true ? "✅" : compliant === false ? "⚠️" : ""}</span>;
 }
 
 function KPIRow({ label, value, className = "" }: { label: string; value: string; className?: string }) {
@@ -27,11 +27,26 @@ function KPIRow({ label, value, className = "" }: { label: string; value: string
   );
 }
 
-export default function VarianteCard({ variante, onSetFavorite, onDelete }: Props) {
+function RenditeGrid({ items }: { items: { label: string; value: string; colorClass?: string }[] }) {
+  return (
+    <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+      {items.map(i => (
+        <div key={i.label} className="flex justify-between items-baseline gap-1">
+          <span className="text-[10px] text-slate-text/50 truncate">{i.label}</span>
+          <span className={`text-[11px] font-semibold whitespace-nowrap ${i.colorClass || ""}`}>{i.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const AMPEL = { green: "🟢", yellow: "🟡", red: "🔴" } as const;
+
+export default function VarianteCard({ variante, onSetFavorite, onDelete, isTopPerformer }: Props) {
   const k = extractKPIs(variante);
   const isHold = k.strategy === "hold";
   const isSell = k.strategy === "sell";
-  const mainRendite = isHold ? k.niy : (isSell ? k.marge : k.rendite);
+  const health = healthScore(k);
 
   return (
     <motion.div
@@ -46,6 +61,9 @@ export default function VarianteCard({ variante, onSetFavorite, onDelete }: Prop
       {variante.is_favorite && (
         <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-white text-xs shadow">⭐</span>
       )}
+      {isTopPerformer && (
+        <span className="absolute -top-2 -left-2 flex h-6 items-center justify-center rounded-full bg-green-500 text-white text-[10px] font-bold px-1.5 shadow">🏆 Best</span>
+      )}
 
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
@@ -58,7 +76,9 @@ export default function VarianteCard({ variante, onSetFavorite, onDelete }: Prop
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-primary truncate">{variante.name}</h4>
+          <h4 className="text-sm font-semibold text-primary truncate">
+            {AMPEL[health]} {variante.name}
+          </h4>
           <div className="flex items-center gap-2 mt-0.5">
             {k.strategy && (
               <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -74,7 +94,7 @@ export default function VarianteCard({ variante, onSetFavorite, onDelete }: Prop
         </div>
       </div>
 
-      {/* KPI Grid — 3 sections */}
+      {/* KPI Grid */}
       <div className="space-y-2">
         {/* Flächen */}
         <div className="rounded-lg bg-gray-bg/60 px-3 py-2 space-y-1">
@@ -106,7 +126,10 @@ export default function VarianteCard({ variante, onSetFavorite, onDelete }: Prop
           {k.baukosten !== null && <KPIRow label="Baukosten (KG 200-500)" value={fmtCurrency(k.baukosten)} />}
           <KPIRow label="€/m² BGF" value={fmtEuroM2(k.euroProM2BGF)} />
           <KPIRow label="€/m² WF" value={fmtEuroM2(k.euroProM2WF)} />
-          {k.ekBedarf !== null && <KPIRow label="EK-Bedarf" value={fmtCurrency(k.ekBedarf)} />}
+          <KPIRow label="EK-Bedarf" value={fmtCurrency(k.ekBedarf)} />
+          {k.ekQuote !== null && <KPIRow label="EK-Quote" value={fmtPercent(k.ekQuote)} />}
+          {k.fkVolumen !== null && <KPIRow label="FK-Volumen" value={fmtCurrency(k.fkVolumen)} />}
+          {k.annuitaetJahr !== null && <KPIRow label="Annuität p.a." value={fmtCurrency(k.annuitaetJahr)} />}
         </div>
 
         {/* Rendite */}
@@ -114,24 +137,30 @@ export default function VarianteCard({ variante, onSetFavorite, onDelete }: Prop
           <div className="text-[10px] font-bold text-slate-text/40 uppercase tracking-wider mb-0.5">Rendite</div>
           {isHold ? (
             <>
-              <KPIRow label="NIY" value={fmtPercent(k.niy)} className={renditeColor(k.niy)} />
-              <KPIRow label="IRR (Hold)" value={fmtPercent(k.irrHold)} className={renditeColor(k.irrHold)} />
-              <KPIRow label="Cash-on-Cash" value={fmtPercent(k.cashOnCash)} className={renditeColor(k.cashOnCash)} />
-              <KPIRow label="DSCR" value={k.dscr !== null ? k.dscr.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"} className={dscrColor(k.dscr)} />
+              <RenditeGrid items={[
+                { label: "NIY", value: fmtPercent(k.niy), colorClass: renditeColor(k.niy) },
+                { label: "IRR", value: fmtPercent(k.irrHold), colorClass: renditeColor(k.irrHold) },
+                { label: "CoC", value: fmtPercent(k.cashOnCash), colorClass: renditeColor(k.cashOnCash) },
+                { label: "DSCR", value: k.dscr !== null ? k.dscr.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—", colorClass: dscrColor(k.dscr) },
+              ]} />
               <KPIRow label="Jahresmiete" value={fmtCurrency(k.jahresmiete)} />
               <KPIRow label="Miete/m²" value={fmtEuroM2(k.mieteProM2)} />
+              {k.ekMultiplikator !== null && <KPIRow label="EK-Multiplikator" value={`${k.ekMultiplikator.toLocaleString("de-DE", { maximumFractionDigits: 2 })}x`} />}
             </>
           ) : isSell ? (
             <>
-              <KPIRow label="Marge" value={fmtPercent(k.marge)} className={renditeColor(k.marge)} />
-              <KPIRow label="EK-Rendite" value={fmtPercent(k.ekRenditeSell)} className={renditeColor(k.ekRenditeSell)} />
-              <KPIRow label="IRR (Sell)" value={fmtPercent(k.irrSell)} className={renditeColor(k.irrSell)} />
+              <RenditeGrid items={[
+                { label: "Marge", value: fmtPercent(k.marge), colorClass: renditeColor(k.marge) },
+                { label: "EK-Rendite", value: fmtPercent(k.ekRenditeSell), colorClass: renditeColor(k.ekRenditeSell) },
+                { label: "IRR (Sell)", value: fmtPercent(k.irrSell), colorClass: renditeColor(k.irrSell) },
+                { label: "EK-Multipl.", value: k.ekMultiplikator !== null ? `${k.ekMultiplikator.toLocaleString("de-DE", { maximumFractionDigits: 2 })}x` : "—" },
+              ]} />
               <KPIRow label="Verkaufserlös" value={fmtCurrency(k.verkaufserloes)} />
               <KPIRow label="Verkauf/m²" value={fmtEuroM2(k.verkaufProM2)} />
             </>
           ) : (
             <>
-              {mainRendite !== null && <KPIRow label="Rendite" value={fmtPercent(mainRendite)} className={renditeColor(mainRendite)} />}
+              {k.rendite !== null && <KPIRow label="Rendite" value={fmtPercent(k.rendite)} className={renditeColor(k.rendite)} />}
             </>
           )}
           {k.breakEvenMonth !== null && <KPIRow label="Break-Even" value={`Monat ${k.breakEvenMonth}`} />}
