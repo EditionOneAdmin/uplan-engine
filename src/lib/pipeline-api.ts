@@ -1,7 +1,12 @@
 import { supabase } from './supabase'
-import type { Project, Baufeld, Variante, ProjectOverview } from '@/types/pipeline'
+import type {
+  Project, Baufeld, Variante, ProjectOverview,
+  CreateProject, UpdateProject,
+  CreateBaufeld, UpdateBaufeld,
+  CreateVariante, UpdateVariante,
+} from '@/types/pipeline'
 
-// ─── Projects ─────────────────────────────────────────
+// ─── Projects ────────────────────────────────────────────────────────────────
 
 export async function getProjects(): Promise<Project[]> {
   const { data, error } = await supabase
@@ -9,7 +14,7 @@ export async function getProjects(): Promise<Project[]> {
     .select('*')
     .order('updated_at', { ascending: false })
   if (error) throw error
-  return data ?? []
+  return data as Project[]
 }
 
 export async function getProject(id: string): Promise<Project | null> {
@@ -18,21 +23,21 @@ export async function getProject(id: string): Promise<Project | null> {
     .select('*')
     .eq('id', id)
     .single()
-  if (error) throw error
-  return data
+  if (error) return null
+  return data as Project
 }
 
-export async function createProject(name: string, description?: string): Promise<Project> {
+export async function createProject(project: CreateProject): Promise<Project> {
   const { data, error } = await supabase
     .from('projects')
-    .insert({ name, description })
+    .insert(project)
     .select()
     .single()
   if (error) throw error
-  return data
+  return data as Project
 }
 
-export async function updateProject(id: string, updates: Partial<Pick<Project, 'name' | 'description' | 'status'>>): Promise<Project> {
+export async function updateProject(id: string, updates: UpdateProject): Promise<Project> {
   const { data, error } = await supabase
     .from('projects')
     .update(updates)
@@ -40,7 +45,7 @@ export async function updateProject(id: string, updates: Partial<Pick<Project, '
     .select()
     .single()
   if (error) throw error
-  return data
+  return data as Project
 }
 
 export async function deleteProject(id: string): Promise<void> {
@@ -48,29 +53,29 @@ export async function deleteProject(id: string): Promise<void> {
   if (error) throw error
 }
 
-// ─── Baufelder ────────────────────────────────────────
+// ─── Baufelder ───────────────────────────────────────────────────────────────
 
 export async function getBaufelder(projectId: string): Promise<Baufeld[]> {
   const { data, error } = await supabase
     .from('baufelder')
     .select('*')
     .eq('project_id', projectId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
   if (error) throw error
-  return data ?? []
+  return data as Baufeld[]
 }
 
-export async function createBaufeld(projectId: string, name: string, opts?: { flurstueck_info?: Record<string, unknown>; location?: { lat: number; lng: number }; region?: string }): Promise<Baufeld> {
+export async function createBaufeld(baufeld: CreateBaufeld): Promise<Baufeld> {
   const { data, error } = await supabase
     .from('baufelder')
-    .insert({ project_id: projectId, name, ...opts })
+    .insert(baufeld)
     .select()
     .single()
   if (error) throw error
-  return data
+  return data as Baufeld
 }
 
-export async function updateBaufeld(id: string, updates: Partial<Pick<Baufeld, 'name' | 'flurstueck_info' | 'location' | 'region'>>): Promise<Baufeld> {
+export async function updateBaufeld(id: string, updates: UpdateBaufeld): Promise<Baufeld> {
   const { data, error } = await supabase
     .from('baufelder')
     .update(updates)
@@ -78,7 +83,7 @@ export async function updateBaufeld(id: string, updates: Partial<Pick<Baufeld, '
     .select()
     .single()
   if (error) throw error
-  return data
+  return data as Baufeld
 }
 
 export async function deleteBaufeld(id: string): Promise<void> {
@@ -86,34 +91,29 @@ export async function deleteBaufeld(id: string): Promise<void> {
   if (error) throw error
 }
 
-// ─── Varianten ────────────────────────────────────────
+// ─── Varianten ───────────────────────────────────────────────────────────────
 
 export async function getVarianten(baufeldId: string): Promise<Variante[]> {
   const { data, error } = await supabase
     .from('varianten')
     .select('*')
     .eq('baufeld_id', baufeldId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
   if (error) throw error
-  return data ?? []
+  return data as Variante[]
 }
 
-export async function createVariante(baufeldId: string, name: string, config: {
-  bauplan_config?: Record<string, unknown>
-  gebaeude_config?: Record<string, unknown>
-  wirtschaftlichkeit?: Record<string, unknown>
-  map_snapshot_url?: string
-}): Promise<Variante> {
+export async function createVariante(variante: CreateVariante): Promise<Variante> {
   const { data, error } = await supabase
     .from('varianten')
-    .insert({ baufeld_id: baufeldId, name, ...config })
+    .insert(variante)
     .select()
     .single()
   if (error) throw error
-  return data
+  return data as Variante
 }
 
-export async function updateVariante(id: string, updates: Partial<Omit<Variante, 'id' | 'baufeld_id' | 'created_at' | 'updated_at'>>): Promise<Variante> {
+export async function updateVariante(id: string, updates: UpdateVariante): Promise<Variante> {
   const { data, error } = await supabase
     .from('varianten')
     .update(updates)
@@ -121,7 +121,7 @@ export async function updateVariante(id: string, updates: Partial<Omit<Variante,
     .select()
     .single()
   if (error) throw error
-  return data
+  return data as Variante
 }
 
 export async function deleteVariante(id: string): Promise<void> {
@@ -129,21 +129,27 @@ export async function deleteVariante(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function setFavorite(baufeldId: string, varianteId: string): Promise<void> {
-  // Unfavorite all in this baufeld first
-  await supabase
+export async function setFavorite(baufeldId: string, varianteId: string): Promise<Variante> {
+  // Clear existing favorites for this baufeld
+  const { error: clearError } = await supabase
     .from('varianten')
-    .update({ is_favorite: false, status: 'draft' })
+    .update({ is_favorite: false, status: 'draft' as const })
     .eq('baufeld_id', baufeldId)
+    .eq('is_favorite', true)
+  if (clearError) throw clearError
 
-  // Set the chosen one
-  await supabase
+  // Set new favorite
+  const { data, error } = await supabase
     .from('varianten')
-    .update({ is_favorite: true, status: 'favorite' })
+    .update({ is_favorite: true, status: 'favorite' as const })
     .eq('id', varianteId)
+    .select()
+    .single()
+  if (error) throw error
+  return data as Variante
 }
 
-// ─── Project Overview ─────────────────────────────────
+// ─── Aggregated ──────────────────────────────────────────────────────────────
 
 export async function getProjectOverview(projectId: string): Promise<ProjectOverview | null> {
   const project = await getProject(projectId)
@@ -152,34 +158,18 @@ export async function getProjectOverview(projectId: string): Promise<ProjectOver
   const baufelder = await getBaufelder(projectId)
 
   let varianten_count = 0
-  let total_bgf = 0
-  let total_investment = 0
-  let rendite_sum = 0
-  let rendite_count = 0
+  let favorite_count = 0
 
   for (const bf of baufelder) {
     const varianten = await getVarianten(bf.id)
     varianten_count += varianten.length
-
-    // Aggregate from favorite or first variante
-    const chosen = varianten.find(v => v.is_favorite) ?? varianten[0]
-    if (chosen?.wirtschaftlichkeit) {
-      const w = chosen.wirtschaftlichkeit as Record<string, number>
-      if (w.total_bgf) total_bgf += w.total_bgf
-      if (w.total_investment) total_investment += w.total_investment
-      if (w.rendite != null) {
-        rendite_sum += w.rendite
-        rendite_count++
-      }
-    }
+    favorite_count += varianten.filter(v => v.is_favorite).length
   }
 
   return {
     ...project,
     baufelder_count: baufelder.length,
     varianten_count,
-    total_bgf: total_bgf || undefined,
-    total_investment: total_investment || undefined,
-    avg_rendite: rendite_count > 0 ? rendite_sum / rendite_count : undefined,
+    favorite_count,
   }
 }

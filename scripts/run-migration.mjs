@@ -1,30 +1,38 @@
+#!/usr/bin/env node
+/**
+ * Run migration against Supabase.
+ * 
+ * Usage:
+ *   SUPABASE_DB_PASSWORD=<your-db-password> node scripts/run-migration.mjs
+ * 
+ * If you don't have the DB password, run the SQL manually:
+ *   1. Go to https://supabase.com/dashboard/project/jkcnvuyklczouglhcoih/sql
+ *   2. Paste contents of supabase/migrations/001_pipeline_tables.sql
+ *   3. Click "Run"
+ */
 import { readFileSync } from 'fs'
 import postgres from 'postgres'
 
-// Supabase direct Postgres connection
-// Format: postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
-const sql = postgres(`postgresql://postgres.jkcnvuyklczouglhcoih:${process.env.SUPABASE_DB_PASSWORD}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`, {
-  ssl: 'require',
-})
+const password = process.env.SUPABASE_DB_PASSWORD
+if (!password) {
+  console.error('❌ SUPABASE_DB_PASSWORD not set.')
+  console.error('Run the migration SQL manually via Supabase Dashboard SQL Editor:')
+  console.error('  https://supabase.com/dashboard/project/jkcnvuyklczouglhcoih/sql')
+  console.error('  File: supabase/migrations/001_pipeline_tables.sql')
+  process.exit(1)
+}
 
+const sql = postgres(`postgresql://postgres:${password}@db.jkcnvuyklczouglhcoih.supabase.co:5432/postgres?sslmode=require`)
 const migration = readFileSync(new URL('../supabase/migrations/001_pipeline_tables.sql', import.meta.url), 'utf-8')
 
 console.log('Running migration...')
 try {
   await sql.unsafe(migration)
-  console.log('✅ Migration completed successfully!')
-  
-  // Verify
-  const projects = await sql`SELECT count(*) FROM projects`
-  console.log('Projects table exists, count:', projects[0].count)
-  
-  const baufelder = await sql`SELECT count(*) FROM baufelder`
-  console.log('Baufelder table exists, count:', baufelder[0].count)
-  
-  const varianten = await sql`SELECT count(*) FROM varianten`
-  console.log('Varianten table exists, count:', varianten[0].count)
+  console.log('✅ Migration completed!')
+  const r = await sql`SELECT count(*) FROM projects`
+  console.log('Verified: projects table exists')
 } catch (e) {
-  console.error('❌ Migration failed:', e.message)
+  console.error('❌ Failed:', e.message)
   process.exit(1)
 } finally {
   await sql.end()
