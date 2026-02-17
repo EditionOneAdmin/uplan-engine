@@ -21,7 +21,7 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mt-6 text-lg md:text-xl text-slate-text/80 leading-relaxed max-w-xl"
           >
-            ...automatisiert und optimiert die Machbarkeitsprüfung & Variantenplanung.
+            U-Plan Engine automatisiert und optimiert die Machbarkeitsprüfung & Variantenplanung.
             U-Plan Engine findet die beste Planung für Ihr Grundstück.
           </motion.p>
           <motion.div

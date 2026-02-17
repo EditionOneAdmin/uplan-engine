@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "U-Plan Engine — Machbarkeitsentscheidung in Minuten",
   description:
-    "...automatisiert und optimiert die Machbarkeitsprüfung & Variantenplanung. U-Plan Engine findet die beste Planung für Ihr Grundstück.",
+    "U-Plan Engine automatisiert und optimiert die Machbarkeitsprüfung & Variantenplanung. U-Plan Engine findet die beste Planung für Ihr Grundstück.",
 };
 
 export default function RootLayout({

@@ -126,7 +126,7 @@ function Hero() {
             Machbarkeitsentscheidung — in Minuten.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-text/70 md:text-xl">
-            ...automatisiert und optimiert die Machbarkeitsprüfung &
+            U-Plan Engine automatisiert und optimiert die Machbarkeitsprüfung &
             Variantenplanung. U-Plan Engine findet die beste Planung für Ihr Grundstück.
           </p>
         </motion.div>
