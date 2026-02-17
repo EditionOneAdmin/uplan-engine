@@ -6,19 +6,32 @@ import { MapPin, Plus, BarChart3, Trash2, ChevronDown, ChevronRight } from "luci
 import type { Baufeld, Variante } from "@/types/pipeline";
 import VarianteCard from "./VarianteCard";
 import VariantenVergleich from "./VariantenVergleich";
+import SelectTemplateModal from "./SelectTemplateModal";
 
 interface Props {
   baufeld: Baufeld;
   varianten: Variante[];
+  projectId: string;
   onAddVariante: () => void;
+  onAddVarianteFromTemplate: (varianteId: string) => void;
+  onAddBlankVariante: () => void;
   onSetFavorite: (baufeldId: string, varianteId: string) => void;
   onDeleteVariante: (id: string) => void;
   onDeleteBaufeld: () => void;
 }
 
-export default function BaufeldSection({ baufeld, varianten, onAddVariante, onSetFavorite, onDeleteVariante, onDeleteBaufeld }: Props) {
+export default function BaufeldSection({ baufeld, varianten, projectId, onAddVariante, onAddVarianteFromTemplate, onAddBlankVariante, onSetFavorite, onDeleteVariante, onDeleteBaufeld }: Props) {
   const [expanded, setExpanded] = useState(true);
   const [showVergleich, setShowVergleich] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+
+  const handleAddClick = () => {
+    if (varianten.length === 0) {
+      onAddBlankVariante();
+    } else {
+      setShowTemplateModal(true);
+    }
+  };
 
   return (
     <>
@@ -59,7 +72,7 @@ export default function BaufeldSection({ baufeld, varianten, onAddVariante, onSe
               </button>
             )}
             <button
-              onClick={onAddVariante}
+              onClick={handleAddClick}
               className="flex items-center gap-1 rounded-lg bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition"
             >
               <Plus className="h-3.5 w-3.5" /> Variante
@@ -103,6 +116,21 @@ export default function BaufeldSection({ baufeld, varianten, onAddVariante, onSe
           onClose={() => setShowVergleich(false)}
         />
       )}
+
+      <SelectTemplateModal
+        open={showTemplateModal}
+        varianten={varianten}
+        baufeldName={baufeld.name}
+        onSelect={(varianteId) => {
+          setShowTemplateModal(false);
+          onAddVarianteFromTemplate(varianteId);
+        }}
+        onBlank={() => {
+          setShowTemplateModal(false);
+          onAddBlankVariante();
+        }}
+        onClose={() => setShowTemplateModal(false)}
+      />
     </>
   );
 }

@@ -255,6 +255,14 @@ export default function ProjectDetailClient() {
     await fetchData();
   };
 
+  const handleAddVarianteFromTemplate = (baufeldId: string, varianteId: string) => {
+    router.push(`/demo/?loadVariante=${varianteId}&newVariante=true&projectId=${project!.id}&baufeldId=${baufeldId}`);
+  };
+
+  const handleAddBlankVariante = (baufeldId: string) => {
+    router.push(`/demo/?newVariante=true&projectId=${project!.id}&baufeldId=${baufeldId}`);
+  };
+
   const handleDeleteVariante = async (id: string) => {
     await deleteVariante(id);
     setToast("Variante gelöscht");
@@ -391,7 +399,10 @@ export default function ProjectDetailClient() {
                   key={bf.id}
                   baufeld={bf}
                   varianten={variantenMap[bf.id] || []}
+                  projectId={project!.id}
                   onAddVariante={() => handleAddVariante(bf.id)}
+                  onAddVarianteFromTemplate={(varianteId) => handleAddVarianteFromTemplate(bf.id, varianteId)}
+                  onAddBlankVariante={() => handleAddBlankVariante(bf.id)}
                   onSetFavorite={handleSetFavorite}
                   onDeleteVariante={handleDeleteVariante}
                   onDeleteBaufeld={() => handleDeleteBaufeld(bf.id)}

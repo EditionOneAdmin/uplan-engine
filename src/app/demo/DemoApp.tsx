@@ -64,6 +64,9 @@ export default function DemoApp() {
   const [costData, setCostData] = useState<CostData | undefined>(undefined);
   // Add to project modal
   const [showAddToProject, setShowAddToProject] = useState(false);
+  // Pre-selection from pipeline (newVariante flow)
+  const [preselectedProjectId, setPreselectedProjectId] = useState<string | null>(null);
+  const [preselectedBaufeldId, setPreselectedBaufeldId] = useState<string | null>(null);
 
   const handlePlace = useCallback(() => {
     setPlaceMode(true);
@@ -278,7 +281,21 @@ export default function DemoApp() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const varianteId = params.get("loadVariante");
-    if (!varianteId) return;
+    const isNewVariante = params.get("newVariante") === "true";
+    const urlProjectId = params.get("projectId");
+    const urlBaufeldId = params.get("baufeldId");
+
+    // Store preselection for AddToProjectModal
+    if (isNewVariante && urlProjectId) setPreselectedProjectId(urlProjectId);
+    if (isNewVariante && urlBaufeldId) setPreselectedBaufeldId(urlBaufeldId);
+
+    if (!varianteId) {
+      // Blank new variante from pipeline — just clean URL
+      if (isNewVariante) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+      return;
+    }
 
     (async () => {
       try {
@@ -314,7 +331,10 @@ export default function DemoApp() {
           setCostData(w.costData as CostData);
         }
 
-        setDeepLinkToast(`Variante "${variante.name}" geladen`);
+        const toastMsg = isNewVariante
+          ? `Vorlage "${variante.name}" geladen — bearbeiten & speichern`
+          : `Variante "${variante.name}" geladen`;
+        setDeepLinkToast(toastMsg);
         // Clean URL
         window.history.replaceState({}, "", window.location.pathname);
       } catch {
@@ -461,13 +481,15 @@ export default function DemoApp() {
       />
       <AddToProjectModal
         open={showAddToProject}
-        onClose={() => setShowAddToProject(false)}
+        onClose={() => { setShowAddToProject(false); }}
         selectedRegion={selectedRegion}
         baufelder={baufelder}
         placedUnits={placedUnits}
         costData={costData}
         filters={filters}
         metrics={metrics}
+        preselectedProjectId={preselectedProjectId}
+        preselectedBaufeldId={preselectedBaufeldId}
       />
       <ExportModal
         open={showExportModal}

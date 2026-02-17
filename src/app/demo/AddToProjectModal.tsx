@@ -27,6 +27,8 @@ interface Props {
   costData?: CostData;
   filters: Filters;
   metrics: Metrics;
+  preselectedProjectId?: string | null;
+  preselectedBaufeldId?: string | null;
 }
 
 type Step = 1 | 2 | 3 | 4; // 4 = success
@@ -40,6 +42,8 @@ export function AddToProjectModal({
   costData,
   filters,
   metrics,
+  preselectedProjectId,
+  preselectedBaufeldId,
 }: Props) {
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
@@ -68,15 +72,27 @@ export function AddToProjectModal({
   // Load projects on open
   useEffect(() => {
     if (open) {
-      setStep(1);
       setError(null);
-      setSelectedProjectId(null);
       setCreateNew(false);
       setNewProjectName("");
       setNewProjectDesc("");
-      getProjects().then(setProjects).catch(() => setProjects([]));
+
+      if (preselectedProjectId && preselectedBaufeldId) {
+        // Skip steps 1 & 2 — go directly to naming
+        setSelectedProjectId(preselectedProjectId);
+        setSelectedBaufeldId(preselectedBaufeldId);
+        setStep(3);
+        // Auto-suggest name
+        getVarianten(preselectedBaufeldId)
+          .then((v) => setVarianteName(`Variante ${v.length + 1}`))
+          .catch(() => setVarianteName("Variante 1"));
+      } else {
+        setStep(1);
+        setSelectedProjectId(null);
+        getProjects().then(setProjects).catch(() => setProjects([]));
+      }
     }
-  }, [open]);
+  }, [open, preselectedProjectId, preselectedBaufeldId]);
 
   // Load baufelder when project selected
   useEffect(() => {
