@@ -2,8 +2,9 @@
 
 import type { Metrics } from "./types";
 import { getScoreColor, getScoreIcon } from "./matchScore";
+import { InfoTooltip } from "./InfoTooltip";
 
-function ProgressBar({ value, label, unit }: { value: number; label: string; unit?: string }) {
+function ProgressBar({ value, label, unit }: { value: number; label: React.ReactNode; unit?: string }) {
   const pct = Math.min(value * 100, 100);
   const color = pct > 90 ? "#EF4444" : pct > 70 ? "#EAB308" : "#0D9488";
   return (
@@ -73,8 +74,8 @@ export function BottomBar({ metrics, drawing, onToggleDraw, matchScore, onExport
       <div className="flex items-center gap-1 mr-2">
         <span className="text-xs text-white/40 uppercase tracking-wider font-semibold">📊</span>
       </div>
-      <ProgressBar value={metrics.grzUsage} label="GRZ" />
-      <ProgressBar value={metrics.gfzUsage} label="GFZ" />
+      <ProgressBar value={metrics.grzUsage} label={<>GRZ<InfoTooltip term="GRZ" definition="Grundflächenzahl — max. überbaubare Fläche im Verhältnis zur Grundstücksfläche. GRZ 0.4 = 40% dürfen überbaut werden." /></>} />
+      <ProgressBar value={metrics.gfzUsage} label={<>GFZ<InfoTooltip term="GFZ" definition="Geschossflächenzahl — max. Geschossfläche im Verhältnis zur Grundstücksfläche. GFZ 1.2 = 120% Geschossfläche erlaubt." /></>} />
       <div className="w-px h-8 bg-white/10 shrink-0" />
       <Stat label="Wohneinheiten" value={metrics.totalUnits} />
       <Stat label="BGF" value={metrics.totalBGF.toLocaleString("de-DE")} unit="m²" />

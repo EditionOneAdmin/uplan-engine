@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { CostData } from "./exportPDF";
 import type { Baufeld, PlacedUnit, BuildingModule, Filters } from "./types";
+import { InfoTooltip } from "./InfoTooltip";
 
 /* ── Mietspiegel Data ─────────────────────────────────────── */
 
@@ -149,7 +150,7 @@ function CostRow({
   children,
   color = "text-white",
 }: {
-  label: string;
+  label: React.ReactNode;
   value: number;
   enabled: boolean;
   onToggle: (v: boolean) => void;
@@ -174,11 +175,14 @@ function CostRow({
 
 /* ── KPI Card ─────────────────────────────────────────────── */
 
-function KPICard({ label, value, unit, color }: { label: string; value: string; unit?: string; color: string }) {
+function KPICard({ label, value, unit, color, info }: { label: string; value: string; unit?: string; color: string; info?: { definition: string; formula?: string } }) {
   return (
     <div className="bg-[#0F172A] rounded-lg p-3 border border-white/5 text-center">
       <div className="text-lg font-bold" style={{ color }}>{value}{unit && <span className="text-sm ml-0.5">{unit}</span>}</div>
-      <div className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">{label}</div>
+      <div className="text-[10px] text-white/40 uppercase tracking-wider mt-0.5">
+        {label}
+        {info && <InfoTooltip term={label} definition={info.definition} formula={info.formula} />}
+      </div>
     </div>
   );
 }
@@ -1012,7 +1016,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
 
       {/* ── Kostengruppen ────────────────────────────────── */}
       <Section title="Kosten" color="#F59E0B">
-        <CostRow label="KG 100 · Grundstück" value={calc.kg100} enabled={kg100On} onToggle={setKg100On}>
+        <CostRow label={<>KG 100 · Grundstück<InfoTooltip term="KG100" definition="Kostengruppe 100 — Grundstück (nach DIN 276)." /></>} value={calc.kg100} enabled={kg100On} onToggle={setKg100On}>
           <div className="space-y-2">
             {/* Zwei editierbare Felder: €/m² und Gesamtpreis */}
             <div className="grid grid-cols-2 gap-2">
@@ -1072,19 +1076,19 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
           </div>
         </CostRow>
 
-        <CostRow label="KG 200 · Herrichten & Erschließen" value={calc.kg200} enabled={kg200On} onToggle={setKg200On}>
+        <CostRow label={<>KG 200 · Herrichten &amp; Erschließen<InfoTooltip term="KG200" definition="Kostengruppe 200 — Vorbereitende Maßnahmen, Herrichten, Erschließen." /></>} value={calc.kg200} enabled={kg200On} onToggle={setKg200On}>
           <NumInput value={kg200Pct} onChange={setKg200Pct} suffix="% der Baukosten" step={1} />
         </CostRow>
 
-        <CostRow label="KG 300+400 · Gebäude + Technik" value={calc.kg300} enabled={kg300On} onToggle={setKg300On}>
-          <div className="text-[10px] text-white/30">{placedUnits.length} Gebäude · {calc.totalBGF.toLocaleString("de-DE")} m² BGF · {calc.totalWohnflaeche.toLocaleString("de-DE")} m² WF (75%)</div>
+        <CostRow label={<>KG 300+400 · Gebäude + Technik<InfoTooltip term="KG300" definition="Kostengruppe 300 — Bauwerk / Baukonstruktionen (Rohbau + Ausbau)." /></>} value={calc.kg300} enabled={kg300On} onToggle={setKg300On}>
+          <div className="text-[10px] text-white/30">{placedUnits.length} Gebäude · {calc.totalBGF.toLocaleString("de-DE")} m² BGF<InfoTooltip term="BGF" definition="Bruttogrundfläche — gesamte Geschossfläche inkl. Wände, Treppenhäuser, Technik." /> · {calc.totalWohnflaeche.toLocaleString("de-DE")} m² WF<InfoTooltip term="WF" definition="Wohnfläche — nutzbare Wohnfläche (ca. 75% der BGF bei Wohnbau)." /> (75%)</div>
         </CostRow>
 
-        <CostRow label="KG 500 · Außenanlagen" value={calc.kg500} enabled={kg500On} onToggle={setKg500On}>
+        <CostRow label={<>KG 500 · Außenanlagen<InfoTooltip term="KG500" definition="Kostengruppe 500 — Außenanlagen." /></>} value={calc.kg500} enabled={kg500On} onToggle={setKg500On}>
           <NumInput value={kg500Pct} onChange={setKg500Pct} suffix="% der Baukosten" step={1} />
         </CostRow>
 
-        <CostRow label="KG 700 · Baunebenkosten" value={calc.kg700} enabled={kg700On} onToggle={setKg700On}>
+        <CostRow label={<>KG 700 · Baunebenkosten<InfoTooltip term="KG700" definition="Kostengruppe 700 — Baunebenkosten (Planung, Honorare, Genehmigungen)." /></>} value={calc.kg700} enabled={kg700On} onToggle={setKg700On}>
           <div className="flex items-center gap-2">
             <NumInput value={kg700Pct} onChange={setKg700Pct} suffix="%" step={1} />
             {matchScore !== undefined && calc.kg700BasePct > kg700Pct && (
@@ -1138,7 +1142,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             {/* EK/FK Bar */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-white/50">EK {ekQuote}% / FK {fkQuoteVal}%</span>
+                <span className="text-[10px] text-white/50">EK<InfoTooltip term="EK" definition="Eigenkapital — dein eigener Kapitaleinsatz." /> {ekQuote}% / FK<InfoTooltip term="FK" definition="Fremdkapital — Kreditfinanzierung." /> {fkQuoteVal}%</span>
               </div>
               <div className="flex h-3 rounded-full overflow-hidden">
                 <div className="bg-teal-500 transition-all" style={{ width: `${ekQuote}%` }} />
@@ -1557,22 +1561,23 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             {/* ── KPIs (Sell with Sensitivity) ───────────────── */}
             <Section title="KPI-Dashboard" color="#0D9488">
               <div className="grid grid-cols-2 gap-2">
-                <KPICard label="Marge" value={fmtPct(hasSens ? adjMarge : calc.marge)} color={(hasSens ? adjMarge : calc.marge) > 0 ? "#22C55E" : "#EF4444"} />
-                <KPICard label="IRR (ann.)" value={fmtPct(hasSens ? adjIrr : calc.irrSell)} color="#0D9488" />
+                <KPICard label="Marge" value={fmtPct(hasSens ? adjMarge : calc.marge)} color={(hasSens ? adjMarge : calc.marge) > 0 ? "#22C55E" : "#EF4444"} info={{ definition: "Gewinnspanne bezogen auf die Gesamtkosten.", formula: "(Verkaufserlös − Gesamtkosten) ÷ Gesamtkosten" }} />
+                <KPICard label="IRR (ann.)" value={fmtPct(hasSens ? adjIrr : calc.irrSell)} color="#0D9488" info={{ definition: "Annualisierte Rendite des Verkaufsszenarios.", formula: "Annualisierte Marge über Projektlaufzeit" }} />
                 {finanzierungAktiv && (hasSens ? adjEkRendite : calc.ekRenditeSell) !== null && (
                   <KPICard
                     label="EK-Rendite"
                     value={fmtPct((hasSens ? adjEkRendite : calc.ekRenditeSell)!)}
                     color={(hasSens ? adjEkRendite! : calc.ekRenditeSell!) > 0 ? "#22C55E" : "#EF4444"}
+                    info={{ definition: "Gewinn bezogen auf den Eigenkapitaleinsatz.", formula: "(Verkaufserlös − Gesamtkosten) ÷ EK" }}
                   />
                 )}
-                <KPICard label="Break-Even" value={calc.breakEvenMonth !== null ? `${calc.breakEvenMonth}` : "—"} unit=" Mo." color="#22C55E" />
-                <KPICard label="Max. Kapitalbedarf" value={fmtEur(Math.abs(calc.peakCapital))} color="#EF4444" />
-                <KPICard label="Grundstücksanteil" value={fmtPct(hasSens ? adjGrundstuecksanteil : calc.grundstuecksanteil)} color="#FBBF24" />
-                <KPICard label="Baukosten/m²" value={`${Math.round(calc.baukostenProM2).toLocaleString("de-DE")}`} unit=" €" color="#A78BFA" />
-                <KPICard label="Betrachtung" value={`${calc.gesamtlaufzeitMonate}`} unit=" Mo." color="#94A3B8" />
+                <KPICard label="Break-Even" value={calc.breakEvenMonth !== null ? `${calc.breakEvenMonth}` : "—"} unit=" Mo." color="#22C55E" info={{ definition: "Monat, ab dem das Projekt kumuliert im Plus ist.", formula: "Erster Monat mit kumuliertem CF ≥ 0" }} />
+                <KPICard label="Max. Kapitalbedarf" value={fmtEur(Math.abs(calc.peakCapital))} color="#EF4444" info={{ definition: "Höchster Punkt der negativen Cashflow-Kurve — so viel Kapital brauchst du mindestens.", formula: "Min(kumulierter Cashflow)" }} />
+                <KPICard label="Grundstücksanteil" value={fmtPct(hasSens ? adjGrundstuecksanteil : calc.grundstuecksanteil)} color="#FBBF24" info={{ definition: "Anteil der Grundstückskosten an den Gesamtkosten.", formula: "KG100 ÷ Gesamtkosten" }} />
+                <KPICard label="Baukosten/m²" value={`${Math.round(calc.baukostenProM2).toLocaleString("de-DE")}`} unit=" €" color="#A78BFA" info={{ definition: "Reine Baukosten (KG300) pro m² Bruttogrundfläche.", formula: "KG300 ÷ BGF" }} />
+                <KPICard label="Betrachtung" value={`${calc.gesamtlaufzeitMonate}`} unit=" Mo." color="#94A3B8" info={{ definition: "Gesamter Analysezeitraum des Projekts in Monaten." }} />
                 {finanzierungAktiv && (
-                  <KPICard label="Monatl. Rate" value={fmtEur(calc.monatlicheRate)} color="#F59E0B" />
+                  <KPICard label="Monatl. Rate" value={fmtEur(calc.monatlicheRate)} color="#F59E0B" info={{ definition: "Monatliche Annuitätenrate (Zins + Tilgung).", formula: "FK × (Zinssatz + Tilgung) ÷ 12" }} />
                 )}
               </div>
             </Section>
@@ -1652,26 +1657,30 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
                 label="IRR (levered)"
                 value={calc.irrHoldLevered !== null ? fmtPct(calc.irrHoldLevered) : "—"}
                 color={calc.irrHoldLevered !== null ? (calc.irrHoldLevered > 8 ? "#22C55E" : calc.irrHoldLevered >= 4 ? "#FBBF24" : "#EF4444") : "#94A3B8"}
+                info={{ definition: "Interner Zinsfuß deiner EK-Cashflows inkl. Finanzierung und Exit-Erlös.", formula: "Newton-Raphson auf jährliche EK-Cashflows" }}
               />
               <KPICard
                 label="IRR (unlevered)"
                 value={calc.irrHoldUnlevered !== null ? fmtPct(calc.irrHoldUnlevered) : "—"}
                 color={calc.irrHoldUnlevered !== null ? (calc.irrHoldUnlevered > 8 ? "#22C55E" : calc.irrHoldUnlevered >= 4 ? "#FBBF24" : "#EF4444") : "#94A3B8"}
+                info={{ definition: "Interner Zinsfuß ohne Finanzierung — zeigt die reine Objektqualität.", formula: "Newton-Raphson auf Gesamt-Cashflows" }}
               />
               <KPICard
                 label="Multiple on Equity"
                 value={calc.multipleOnEquity > 0 ? `${calc.multipleOnEquity.toFixed(2)}` : "—"}
                 unit="×"
                 color={calc.multipleOnEquity > 2 ? "#22C55E" : calc.multipleOnEquity >= 1.5 ? "#FBBF24" : "#EF4444"}
+                info={{ definition: "Wie oft bekommst du dein eingesetztes EK zurück?", formula: "Gesamtrückflüsse ÷ EK-Einsatz" }}
               />
-              <KPICard label="Total Profit" value={fmtEur(calc.totalProfitHold)} color={calc.totalProfitHold > 0 ? "#22C55E" : "#EF4444"} />
-              <KPICard label="Avg. Cash Yield" value={fmtPct(calc.avgCashYield)} color={calc.avgCashYield > 8 ? "#22C55E" : calc.avgCashYield >= 4 ? "#FBBF24" : "#EF4444"} />
-              <KPICard label="Nettoanfangsrendite" value={fmtPct(calc.niy)} color="#0D9488" />
+              <KPICard label="Total Profit" value={fmtEur(calc.totalProfitHold)} color={calc.totalProfitHold > 0 ? "#22C55E" : "#EF4444"} info={{ definition: "Absoluter Gewinn über die gesamte Haltedauer.", formula: "Summe aller Cashflows" }} />
+              <KPICard label="Avg. Cash Yield" value={fmtPct(calc.avgCashYield)} color={calc.avgCashYield > 8 ? "#22C55E" : calc.avgCashYield >= 4 ? "#FBBF24" : "#EF4444"} info={{ definition: "Durchschnittlicher jährlicher Ertrag auf dein EK (ohne Exit).", formula: "Ø Jahres-Cashflow ÷ EK" }} />
+              <KPICard label="Nettoanfangsrendite" value={fmtPct(calc.niy)} color="#0D9488" info={{ definition: "Jährliche Nettomiete im Verhältnis zum Gesamtinvestment. Zeigt die ungehebelte Objektrendite.", formula: "Nettomiete p.a. ÷ Investitionskosten" }} />
               {finanzierungAktiv && calc.coc !== null && (
                 <KPICard
                   label="Cash-on-Cash"
                   value={fmtPct(calc.coc)}
                   color={calc.coc > 8 ? "#22C55E" : calc.coc >= 4 ? "#FBBF24" : "#EF4444"}
+                  info={{ definition: "Jährlicher freier Cashflow bezogen auf deinen Eigenkapitaleinsatz.", formula: "(Nettomiete − Annuität) ÷ EK" }}
                 />
               )}
               {finanzierungAktiv && calc.dscr !== null && (
@@ -1680,26 +1689,28 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
                   value={calc.dscr.toFixed(2)}
                   unit="×"
                   color={calc.dscr > 1.3 ? "#22C55E" : calc.dscr >= 1.0 ? "#FBBF24" : "#EF4444"}
+                  info={{ definition: "Debt Service Coverage Ratio — kann die Miete den Kapitaldienst decken?", formula: "Nettomiete p.a. ÷ Annuität p.a." }}
                 />
               )}
               {finanzierungAktiv && (
                 <>
-                  <KPICard label="Restschuld" value={fmtEur(calc.restschuldEnde)} color="#F59E0B" />
-                  <KPICard label="Equity Build-up" value={fmtEur(calc.equityBuildup)} color="#22C55E" />
+                  <KPICard label="Restschuld" value={fmtEur(calc.restschuldEnde)} color="#F59E0B" info={{ definition: "Verbleibende Kreditschuld am Ende des Betrachtungszeitraums.", formula: "FK − kumulierte Tilgung" }} />
+                  <KPICard label="Equity Build-up" value={fmtEur(calc.equityBuildup)} color="#22C55E" info={{ definition: "Durch Tilgung aufgebautes Eigenkapital im Objekt.", formula: "FK-Volumen − Restschuld" }} />
                 </>
               )}
-              <KPICard label="Monatl. Rate" value={fmtEur(calc.monatlicheRate)} color="#F59E0B" />
-              <KPICard label="Nettomiete/Mo." value={fmtEur(calc.nettomieteJahr / 12)} color="#22C55E" />
+              <KPICard label="Monatl. Rate" value={fmtEur(calc.monatlicheRate)} color="#F59E0B" info={{ definition: "Monatliche Annuitätenrate (Zins + Tilgung).", formula: "FK × (Zinssatz + Tilgung) ÷ 12" }} />
+              <KPICard label="Nettomiete/Mo." value={fmtEur(calc.nettomieteJahr / 12)} color="#22C55E" info={{ definition: "Monatliche Mieteinnahme nach Bewirtschaftungskosten.", formula: "Jahresmiete × (1 − Bewirtschaftung%) ÷ 12" }} />
               <KPICard
                 label="Netto nach Rate"
                 value={fmtEur(calc.nettomieteJahr / 12 - calc.monatlicheRate)}
                 color={(calc.nettomieteJahr / 12 - calc.monatlicheRate) > 0 ? "#22C55E" : "#EF4444"}
+                info={{ definition: "Was monatlich nach Kreditrate übrig bleibt.", formula: "Nettomiete/Mo. − Monatl. Rate" }}
               />
-          <KPICard label="Break-Even" value={calc.breakEvenMonth !== null ? `${calc.breakEvenMonth}` : "—"} unit=" Mo." color="#22C55E" />
-          <KPICard label="Max. Kapitalbedarf" value={fmtEur(Math.abs(calc.peakCapital))} color="#EF4444" />
-          <KPICard label="Grundstücksanteil" value={fmtPct(calc.grundstuecksanteil)} color="#FBBF24" />
-          <KPICard label="Baukosten/m²" value={`${Math.round(calc.baukostenProM2).toLocaleString("de-DE")}`} unit=" €" color="#A78BFA" />
-          <KPICard label="Betrachtung" value={`${betrachtungJahre * 12}`} unit=" Mo." color="#94A3B8" />
+          <KPICard label="Break-Even" value={calc.breakEvenMonth !== null ? `${calc.breakEvenMonth}` : "—"} unit=" Mo." color="#22C55E" info={{ definition: "Monat, ab dem das Projekt kumuliert im Plus ist.", formula: "Erster Monat mit kumuliertem CF ≥ 0" }} />
+          <KPICard label="Max. Kapitalbedarf" value={fmtEur(Math.abs(calc.peakCapital))} color="#EF4444" info={{ definition: "Höchster Punkt der negativen Cashflow-Kurve — so viel Kapital brauchst du mindestens.", formula: "Min(kumulierter Cashflow)" }} />
+          <KPICard label="Grundstücksanteil" value={fmtPct(calc.grundstuecksanteil)} color="#FBBF24" info={{ definition: "Anteil der Grundstückskosten an den Gesamtkosten.", formula: "KG100 ÷ Gesamtkosten" }} />
+          <KPICard label="Baukosten/m²" value={`${Math.round(calc.baukostenProM2).toLocaleString("de-DE")}`} unit=" €" color="#A78BFA" info={{ definition: "Reine Baukosten (KG300) pro m² Bruttogrundfläche.", formula: "KG300 ÷ BGF" }} />
+          <KPICard label="Betrachtung" value={`${betrachtungJahre * 12}`} unit=" Mo." color="#94A3B8" info={{ definition: "Gesamter Analysezeitraum des Projekts in Monaten." }} />
         </div>
       </Section>
       )}

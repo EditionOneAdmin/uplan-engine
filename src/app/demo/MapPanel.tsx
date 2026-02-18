@@ -19,6 +19,7 @@ import "leaflet/dist/leaflet.css";
 import type { Baufeld, PlacedUnit } from "./types";
 import { BUILDINGS } from "./data";
 import PlacedBuildings, { GhostPolygon } from "./PlacedBuildings";
+import { InfoTooltip } from "./InfoTooltip";
 import type { RegionConfig } from "../../config/regionTypes";
 import { RegionSelector } from "./RegionSelector";
 import { getMietspiegel } from "../../data/mietspiegel";
@@ -714,7 +715,7 @@ function BaufeldConfigModal({
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <div className={labelStyle}>GRZ max</div>
+              <div className={labelStyle}>GRZ max<InfoTooltip term="GRZ" definition="Grundflächenzahl — max. überbaubare Fläche im Verhältnis zur Grundstücksfläche. GRZ 0.4 = 40% dürfen überbaut werden." /></div>
               <input
                 type="number"
                 className={inputStyle}
@@ -726,7 +727,7 @@ function BaufeldConfigModal({
               />
             </div>
             <div>
-              <div className={labelStyle}>GFZ max</div>
+              <div className={labelStyle}>GFZ max<InfoTooltip term="GFZ" definition="Geschossflächenzahl — max. Geschossfläche im Verhältnis zur Grundstücksfläche. GFZ 1.2 = 120% Geschossfläche erlaubt." /></div>
               <input
                 type="number"
                 className={inputStyle}
