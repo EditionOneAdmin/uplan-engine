@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B-Plan Extraction Review — UPLAN GeoIndex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0b; --bg2: #141416; --bg3: #1c1c20; --bg4: #26262b;
+  --border: #2a2a30; --border2: #38383f;
+  --text: #f0f0f2; --text2: #a0a0a8; --text3: #68686f;
+  --accent: #f5c518; --accent2: #d4a80e;
+  --green: #22c55e; --green-bg: rgba(34,197,94,0.1); --green-border: rgba(34,197,94,0.3);
+  --red: #ef4444; --red-bg: rgba(239,68,68,0.1); --red-border: rgba(239,68,68,0.3);
+  --blue: #3b82f6; --blue-bg: rgba(59,130,246,0.08);
+  --radius: 12px; --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* Header */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px; background: var(--bg2); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);
+}
+.topbar .logo { display: flex; align-items: center; gap: 10px; }
+.topbar .logo-icon { font-size: 24px; }
+.topbar .logo-text { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+.topbar .logo-sub { font-size: 12px; color: var(--text3); font-weight: 400; margin-left: 8px; }
+.progress-bar-wrap { flex: 1; max-width: 300px; margin: 0 24px; }
+.progress-bar-bg { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; transition: width .4s ease; }
+.progress-label { font-size: 11px; color: var(--text3); margin-top: 3px; text-align: center; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-ok { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.badge-flag { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+
+/* Plan Strip */
+.plan-strip {
+  display: flex; gap: 6px; padding: 10px 24px; background: var(--bg2);
+  border-bottom: 1px solid var(--border); overflow-x: auto;
+  scrollbar-width: thin; scrollbar-color: var(--bg4) transparent;
+}
+.plan-chip {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 14px; border-radius: var(--radius-sm); cursor: pointer;
+  background: var(--bg3); border: 1.5px solid transparent;
+  transition: all .2s; min-width: 90px; position: relative;
+}
+.plan-chip:hover { background: var(--bg4); border-color: var(--border2); }
+.plan-chip.active { border-color: var(--accent); background: rgba(245,197,24,0.06); }
+.plan-chip .chip-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.plan-chip .chip-bezirk { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.plan-chip .chip-status {
+  position: absolute; top: -4px; right: -4px; width: 18px; height: 18px;
+  border-radius: 50%; font-size: 10px; display: flex; align-items: center;
+  justify-content: center; border: 2px solid var(--bg2);
+}
+.chip-status.ok { background: var(--green); }
+.chip-status.flag { background: var(--red); }
+.chip-status.pending { background: var(--bg4); }
+
+/* Main Layout */
+.main { display: flex; height: calc(100vh - 96px); }
+
+/* PDF Viewer */
+.viewer {
+  flex: 1; display: flex; flex-direction: column; background: #000;
+  position: relative; overflow: hidden;
+}
+.viewer-toolbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 16px; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+}
+.viewer-toolbar a, .viewer-toolbar button {
+  color: var(--text2); font-size: 12px; text-decoration: none;
+  padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.08);
+  border: none; cursor: pointer; font-family: inherit; transition: all .2s;
+}
+.viewer-toolbar a:hover, .viewer-toolbar button:hover { background: rgba(255,255,255,0.15); color: var(--text); }
+.viewer-img-wrap {
+  flex: 1; overflow: auto; display: flex; justify-content: center;
+  align-items: flex-start; padding: 16px;
+}
+.viewer-img-wrap img {
+  max-width: 100%; height: auto; border-radius: 4px;
+  transition: transform .3s; transform-origin: top center;
+}
+.viewer-img-wrap img.z150 { transform: scale(1.5); }
+.viewer-img-wrap img.z200 { transform: scale(2); }
+.viewer-img-wrap img.z300 { transform: scale(3); }
+
+/* Data Panel */
+.panel {
+  width: 520px; display: flex; flex-direction: column;
+  border-left: 1px solid var(--border); background: var(--bg2);
+}
+.panel-header {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+}
+.panel-title { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.panel-title .accent { color: var(--accent); }
+.panel-subtitle { font-size: 13px; color: var(--text3); margin-top: 4px; }
+.panel-body { flex: 1; overflow-y: auto; padding: 16px 24px; }
+
+/* Cards */
+.card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  transition: border-color .2s;
+}
+.card:hover { border-color: var(--border2); }
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.card-title { font-size: 15px; font-weight: 700; color: var(--blue); }
+.card-badge {
+  font-size: 10px; padding: 3px 8px; border-radius: 4px;
+  background: var(--blue-bg); color: var(--blue); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* KPI Grid */
+.kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+.kpi-cell {
+  background: var(--bg); border-radius: var(--radius-sm); padding: 10px;
+  text-align: center; position: relative;
+}
+.kpi-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+.kpi-value { font-size: 22px; font-weight: 800; margin-top: 2px; letter-spacing: -0.5px; }
+.kpi-value.empty { color: var(--text3); font-size: 16px; font-weight: 400; }
+.kpi-conf {
+  position: absolute; top: 4px; right: 6px; font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 3px;
+}
+.conf-h { background: var(--green-bg); color: var(--green); }
+.conf-m { background: rgba(245,197,24,0.15); color: var(--accent); }
+.conf-l { background: var(--red-bg); color: var(--red); }
+
+/* Extras */
+.extras { margin-top: 8px; }
+.extras summary {
+  font-size: 11px; color: var(--text3); cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+}
+.extras ul { padding: 8px 0 0 16px; }
+.extras li { font-size: 12px; color: var(--text2); margin-bottom: 4px; line-height: 1.4; }
+
+/* Review Footer */
+.panel-footer {
+  padding: 16px 24px; border-top: 1px solid var(--border);
+  background: var(--bg3);
+}
+.notes-area {
+  width: 100%; padding: 10px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  font-family: inherit; font-size: 13px; resize: vertical; min-height: 50px;
+  transition: border-color .2s; margin-bottom: 10px;
+}
+.notes-area:focus { outline: none; border-color: var(--accent); }
+.notes-area::placeholder { color: var(--text3); }
+.btn-row { display: flex; gap: 8px; }
+.btn {
+  flex: 1; padding: 12px; border-radius: var(--radius-sm); font-size: 14px;
+  font-weight: 700; cursor: pointer; border: none; font-family: inherit;
+  transition: all .15s; letter-spacing: -0.2px;
+}
+.btn-ok { background: var(--green); color: #fff; }
+.btn-ok:hover { background: #16a34a; transform: translateY(-1px); }
+.btn-flag { background: var(--red); color: #fff; }
+.btn-flag:hover { background: #dc2626; transform: translateY(-1px); }
+.btn-skip { background: var(--bg4); color: var(--text2); }
+.btn-skip:hover { background: var(--border); color: var(--text); }
+
+/* Keyboard hint */
+.kbd-hint {
+  display: flex; justify-content: center; gap: 16px; margin-top: 8px;
+}
+.kbd { 
+  font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 4px;
+}
+.kbd kbd {
+  background: var(--bg4); padding: 1px 6px; border-radius: 3px;
+  font-family: inherit; font-size: 10px; border: 1px solid var(--border);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+/* Animations */
+@keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.card { animation: slideIn .3s ease; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <span class="logo-icon">🏗️</span>
+    <span class="logo-text">UPLAN GeoIndex</span>
+    <span class="logo-sub">Extraction Review</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 von 10</div>
+  </div>
+  <div class="topbar-actions">
+    <span class="badge badge-ok" id="badgeOk">✓ 0</span>
+    <span class="badge badge-flag" id="badgeFlag">✗ 0</span>
+  </div>
+</div>
+
+<div class="plan-strip" id="planStrip"></div>
+
+<div class="main">
+  <div class="viewer" id="viewer"></div>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title" id="panelTitle"></div>
+      <div class="panel-subtitle" id="panelSub"></div>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+    <div class="panel-footer">
+      <textarea class="notes-area" id="notes" placeholder="Notizen — z.B. 'GRZ sollte 0.3 sein, nicht 0.4'"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-ok" onclick="review('ok')">✓ Korrekt</button>
+        <button class="btn btn-flag" onclick="review('flag')">✗ Fehler</button>
+        <button class="btn btn-skip" onclick="go((cur+1)%P.length)">→ Weiter</button>
+      </div>
+      <div class="kbd-hint">
+        <span class="kbd"><kbd>←</kbd><kbd>→</kbd> Navigation</span>
+        <span class="kbd"><kbd>1</kbd> Korrekt</span>
+        <span class="kbd"><kbd>2</kbd> Fehler</span>
+        <span class="kbd"><kbd>+</kbd><kbd>-</kbd> Zoom</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const S = "https://jkcnvuyklczouglhcoih.supabase.co/storage/v1/object/public/bplan-pdfs/review";
+
+const P = [
+  { id:"01",name:"4-65",bz:"Charlottenburg-Wilm.",typ:"WA",yr:"2021",img:"01_4-65_ChaWi_hq.jpg",pdf:"01_4-65_ChaWi.pdf",
+    ex:[{t:"WA (Flächen A–D)",g:"WA",grz:null,gfz:null,gs:5,bw:"g",h:null,df:"",c:{grz:0,gfz:0,gs:.7,bw:.6},s:["OK 45.5–55.7m über NHN","Fläche A: OK=52.7m/45.6m","Fläche D: OK=55.7m","≥30% GF für sozialen Wohnungsbau"]}]},
+  { id:"02",name:"VI-4-1b",bz:"Friedrichshain-Kreuzb.",typ:"MI",yr:"2010",img:"02_VI-4-1b_FrKr_hq.jpg",pdf:"02_VI-4-1b_FrKr.pdf",
+    ex:[{t:"MI (Mischgebiet)",g:"MI",grz:.6,gfz:1.5,gs:5,bw:"g",h:null,df:"",c:{grz:.5,gfz:.5,gs:.6,bw:.6},s:["Baul. Anlagen bis höchstzul. VG an Grenze zur Parkanlage"]}]},
+  { id:"03",name:"11-60",bz:"Lichtenberg",typ:"WA",yr:"2016",img:"03_11-60_Lichtenb_hq.jpg",pdf:"03_11-60_Lichtenb.pdf",
+    ex:[{t:"WA 1",g:"WA",grz:.4,gfz:null,gs:4,bw:"",h:null,df:"",c:{grz:.8,gfz:0,gs:.7,bw:0},s:["GRZ-Überschreitung bis 0.6 durch Nebenanlagen"]},{t:"WA 2",g:"WA",grz:.4,gfz:null,gs:4,bw:"",h:null,df:"",c:{grz:.7,gfz:0,gs:.7,bw:0},s:[]},{t:"WA 3",g:"WA",grz:.4,gfz:null,gs:4,bw:"",h:null,df:"",c:{grz:.7,gfz:0,gs:.6,bw:0},s:[]}]},
+  { id:"04",name:"10-77",bz:"Marzahn-Hellersdorf",typ:"WA",yr:"2022",img:"04_10-77_MaHe_hq.jpg",pdf:"04_10-77_MaHe.pdf",
+    ex:[{t:"WA 1",g:"WA",grz:.4,gfz:.8,gs:12,bw:"",h:null,df:"",c:{grz:.7,gfz:.7,gs:.6,bw:0},s:["XII / 6.4 Nutzungsschablone"]},{t:"WA 2",g:"WA",grz:.4,gfz:.8,gs:8,bw:"",h:null,df:"",c:{grz:.6,gfz:.6,gs:.6,bw:0},s:["VIII / 6.4"]},{t:"WA 3",g:"WA",grz:.4,gfz:.8,gs:7,bw:"",h:null,df:"",c:{grz:.6,gfz:.6,gs:.6,bw:0},s:[]}]},
+  { id:"05",name:"I-14a",bz:"Mitte",typ:"WA",yr:"2017",img:"05_I-14a_Mitte_hq.jpg",pdf:"05_I-14a_Mitte.pdf",
+    ex:[{t:"WA 1",g:"WA",grz:null,gfz:null,gs:null,bw:"g",h:null,df:"",c:{grz:.6,gfz:.5,gs:.5,bw:.7},s:["GRZ im zeichn. Teil festgesetzt","GFZ-Überschreitung bis 0.5 (Balkone)","GFZ-Überschreitung bis 0.9 (Terrassen)","OK 56.0m / 53.0m über NHN"]}]},
+  { id:"06",name:"8-65",bz:"Neukölln",typ:"WA",yr:"2015",img:"06_8-65_Neukoelln_hq.jpg",pdf:"06_8-65_Neukoelln.pdf",
+    ex:[{t:"WA (Nord)",g:"WA",grz:.2,gfz:.4,gs:2,bw:"ED",h:null,df:"",c:{grz:.8,gfz:.8,gs:.8,bw:.7},s:["Mindestgrundstücksgröße 500m²","Stellpl./Garagen auf nicht überbaubaren Flächen unzulässig"]},{t:"WA (Süd)",g:"WA",grz:.2,gfz:.4,gs:2,bw:"ED",h:null,df:"",c:{grz:.8,gfz:.8,gs:.8,bw:.7},s:["Mindestgrundstücksgröße 500m²"]}]},
+  { id:"07",name:"3-23",bz:"Pankow",typ:"MK+MI",yr:"2011",img:"07_3-23_Pankow_hq.jpg",pdf:"07_3-23_Pankow.pdf",
+    ex:[{t:"a (Kerngebiet)",g:"MK",grz:.8,gfz:2.5,gs:null,bw:"g",h:62,df:"",c:{grz:.5,gfz:.5,gs:0,bw:.6},s:["Wohnen ab 2. OG","Tankstellen nicht zulässig"]},{t:"b (Mischgebiet)",g:"MI",grz:.6,gfz:1.5,gs:null,bw:"g",h:62,df:"",c:{grz:.4,gfz:.4,gs:0,bw:.5},s:["Traufhöhe mind. 54.5m"]}]},
+  { id:"08",name:"12-13",bz:"Reinickendorf",typ:"WA",yr:"2012",img:"08_12-13_Reinick_hq.jpg",pdf:"08_12-13_Reinick.pdf",
+    ex:[{t:"WA 1",g:"WA",grz:.4,gfz:.8,gs:3,bw:"o",h:null,df:"",c:{grz:.7,gfz:.7,gs:.8,bw:.7},s:["Gebäudelänge 18–19m","Max 2 WE <500m²"]},{t:"WA 2",g:"WA",grz:.4,gfz:.8,gs:3,bw:"o",h:null,df:"",c:{grz:.7,gfz:.7,gs:.8,bw:.7},s:[]},{t:"WA 3",g:"WA",grz:.4,gfz:.8,gs:3,bw:"o",h:null,df:"",c:{grz:.7,gfz:.7,gs:.8,bw:.7},s:[]}]},
+  { id:"09",name:"5-107",bz:"Spandau",typ:"WA",yr:"2022",img:"09_5-107_Spandau_hq.jpg",pdf:"09_5-107_Spandau.pdf",
+    ex:[{t:"WA",g:"WA",grz:.4,gfz:null,gs:4,bw:"o",h:null,df:"",c:{grz:.7,gfz:0,gs:.7,bw:.6},s:["GR variiert: 100–250m²","GF variiert: 300–500m²","OK 48.0–57.2m über NHN","GRZ-Überschr. bis 0.75"]}]},
+  { id:"10",name:"7-1VE",bz:"Tempelhof-Schöneberg",typ:"MK",yr:"2013",img:"10_7-1VE_TempSchoe_hq.jpg",pdf:"10_7-1VE_TempSchoe.pdf",
+    ex:[{t:"Vorhabengrundstück",g:"MK",grz:.4,gfz:1.0,gs:null,bw:"",h:62.5,df:"",c:{grz:.5,gfz:.5,gs:0,bw:0},s:["Wohnen + Kita + Gewerbe","OK max 62.5m über NHN","Flachdächer ≥15% begrünen","GRZ/GFZ-Überschr. bis 40%"]}]}
+];
+
+let R = JSON.parse(localStorage.getItem('bplan-r2')||'{}');
+let cur = 0, zoom = 0;
+const zoomLevels = ['','z150','z200','z300'];
+
+function cc(v){ return v>=.7?'conf-h':v>=.4?'conf-m':'conf-l'; }
+function cl(v){ return v>=.7?'✓ '+(v*100|0)+'%':v>=.4?'~ '+(v*100|0)+'%':v>0?'? '+(v*100|0)+'%':'—'; }
+function fv(v,u){ return v===null||v===undefined||v===''?'<span class="empty">—</span>':v+(u||''); }
+
+function renderStrip(){
+  document.getElementById('planStrip').innerHTML=P.map((p,i)=>{
+    const r=R[p.id], sc=r==='ok'?'ok':r==='flag'?'flag':'pending';
+    const icon=r==='ok'?'✓':r==='flag'?'✗':'';
+    return `<div class="plan-chip ${i===cur?'active':''}" onclick="go(${i})">
+      <div class="chip-status ${sc}">${icon}</div>
+      <span class="chip-name">${p.name}</span>
+      <span class="chip-bezirk">${p.bz.substring(0,14)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderViewer(p){
+  zoom=0;
+  document.getElementById('viewer').innerHTML=`
+    <div class="viewer-img-wrap" id="imgWrap">
+      <img src="${S}/${p.img}" alt="${p.name}" id="planImg" />
+    </div>
+    <div class="viewer-toolbar">
+      <div>
+        <button onclick="setZoom(-1)">−</button>
+        <button onclick="setZoom(1)">+</button>
+        <button onclick="setZoom(0,true)">Reset</button>
+      </div>
+      <a href="${S}/${p.pdf}" target="_blank">📄 PDF öffnen</a>
+    </div>`;
+}
+
+function setZoom(dir,reset){
+  if(reset) zoom=0;
+  else zoom=Math.max(0,Math.min(3,zoom+dir));
+  const img=document.getElementById('planImg');
+  if(img) img.className=zoomLevels[zoom];
+}
+
+function renderPanel(p){
+  document.getElementById('panelTitle').innerHTML=`<span class="accent">${p.name}</span> — ${p.bz}`;
+  document.getElementById('panelSub').textContent=`${p.typ} · Rechtskraft ${p.yr} · ${p.ex.length} Teilgebiet${p.ex.length>1?'e':''}`;
+  
+  document.getElementById('panelBody').innerHTML=p.ex.map(e=>`
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">${e.t}</span>
+        <span class="card-badge">${e.g}</span>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-cell">
+          <span class="kpi-conf ${cc(e.c.grz)}">${cl(e.c.grz)}</span>
+          <div class="kpi-label">GRZ</div>
+          <div class="kpi-value">${fv(e.grz)}</div>
+        </div>
+        <div class="kpi-cell">
+          <span class="kpi-conf ${cc(e.c.gfz)}">${cl(e.c.gfz)}</span>
+          <div class="kpi-label">GFZ</div>
+          <div class="kpi-value">${fv(e.gfz)}</div>
+        </div>
+        <div class="kpi-cell">
+          <span class="kpi-conf ${cc(e.c.gs)}">${cl(e.c.gs)}</span>
+          <div class="kpi-label">Geschosse</div>
+          <div class="kpi-value">${fv(e.gs)}</div>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi-cell">
+          <span class="kpi-conf ${cc(e.c.bw)}">${cl(e.c.bw)}</span>
+          <div class="kpi-label">Bauweise</div>
+          <div class="kpi-value">${fv(e.bw)}</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-label">Höhe max</div>
+          <div class="kpi-value">${fv(e.h, 'm')}</div>
+        </div>
+        <div class="kpi-cell">
+          <div class="kpi-label">Dachform</div>
+          <div class="kpi-value">${fv(e.df)}</div>
+        </div>
+      </div>
+      ${e.s.length?`<details class="extras"><summary>${e.s.length} Sonstige Festsetzungen</summary><ul>${e.s.map(x=>`<li>${x}</li>`).join('')}</ul></details>`:''}
+    </div>
+  `).join('');
+  
+  document.getElementById('notes').value=R[p.id+'_n']||'';
+}
+
+function updateProgress(){
+  const done=P.filter(p=>R[p.id]).length;
+  const ok=P.filter(p=>R[p.id]==='ok').length;
+  const flag=P.filter(p=>R[p.id]==='flag').length;
+  document.getElementById('progressFill').style.width=(done/P.length*100)+'%';
+  document.getElementById('progressLabel').textContent=`${done} von ${P.length} geprüft`;
+  document.getElementById('badgeOk').textContent=`✓ ${ok}`;
+  document.getElementById('badgeFlag').textContent=`✗ ${flag}`;
+}
+
+function go(i){
+  // Save current notes
+  if(P[cur]) R[P[cur].id+'_n']=document.getElementById('notes')?.value||'';
+  localStorage.setItem('bplan-r2',JSON.stringify(R));
+  
+  cur=i;
+  const p=P[i];
+  renderStrip(); renderViewer(p); renderPanel(p); updateProgress();
+}
+
+function review(s){
+  const p=P[cur];
+  R[p.id]=s;
+  R[p.id+'_n']=document.getElementById('notes').value;
+  localStorage.setItem('bplan-r2',JSON.stringify(R));
+  
+  // Next unreviewed
+  let next=(cur+1)%P.length;
+  for(let i=0;i<P.length;i++){
+    const ci=(cur+1+i)%P.length;
+    if(!R[P[ci].id]){next=ci;break;}
+  }
+  go(next);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='TEXTAREA') return;
+  if(e.key==='ArrowLeft') go((cur-1+P.length)%P.length);
+  if(e.key==='ArrowRight') go((cur+1)%P.length);
+  if(e.key==='1') review('ok');
+  if(e.key==='2') review('flag');
+  if(e.key==='+'||e.key==='=') setZoom(1);
+  if(e.key==='-') setZoom(-1);
+  if(e.key==='0') setZoom(0,true);
+});
+
+go(0);
+</script>
+</body>
+</html>
