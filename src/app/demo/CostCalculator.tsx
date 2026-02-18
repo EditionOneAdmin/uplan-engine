@@ -577,6 +577,12 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   const [costSensitivity, setCostSensitivity] = useState(0);
   const [priceSensitivity, setPriceSensitivity] = useState(0);
 
+  // Exit-Szenario (Hold)
+  const [exitRestwertPct, setExitRestwertPct] = useState(100);
+  const [exitWertsteigerungPa, setExitWertsteigerungPa] = useState(1.5);
+  const [exitRestwertMode, setExitRestwertMode] = useState<"auto"|"manual">("auto");
+  const [exitVerkaufsNK, setExitVerkaufsNK] = useState(5);
+
   // Preset handlers
   const handlePreset = (preset: "seriell" | "konventionell") => {
     setBauzeitPreset(preset);
@@ -604,6 +610,32 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     setBauende(v);
     setBauzeitPreset("custom");
   };
+
+  // IRR solver (Newton-Raphson with bisection fallback)
+  function computeIRR(cashflows: number[], guess = 0.1, maxIter = 100, tol = 1e-7): number | null {
+    let rate = guess;
+    for (let i = 0; i < maxIter; i++) {
+      let npv = 0, dnpv = 0;
+      for (let t = 0; t < cashflows.length; t++) {
+        const disc = Math.pow(1 + rate, t);
+        npv += cashflows[t] / disc;
+        dnpv -= t * cashflows[t] / Math.pow(1 + rate, t + 1);
+      }
+      if (Math.abs(dnpv) < 1e-12) break;
+      const newRate = rate - npv / dnpv;
+      if (Math.abs(newRate - rate) < tol) return newRate * 100;
+      rate = newRate;
+    }
+    let lo = -0.5, hi = 5.0;
+    for (let i = 0; i < 200; i++) {
+      const mid = (lo + hi) / 2;
+      let npv = 0;
+      for (let t = 0; t < cashflows.length; t++) npv += cashflows[t] / Math.pow(1 + mid, t);
+      if (npv > 0) lo = mid; else hi = mid;
+      if (hi - lo < tol) return mid * 100;
+    }
+    return null;
+  }
 
   const calc = useMemo(() => {
     // KG 300+400: Baukosten
@@ -822,6 +854,54 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       return (nettomieteJahr / sumKG) * 100;
     })();
 
+    // Exit value at end of Betrachtungszeitraum
+    const exitWert = exitRestwertMode === "auto"
+      ? gesamtkosten * Math.pow(1 + exitWertsteigerungPa / 100, betrachtungJahre)
+      : gesamtkosten * (exitRestwertPct / 100);
+    const exitNK = exitWert * (exitVerkaufsNK / 100);
+    const exitErloes = exitWert - exitNK;
+
+    // Build annual cashflows for IRR (levered)
+    const annualCashflowsHold: number[] = [];
+    annualCashflowsHold.push(-ekBedarf);
+    for (let y = 1; y <= betrachtungJahre; y++) {
+      const steigerung = Math.pow(1 + mietsteigerungPa / 100, y - 1);
+      const nettoMiete = nettomieteJahr * steigerung;
+      let cf = finanzierungAktiv ? nettoMiete - annuitaetJahr : nettoMiete;
+      if (y === betrachtungJahre) {
+        let rs = fkVolumen;
+        for (let m = 0; m < y * 12; m++) {
+          const monatszins = zinssatz / 100 / 12;
+          const zinsanteil = rs * monatszins;
+          const tilgungsanteil = Math.min(monatlicheRate - zinsanteil, rs);
+          rs = Math.max(0, rs - tilgungsanteil);
+        }
+        cf += exitErloes - (finanzierungAktiv ? rs : 0);
+      }
+      annualCashflowsHold.push(cf);
+    }
+    const irrHoldLevered = computeIRR(annualCashflowsHold);
+
+    // Unlevered IRR
+    const annualCashflowsUnlevered: number[] = [-sumKG];
+    for (let y = 1; y <= betrachtungJahre; y++) {
+      const steigerung = Math.pow(1 + mietsteigerungPa / 100, y - 1);
+      let cf = nettomieteJahr * steigerung;
+      if (y === betrachtungJahre) cf += exitErloes;
+      annualCashflowsUnlevered.push(cf);
+    }
+    const irrHoldUnlevered = computeIRR(annualCashflowsUnlevered);
+
+    // Multiple on Equity
+    const totalCashflowsHold = annualCashflowsHold.reduce((s, v) => s + v, 0);
+    const multipleOnEquity = ekBedarf > 0 ? (totalCashflowsHold + ekBedarf) / ekBedarf : 0;
+    // Total Profit
+    const totalProfitHold = annualCashflowsHold.reduce((s, v) => s + v, 0);
+    // Avg Cash Yield
+    const avgCashYield = ekBedarf > 0 && betrachtungJahre > 0
+      ? (annualCashflowsHold.slice(1, -1).reduce((s,v) => s+v, 0) / Math.max(1, betrachtungJahre - 1)) / ekBedarf * 100
+      : 0;
+
     // Sell KPIs
     const marge = gesamtkosten > 0 ? ((verkaufserloes - gesamtkosten) / gesamtkosten) * 100 : 0;
 
@@ -858,8 +938,10 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       monthlyCashflows, breakEvenMonth, peakCapital,
       effectivePerSqm, totalGrundstuecksflaeche,
       restschuldEnde, equityBuildup, nettomieteJahr, restschuldVerlauf,
+      exitWert, exitNK, exitErloes,
+      irrHoldLevered, irrHoldUnlevered, multipleOnEquity, totalProfitHold, avgCashYield,
     };
-  }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, planungStart, planungEnde, baustart, bauende, vertriebsstart, vertriebsende, auszahlungskurve, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride, strategy, grundstueckspreisPerSqm, grundstueckspreisGesamt, grundstueckspreisMode, betrachtungJahre, bewirtschaftungPct, mietsteigerungPa]);
+  }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, planungStart, planungEnde, baustart, bauende, vertriebsstart, vertriebsende, auszahlungskurve, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride, strategy, grundstueckspreisPerSqm, grundstueckspreisGesamt, grundstueckspreisMode, betrachtungJahre, bewirtschaftungPct, mietsteigerungPa, exitRestwertPct, exitWertsteigerungPa, exitRestwertMode, exitVerkaufsNK]);
 
   // Push calc data to parent
   useEffect(() => {
@@ -1497,10 +1579,78 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
         );
       })()}
 
+      {/* ── Exit-Szenario (Hold only) ────────────────────── */}
+      {strategy === "hold" && (
+        <Section title="🚪 Exit-Szenario" color="#F59E0B">
+          <div className="space-y-3">
+            <div className="flex rounded-lg overflow-hidden border border-white/10">
+              <button onClick={() => setExitRestwertMode("auto")}
+                className={`flex-1 text-[10px] py-1.5 font-semibold ${exitRestwertMode === "auto" ? "bg-amber-600 text-white" : "bg-white/5 text-white/40"}`}>
+                📈 Wertsteigerung
+              </button>
+              <button onClick={() => setExitRestwertMode("manual")}
+                className={`flex-1 text-[10px] py-1.5 font-semibold ${exitRestwertMode === "manual" ? "bg-amber-600 text-white" : "bg-white/5 text-white/40"}`}>
+                ✏️ Manuell
+              </button>
+            </div>
+
+            {exitRestwertMode === "auto" ? (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/70">Wertsteigerung p.a.</span>
+                <NumInput value={exitWertsteigerungPa} onChange={setExitWertsteigerungPa} suffix="%" step={0.5} />
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/70">Restwert (% der Gesamtkosten)</span>
+                <NumInput value={exitRestwertPct} onChange={setExitRestwertPct} suffix="%" step={5} />
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/70">Verkaufs-NK (Makler etc.)</span>
+              <NumInput value={exitVerkaufsNK} onChange={setExitVerkaufsNK} suffix="%" step={1} />
+            </div>
+
+            <div className="space-y-1 pt-2 border-t border-white/10">
+              <div className="flex justify-between">
+                <span className="text-xs text-white/50">Exit-Wert (nach {betrachtungJahre}J)</span>
+                <span className="text-xs text-white/70">{fmtEur(calc.exitWert)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-xs text-white/50">– Verkaufs-NK ({exitVerkaufsNK}%)</span>
+                <span className="text-xs text-red-400/70">−{fmtEur(calc.exitNK)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-amber-400 font-semibold">Netto Exit-Erlös</span>
+                <span className="text-sm font-bold text-amber-400">{fmtEur(calc.exitErloes)}</span>
+              </div>
+            </div>
+          </div>
+        </Section>
+      )}
+
       {/* ── KPIs (Hold mode) ─────────────────────────────── */}
       {strategy === "hold" && (
       <Section title="KPI-Dashboard" color="#0D9488">
         <div className="grid grid-cols-2 gap-2">
+              <KPICard
+                label="IRR (levered)"
+                value={calc.irrHoldLevered !== null ? fmtPct(calc.irrHoldLevered) : "—"}
+                color={calc.irrHoldLevered !== null ? (calc.irrHoldLevered > 8 ? "#22C55E" : calc.irrHoldLevered >= 4 ? "#FBBF24" : "#EF4444") : "#94A3B8"}
+              />
+              <KPICard
+                label="IRR (unlevered)"
+                value={calc.irrHoldUnlevered !== null ? fmtPct(calc.irrHoldUnlevered) : "—"}
+                color={calc.irrHoldUnlevered !== null ? (calc.irrHoldUnlevered > 8 ? "#22C55E" : calc.irrHoldUnlevered >= 4 ? "#FBBF24" : "#EF4444") : "#94A3B8"}
+              />
+              <KPICard
+                label="Multiple on Equity"
+                value={calc.multipleOnEquity > 0 ? `${calc.multipleOnEquity.toFixed(2)}` : "—"}
+                unit="×"
+                color={calc.multipleOnEquity > 2 ? "#22C55E" : calc.multipleOnEquity >= 1.5 ? "#FBBF24" : "#EF4444"}
+              />
+              <KPICard label="Total Profit" value={fmtEur(calc.totalProfitHold)} color={calc.totalProfitHold > 0 ? "#22C55E" : "#EF4444"} />
+              <KPICard label="Avg. Cash Yield" value={fmtPct(calc.avgCashYield)} color={calc.avgCashYield > 8 ? "#22C55E" : calc.avgCashYield >= 4 ? "#FBBF24" : "#EF4444"} />
               <KPICard label="Nettoanfangsrendite" value={fmtPct(calc.niy)} color="#0D9488" />
               {finanzierungAktiv && calc.coc !== null && (
                 <KPICard
