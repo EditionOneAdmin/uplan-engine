@@ -362,123 +362,154 @@ export default function DemoApp() {
     }
   }, [baufelder, placedUnits, filters, metrics, costData]);
 
+  const mapPanel = (
+    <MapPanel
+      region={region}
+      selectedRegion={selectedRegion}
+      onRegionChange={setSelectedRegion}
+      baufelder={baufelder}
+      selectedBaufeld={selectedBaufeld}
+      selectedFloorplan={placeMode ? selectedBuilding : null}
+      placedUnits={placedUnits}
+      onBaufeldClick={handleBaufeldClick}
+      onAddBaufeld={handleAddBaufeld}
+      onDeleteBaufeld={handleDeleteBaufeld}
+      activeBaufeld={activeBaufeld}
+      drawing={drawing}
+      onDrawingChange={setDrawing}
+      onMoveUnit={handleMoveUnit}
+      onRotateUnit={handleRotateUnit}
+      onViewUnit={setSteckbriefUnit}
+      onPlaceOnMap={handlePlaceOnMap}
+      onCancelPlace={handleCancelPlace}
+    />
+  );
+
+  const bottomBar = (
+    <BottomBar
+      metrics={metrics}
+      drawing={drawing}
+      onToggleDraw={() => setDrawing((d) => !d)}
+      onExport={handleOpenExport}
+      onAddToProject={() => setShowAddToProject(true)}
+      matchScore={
+        selectedBuilding && activeBaufeld
+          ? calculateMatch(
+              buildings.find((b) => b.id === selectedBuilding)!,
+              activeBaufeld,
+              filters,
+              configGeschosse
+            ).score
+          : undefined
+      }
+    />
+  );
+
+  const costCalculatorMatchScore = selectedBuilding && activeBaufeld
+    ? calculateMatch(
+        buildings.find((b) => b.id === selectedBuilding)!,
+        activeBaufeld,
+        filters,
+        configGeschosse
+      ).score
+    : undefined;
+
+  const isWirtschaftlichkeit = activeTab === "wirtschaftlichkeit";
+
   return (
     <div className="h-screen flex flex-col bg-[#0F172A] text-white overflow-hidden">
       <DemoHeader />
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-        <div className="flex-1 lg:w-[60%] min-h-[300px] lg:min-h-0 relative">
-          <MapPanel
-            region={region}
-            selectedRegion={selectedRegion}
-            onRegionChange={setSelectedRegion}
-            baufelder={baufelder}
-            selectedBaufeld={selectedBaufeld}
-            selectedFloorplan={placeMode ? selectedBuilding : null}
-            placedUnits={placedUnits}
-            onBaufeldClick={handleBaufeldClick}
-            onAddBaufeld={handleAddBaufeld}
-            onDeleteBaufeld={handleDeleteBaufeld}
-            activeBaufeld={activeBaufeld}
-            drawing={drawing}
-            onDrawingChange={setDrawing}
-            onMoveUnit={handleMoveUnit}
-            onRotateUnit={handleRotateUnit}
-            onViewUnit={setSteckbriefUnit}
-            onPlaceOnMap={handlePlaceOnMap}
-            onCancelPlace={handleCancelPlace}
-          />
-          {placeMode && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-[#0D9488] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg shadow-[#0D9488]/30 animate-pulse">
-              Klicke auf die Karte um das Gebäude zu platzieren · R = Drehen · ESC = Abbrechen
-            </div>
-          )}
-        </div>
-        <div className="lg:w-[40%] flex flex-col min-h-0 border-l border-white/10">
-          {/* Tab bar */}
-          <div className="flex border-b border-white/10 bg-[#1E293B] shrink-0">
-            {([["katalog", "🏗️ Katalog"], ["wirtschaftlichkeit", "📊 Wirtschaftlichkeit"]] as const).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex-1 text-xs font-semibold py-2.5 transition-colors ${
-                  activeTab === key
-                    ? "text-teal-400 border-b-2 border-teal-400"
-                    : "text-white/40 hover:text-white/60"
-                }`}
+
+      {/* Tab bar — always full width */}
+      <div className="flex border-b border-white/10 bg-[#1E293B] shrink-0">
+        {([["katalog", "🏗️ Katalog"], ["wirtschaftlichkeit", "📊 Wirtschaftlichkeit"]] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex-1 text-xs font-semibold py-2.5 transition-colors ${
+              activeTab === key
+                ? "text-teal-400 border-b-2 border-teal-400"
+                : "text-white/40 hover:text-white/60"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Main content area — map is ALWAYS rendered (single DOM node for Leaflet) */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative">
+          {/* Map container — CSS controls size, always in DOM */}
+          <div className={`relative transition-all duration-300 ease-in-out overflow-hidden ${
+            isWirtschaftlichkeit
+              ? "absolute bottom-0 left-0 w-48 h-32 z-20 rounded-tr-lg border-t border-r border-white/20"
+              : "flex-1 lg:w-[60%] min-h-[300px] lg:min-h-0"
+          }`}>
+            {mapPanel}
+            {isWirtschaftlichkeit && (
+              <div
+                className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-[500] cursor-pointer"
+                onClick={() => setActiveTab("katalog")}
               >
-                {label}
-              </button>
-            ))}
+                <span className="text-xs text-white font-semibold">🗺️ Zur Karte</span>
+              </div>
+            )}
+            {!isWirtschaftlichkeit && placeMode && (
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-[#0D9488] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg shadow-[#0D9488]/30 animate-pulse">
+                Klicke auf die Karte um das Gebäude zu platzieren · R = Drehen · ESC = Abbrechen
+              </div>
+            )}
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto bg-[#1E293B] p-4">
-            {activeTab === "wirtschaftlichkeit" ? (
+
+          {/* Content panel */}
+          {isWirtschaftlichkeit ? (
+            <div className="flex-1 min-h-0 overflow-y-auto bg-[#1E293B] p-4">
               <CostCalculator
                 baufelder={baufelder}
                 placedUnits={placedUnits}
                 buildings={buildings}
                 filters={filters}
                 onCalcUpdate={setCostData}
-                matchScore={
-                  selectedBuilding && activeBaufeld
-                    ? calculateMatch(
-                        buildings.find((b) => b.id === selectedBuilding)!,
-                        activeBaufeld,
-                        filters,
-                        configGeschosse
-                      ).score
-                    : undefined
-                }
+                matchScore={costCalculatorMatchScore}
+                fullWidth={true}
               />
-            ) : (
-            <BuildingCatalog
-              buildings={buildings}
-              selectedId={selectedBuilding}
-              onSelect={handleSelectBuilding}
-              placedUnits={placedUnits}
-              onRemoveUnit={handleRemoveUnit}
-              onViewUnit={setSteckbriefUnit}
-              manufacturerFilter={filters.manufacturer}
-              onManufacturerFilter={(m) => setFilters((f) => ({ ...f, manufacturer: m }))}
-              shapeFilter={filters.shape}
-              onShapeFilter={(s) => setFilters((f) => ({ ...f, shape: s }))}
-              geschosse={configGeschosse}
-              setGeschosse={setConfigGeschosse}
-              roofType={configRoof}
-              setRoofType={setConfigRoof}
-              facade={configFacade}
-              setFacade={setConfigFacade}
-              onPlace={handlePlace}
-              activeBaufeld={activeBaufeld}
-              filters={filters}
-              wfEffizienz={configWfEffizienz}
-              setWfEffizienz={setConfigWfEffizienz}
-            />
-            )}
-          </div>
-          {activeTab === "katalog" && (
-          <div className="bg-[#1E293B] border-t border-white/10 p-4">
-            <FilterPanel filters={filters} onChange={setFilters} />
-          </div>
+            </div>
+          ) : (
+            <div className="lg:w-[40%] flex flex-col min-h-0 border-l border-white/10">
+              <div className="flex-1 min-h-0 overflow-y-auto bg-[#1E293B] p-4">
+                <BuildingCatalog
+                  buildings={buildings}
+                  selectedId={selectedBuilding}
+                  onSelect={handleSelectBuilding}
+                  placedUnits={placedUnits}
+                  onRemoveUnit={handleRemoveUnit}
+                  onViewUnit={setSteckbriefUnit}
+                  manufacturerFilter={filters.manufacturer}
+                  onManufacturerFilter={(m) => setFilters((f) => ({ ...f, manufacturer: m }))}
+                  shapeFilter={filters.shape}
+                  onShapeFilter={(s) => setFilters((f) => ({ ...f, shape: s }))}
+                  geschosse={configGeschosse}
+                  setGeschosse={setConfigGeschosse}
+                  roofType={configRoof}
+                  setRoofType={setConfigRoof}
+                  facade={configFacade}
+                  setFacade={setConfigFacade}
+                  onPlace={handlePlace}
+                  activeBaufeld={activeBaufeld}
+                  filters={filters}
+                  wfEffizienz={configWfEffizienz}
+                  setWfEffizienz={setConfigWfEffizienz}
+                />
+              </div>
+              <div className="bg-[#1E293B] border-t border-white/10 p-4">
+                <FilterPanel filters={filters} onChange={setFilters} />
+              </div>
+            </div>
           )}
         </div>
+        {bottomBar}
       </div>
-      <BottomBar
-        metrics={metrics}
-        drawing={drawing}
-        onToggleDraw={() => setDrawing((d) => !d)}
-        onExport={handleOpenExport}
-        onAddToProject={() => setShowAddToProject(true)}
-        matchScore={
-          selectedBuilding && activeBaufeld
-            ? calculateMatch(
-                buildings.find((b) => b.id === selectedBuilding)!,
-                activeBaufeld,
-                filters,
-                configGeschosse
-              ).score
-            : undefined
-        }
-      />
       <AddToProjectModal
         open={showAddToProject}
         onClose={() => { setShowAddToProject(false); }}

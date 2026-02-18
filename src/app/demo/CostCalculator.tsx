@@ -536,9 +536,10 @@ interface Props {
   filters: Filters;
   matchScore?: number;
   onCalcUpdate?: (data: CostData) => void;
+  fullWidth?: boolean;
 }
 
-export function CostCalculator({ baufelder, placedUnits, buildings, filters, matchScore, onCalcUpdate }: Props) {
+export function CostCalculator({ baufelder, placedUnits, buildings, filters, matchScore, onCalcUpdate, fullWidth = false }: Props) {
   // Editable parameters
   const [kg200Pct, setKg200Pct] = useState(5);
   const [kg500Pct, setKg500Pct] = useState(4);
@@ -1008,14 +1009,10 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   const fkQuoteVal = 100 - ekQuote;
   const vertriebsDauer = Math.max(0, vertriebsende - vertriebsstart);
 
-  return (
-    <div className="space-y-3">
-      <h2 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">
-        📊 Wirtschaftlichkeit (DIN 276)
-      </h2>
+  /* ── Section Variables for fullWidth 2-column layout ── */
 
-      {/* ── Kostengruppen ────────────────────────────────── */}
-      <Section title="Kosten" color="#F59E0B">
+  const kostengruppenSection = (
+    <Section title="Kosten" color="#F59E0B">
         <CostRow label={<>KG 100 · Grundstück<InfoTooltip term="KG100" definition="Kostengruppe 100 — Grundstück (nach DIN 276)." /></>} value={calc.kg100} enabled={kg100On} onToggle={setKg100On}>
           <div className="space-y-2">
             {/* Zwei editierbare Felder: €/m² und Gesamtpreis */}
@@ -1126,10 +1123,11 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             </span>
           </div>
         </div>
-      </Section>
+    </Section>
+  );
 
-      {/* ── Finanzierung ─────────────────────────────────── */}
-      <div className="border border-white/10 rounded-lg overflow-hidden mb-2">
+  const finanzierungSection = (
+    <div className="border border-white/10 rounded-lg overflow-hidden mb-2">
         <div className="flex items-center justify-between px-3 py-2">
           <span className="text-xs font-semibold" style={{ color: "#FBBF24" }}>
             🏦 Finanzierung{!finanzierungAktiv && ": Aus"}
@@ -1200,10 +1198,11 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             </div>
           </div>
         )}
-      </div>
+    </div>
+  );
 
-      {/* ── Zeitachse ────────────────────────────────────── */}
-      <Section title="📅 Zeitachse" color="#0D9488">
+  const zeitachseSection = (
+    <Section title="📅 Zeitachse" color="#0D9488">
         {/* Preset buttons */}
         <div className="flex gap-1 mb-3">
           {(["seriell", "konventionell", "custom"] as const).map(p => (
@@ -1394,10 +1393,11 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             </div>
           </div>
         )}
-      </Section>
+    </Section>
+  );
 
-      {/* ── Strategie-Tabs ─────────────────────────────── */}
-      <div className="flex rounded-lg overflow-hidden border border-white/10 mb-2">
+  const strategieTabsSection = (
+    <div className="flex rounded-lg overflow-hidden border border-white/10 mb-2">
         {(["hold", "sell"] as const).map(s => (
           <button
             key={s}
@@ -1409,10 +1409,11 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             {s === "hold" ? "🏠 Hold / Miete" : "💰 Sell / Verkauf"}
           </button>
         ))}
-      </div>
+    </div>
+  );
 
-      {/* ── Erlöse ───────────────────────────────────────── */}
-      <Section title={strategy === "hold" ? "Mieteinnahmen" : "Verkaufserlöse"} color="#22C55E">
+  const erloesSection = (
+    <Section title={strategy === "hold" ? "Mieteinnahmen" : "Verkaufserlöse"} color="#22C55E">
         {strategy === "hold" ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -1490,10 +1491,10 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             </div>
           </div>
         )}
-      </Section>
+    </Section>
+  );
 
-      {/* ── Sensitivität (Sell only) ──────────────────── */}
-      {strategy === "sell" && (() => {
+  const sensitivitaetSection = strategy === "sell" ? (() => {
         const hasSens = costSensitivity !== 0 || priceSensitivity !== 0;
         const adjGesamtkosten = calc.gesamtkosten * (1 + costSensitivity / 100);
         const adjVerkaufserloes = calc.verkaufserloes * (1 + priceSensitivity / 100);
@@ -1560,7 +1561,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
 
             {/* ── KPIs (Sell with Sensitivity) ───────────────── */}
             <Section title="KPI-Dashboard" color="#0D9488">
-              <div className="grid grid-cols-2 gap-2">
+              <div className={`grid ${fullWidth ? "grid-cols-4" : "grid-cols-2"} gap-2`}>
                 <KPICard label="Marge" value={fmtPct(hasSens ? adjMarge : calc.marge)} color={(hasSens ? adjMarge : calc.marge) > 0 ? "#22C55E" : "#EF4444"} info={{ definition: "Gewinnspanne bezogen auf die Gesamtkosten.", formula: "(Verkaufserlös − Gesamtkosten) ÷ Gesamtkosten" }} />
                 <KPICard label="IRR (ann.)" value={fmtPct(hasSens ? adjIrr : calc.irrSell)} color="#0D9488" info={{ definition: "Annualisierte Rendite des Verkaufsszenarios.", formula: "Annualisierte Marge über Projektlaufzeit" }} />
                 {finanzierungAktiv && (hasSens ? adjEkRendite : calc.ekRenditeSell) !== null && (
@@ -1583,11 +1584,10 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
             </Section>
           </>
         );
-      })()}
+  })() : null;
 
-      {/* ── Exit-Szenario (Hold only) ────────────────────── */}
-      {strategy === "hold" && (
-        <Section title="🚪 Exit-Szenario" color="#F59E0B">
+  const exitSection = strategy === "hold" ? (
+    <Section title="🚪 Exit-Szenario" color="#F59E0B">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-white/70">Haltedauer / Exit nach</span>
@@ -1646,13 +1646,12 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
               </div>
             </div>
           </div>
-        </Section>
-      )}
+    </Section>
+  ) : null;
 
-      {/* ── KPIs (Hold mode) ─────────────────────────────── */}
-      {strategy === "hold" && (
-      <Section title="KPI-Dashboard" color="#0D9488">
-        <div className="grid grid-cols-2 gap-2">
+  const kpiSection = strategy === "hold" ? (
+    <Section title="KPI-Dashboard" color="#0D9488">
+      <div className={`grid ${fullWidth ? "grid-cols-4" : "grid-cols-2"} gap-2`}>
               <KPICard
                 label="IRR (levered)"
                 value={calc.irrHoldLevered !== null ? fmtPct(calc.irrHoldLevered) : "—"}
@@ -1711,8 +1710,42 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
           <KPICard label="Grundstücksanteil" value={fmtPct(calc.grundstuecksanteil)} color="#FBBF24" info={{ definition: "Anteil der Grundstückskosten an den Gesamtkosten.", formula: "KG100 ÷ Gesamtkosten" }} />
           <KPICard label="Baukosten/m²" value={`${Math.round(calc.baukostenProM2).toLocaleString("de-DE")}`} unit=" €" color="#A78BFA" info={{ definition: "Reine Baukosten (KG300) pro m² Bruttogrundfläche.", formula: "KG300 ÷ BGF" }} />
           <KPICard label="Betrachtung" value={`${betrachtungJahre * 12}`} unit=" Mo." color="#94A3B8" info={{ definition: "Gesamter Analysezeitraum des Projekts in Monaten." }} />
+      </div>
+    </Section>
+  ) : null;
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">
+        📊 Wirtschaftlichkeit (DIN 276)
+      </h2>
+
+      {fullWidth ? (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            {zeitachseSection}
+            {kostengruppenSection}
+            {finanzierungSection}
+          </div>
+          <div className="space-y-2">
+            {strategieTabsSection}
+            {erloesSection}
+            {exitSection}
+            {sensitivitaetSection}
+            {kpiSection}
+          </div>
         </div>
-      </Section>
+      ) : (
+        <div className="space-y-2">
+          {kostengruppenSection}
+          {finanzierungSection}
+          {zeitachseSection}
+          {strategieTabsSection}
+          {erloesSection}
+          {sensitivitaetSection}
+          {exitSection}
+          {kpiSection}
+        </div>
       )}
     </div>
   );
