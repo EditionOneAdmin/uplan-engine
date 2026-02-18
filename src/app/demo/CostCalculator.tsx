@@ -1508,31 +1508,14 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     </Section>
   );
 
-  const sensitivitaetSection = strategy === "sell" ? (() => {
+  const sensitivitaetSlidersSection = strategy === "sell" ? (() => {
         const hasSens = costSensitivity !== 0 || priceSensitivity !== 0;
         const adjGesamtkosten = calc.gesamtkosten * (1 + costSensitivity / 100);
         const adjVerkaufserloes = calc.verkaufserloes * (1 + priceSensitivity / 100);
-        const adjMarge = adjGesamtkosten > 0 ? ((adjVerkaufserloes - adjGesamtkosten) / adjGesamtkosten) * 100 : 0;
-        const adjEkRendite = finanzierungAktiv && calc.ekBedarf > 0
-          ? ((adjVerkaufserloes - adjGesamtkosten) / calc.ekBedarf) * 100
-          : null;
-        const sellLaufzeit = Math.max(bauende, vertriebsende);
-        const adjIrr = (() => {
-          if (finanzierungAktiv && adjEkRendite !== null) {
-            if (sellLaufzeit <= 0) return 0;
-            return (Math.pow(1 + adjEkRendite / 100, 12 / sellLaufzeit) - 1) * 100;
-          }
-          const years = sellLaufzeit / 12;
-          if (years <= 0 || adjGesamtkosten <= 0) return 0;
-          return (Math.pow(1 + adjMarge / 100, 1 / years) - 1) * 100;
-        })();
-        const adjGrundstuecksanteil = adjGesamtkosten > 0 ? (calc.kg100 / adjGesamtkosten) * 100 : 0;
 
         return (
-          <>
             <Section title="🔀 Sensitivität" color="#0D9488">
               <div className="space-y-3">
-                {/* Cost Sensitivity Slider */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-white/60">Gesamtkosten</span>
@@ -1547,7 +1530,6 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
                     style={{ background: `linear-gradient(to right, #0D9488, #0D9488 ${(costSensitivity + 30) / 60 * 100}%, #374151 ${(costSensitivity + 30) / 60 * 100}%, #374151)` }}
                   />
                 </div>
-                {/* Price Sensitivity Slider */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-white/60">Verkaufspreis</span>
@@ -1572,8 +1554,30 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
                 )}
               </div>
             </Section>
+        );
+  })() : null;
 
-            {/* ── KPIs (Sell with Sensitivity) ───────────────── */}
+  const sellKpiSection = strategy === "sell" ? (() => {
+        const hasSens = costSensitivity !== 0 || priceSensitivity !== 0;
+        const adjGesamtkosten = calc.gesamtkosten * (1 + costSensitivity / 100);
+        const adjVerkaufserloes = calc.verkaufserloes * (1 + priceSensitivity / 100);
+        const adjMarge = adjGesamtkosten > 0 ? ((adjVerkaufserloes - adjGesamtkosten) / adjGesamtkosten) * 100 : 0;
+        const adjEkRendite = finanzierungAktiv && calc.ekBedarf > 0
+          ? ((adjVerkaufserloes - adjGesamtkosten) / calc.ekBedarf) * 100
+          : null;
+        const sellLaufzeit = Math.max(bauende, vertriebsende);
+        const adjIrr = (() => {
+          if (finanzierungAktiv && adjEkRendite !== null) {
+            if (sellLaufzeit <= 0) return 0;
+            return (Math.pow(1 + adjEkRendite / 100, 12 / sellLaufzeit) - 1) * 100;
+          }
+          const years = sellLaufzeit / 12;
+          if (years <= 0 || adjGesamtkosten <= 0) return 0;
+          return (Math.pow(1 + adjMarge / 100, 1 / years) - 1) * 100;
+        })();
+        const adjGrundstuecksanteil = adjGesamtkosten > 0 ? (calc.kg100 / adjGesamtkosten) * 100 : 0;
+
+        return (
             <Section title="KPI-Dashboard" color="#0D9488">
               <div className={`grid ${fullWidth ? "grid-cols-4" : "grid-cols-2"} gap-2`}>
                 <KPICard label="Marge" value={fmtPct(hasSens ? adjMarge : calc.marge)} color={(hasSens ? adjMarge : calc.marge) > 0 ? "#22C55E" : "#EF4444"} info={{ definition: "Gewinnspanne bezogen auf die Gesamtkosten.", formula: "(Verkaufserlös − Gesamtkosten) ÷ Gesamtkosten" }} />
@@ -1596,7 +1600,6 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
                 )}
               </div>
             </Section>
-          </>
         );
   })() : null;
 
@@ -1742,12 +1745,13 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
         {finanzierungSection}
         {zeitachseSection}
         {erloesSection}
-        {sensitivitaetSection}
+        {sensitivitaetSlidersSection}
         {exitSection}
       </div>
       {!hideKpi && (
         <div className={fullWidth ? "sticky bottom-0 z-10 bg-[#1E293B] pt-3 -mx-4 px-4 pb-1 border-t border-white/10 shadow-[0_-4px_12px_rgba(0,0,0,0.3)]" : ""}>
           {kpiSection}
+          {sellKpiSection}
         </div>
       )}
     </div>
