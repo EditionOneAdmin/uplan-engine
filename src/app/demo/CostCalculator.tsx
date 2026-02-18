@@ -177,9 +177,9 @@ function CostRow({
 
 function KPICard({ label, value, unit, color, info, compact }: { label: string; value: string; unit?: string; color: string; info?: { definition: string; formula?: string }; compact?: boolean }) {
   return (
-    <div className={`bg-[#0F172A] rounded-lg border border-white/5 text-center ${compact ? "px-2 py-1.5" : "p-3"}`}>
-      <div className={`${compact ? "text-sm" : "text-lg"} font-bold`} style={{ color }}>{value}{unit && <span className={`${compact ? "text-[10px]" : "text-sm"} ml-0.5`}>{unit}</span>}</div>
-      <div className={`${compact ? "text-[8px]" : "text-[10px]"} text-white/40 uppercase tracking-wider mt-0.5 leading-tight`}>
+    <div className={`bg-[#0F172A] rounded border border-white/5 text-center ${compact ? "px-1 py-1" : "p-3 rounded-lg"}`}>
+      <div className={`${compact ? "text-xs" : "text-lg"} font-bold truncate`} style={{ color }}>{value}{unit && <span className={`${compact ? "text-[9px]" : "text-sm"} ml-0.5`}>{unit}</span>}</div>
+      <div className={`${compact ? "text-[7px]" : "text-[10px]"} text-white/40 uppercase tracking-wider mt-0.5 leading-tight truncate`}>
         {label}
         {info && <InfoTooltip term={label} definition={info.definition} formula={info.formula} />}
       </div>
@@ -1579,7 +1579,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
 
         return (
             <Section title="KPI-Dashboard" color="#0D9488">
-              <div className={`grid ${fullWidth ? "grid-cols-6" : "grid-cols-2"} gap-2`}>
+              <div className={`grid ${fullWidth ? "grid-cols-6" : "grid-cols-2"} gap-1.5`}>
                 <KPICard compact={fullWidth} label="Marge" value={fmtPct(hasSens ? adjMarge : calc.marge)} color={(hasSens ? adjMarge : calc.marge) > 0 ? "#22C55E" : "#EF4444"} info={{ definition: "Gewinnspanne bezogen auf die Gesamtkosten.", formula: "(Verkaufserlös − Gesamtkosten) ÷ Gesamtkosten" }} />
                 <KPICard compact={fullWidth} label="IRR (ann.)" value={fmtPct(hasSens ? adjIrr : calc.irrSell)} color="#0D9488" info={{ definition: "Annualisierte Rendite des Verkaufsszenarios.", formula: "Annualisierte Marge über Projektlaufzeit" }} />
                 {finanzierungAktiv && (hasSens ? adjEkRendite : calc.ekRenditeSell) !== null && (
@@ -1668,7 +1668,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
 
   const kpiSection = strategy === "hold" ? (
     <Section title="KPI-Dashboard" color="#0D9488">
-      <div className={`grid ${fullWidth ? "grid-cols-6" : "grid-cols-2"} gap-2`}>
+      <div className={`grid ${fullWidth ? "grid-cols-6" : "grid-cols-2"} gap-1.5`}>
               <KPICard compact={fullWidth}
                 label="IRR (levered)"
                 value={calc.irrHoldLevered !== null ? fmtPct(calc.irrHoldLevered) : "—"}
