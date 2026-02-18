@@ -578,6 +578,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
   const [priceSensitivity, setPriceSensitivity] = useState(0);
 
   // Exit-Szenario (Hold)
+  const [exitJahre, setExitJahre] = useState(20);
   const [exitRestwertPct, setExitRestwertPct] = useState(100);
   const [exitWertsteigerungPa, setExitWertsteigerungPa] = useState(1.5);
   const [exitRestwertMode, setExitRestwertMode] = useState<"auto"|"manual">("auto");
@@ -854,9 +855,9 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       return (nettomieteJahr / sumKG) * 100;
     })();
 
-    // Exit value at end of Betrachtungszeitraum
+    // Exit value at end of Exit-Zeitraum
     const exitWert = exitRestwertMode === "auto"
-      ? gesamtkosten * Math.pow(1 + exitWertsteigerungPa / 100, betrachtungJahre)
+      ? gesamtkosten * Math.pow(1 + exitWertsteigerungPa / 100, exitJahre)
       : gesamtkosten * (exitRestwertPct / 100);
     const exitNK = exitWert * (exitVerkaufsNK / 100);
     const exitErloes = exitWert - exitNK;
@@ -864,11 +865,11 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     // Build annual cashflows for IRR (levered)
     const annualCashflowsHold: number[] = [];
     annualCashflowsHold.push(-ekBedarf);
-    for (let y = 1; y <= betrachtungJahre; y++) {
+    for (let y = 1; y <= exitJahre; y++) {
       const steigerung = Math.pow(1 + mietsteigerungPa / 100, y - 1);
       const nettoMiete = nettomieteJahr * steigerung;
       let cf = finanzierungAktiv ? nettoMiete - annuitaetJahr : nettoMiete;
-      if (y === betrachtungJahre) {
+      if (y === exitJahre) {
         let rs = fkVolumen;
         for (let m = 0; m < y * 12; m++) {
           const monatszins = zinssatz / 100 / 12;
@@ -884,10 +885,10 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
 
     // Unlevered IRR
     const annualCashflowsUnlevered: number[] = [-sumKG];
-    for (let y = 1; y <= betrachtungJahre; y++) {
+    for (let y = 1; y <= exitJahre; y++) {
       const steigerung = Math.pow(1 + mietsteigerungPa / 100, y - 1);
       let cf = nettomieteJahr * steigerung;
-      if (y === betrachtungJahre) cf += exitErloes;
+      if (y === exitJahre) cf += exitErloes;
       annualCashflowsUnlevered.push(cf);
     }
     const irrHoldUnlevered = computeIRR(annualCashflowsUnlevered);
@@ -898,8 +899,8 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
     // Total Profit
     const totalProfitHold = annualCashflowsHold.reduce((s, v) => s + v, 0);
     // Avg Cash Yield
-    const avgCashYield = ekBedarf > 0 && betrachtungJahre > 0
-      ? (annualCashflowsHold.slice(1, -1).reduce((s,v) => s+v, 0) / Math.max(1, betrachtungJahre - 1)) / ekBedarf * 100
+    const avgCashYield = ekBedarf > 0 && exitJahre > 0
+      ? (annualCashflowsHold.slice(1, -1).reduce((s,v) => s+v, 0) / Math.max(1, exitJahre - 1)) / ekBedarf * 100
       : 0;
 
     // Sell KPIs
@@ -941,7 +942,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       exitWert, exitNK, exitErloes,
       irrHoldLevered, irrHoldUnlevered, multipleOnEquity, totalProfitHold, avgCashYield,
     };
-  }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, planungStart, planungEnde, baustart, bauende, vertriebsstart, vertriebsende, auszahlungskurve, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride, strategy, grundstueckspreisPerSqm, grundstueckspreisGesamt, grundstueckspreisMode, betrachtungJahre, bewirtschaftungPct, mietsteigerungPa, exitRestwertPct, exitWertsteigerungPa, exitRestwertMode, exitVerkaufsNK]);
+  }, [baufelder, placedUnits, buildings, kg200Pct, kg500Pct, kg700Pct, zinssatz, tilgung, bereitstellungszins, planungStart, planungEnde, baustart, bauende, vertriebsstart, vertriebsende, auszahlungskurve, matchScore, kg100On, kg200On, kg300On, kg500On, kg700On, finanzierungAktiv, ekQuote, mietOverride, verkaufOverride, strategy, grundstueckspreisPerSqm, grundstueckspreisGesamt, grundstueckspreisMode, betrachtungJahre, bewirtschaftungPct, mietsteigerungPa, exitRestwertPct, exitWertsteigerungPa, exitRestwertMode, exitVerkaufsNK, exitJahre]);
 
   // Push calc data to parent
   useEffect(() => {
@@ -1583,6 +1584,20 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
       {strategy === "hold" && (
         <Section title="🚪 Exit-Szenario" color="#F59E0B">
           <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/70">Haltedauer / Exit nach</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min={5} max={30} step={1}
+                  value={exitJahre}
+                  onChange={e => setExitJahre(Number(e.target.value))}
+                  className="w-20 accent-amber-500"
+                />
+                <span className="text-xs text-white font-mono w-10 text-right">{exitJahre} J</span>
+              </div>
+            </div>
+
             <div className="flex rounded-lg overflow-hidden border border-white/10">
               <button onClick={() => setExitRestwertMode("auto")}
                 className={`flex-1 text-[10px] py-1.5 font-semibold ${exitRestwertMode === "auto" ? "bg-amber-600 text-white" : "bg-white/5 text-white/40"}`}>
@@ -1613,7 +1628,7 @@ export function CostCalculator({ baufelder, placedUnits, buildings, filters, mat
 
             <div className="space-y-1 pt-2 border-t border-white/10">
               <div className="flex justify-between">
-                <span className="text-xs text-white/50">Exit-Wert (nach {betrachtungJahre}J)</span>
+                <span className="text-xs text-white/50">Exit-Wert (nach {exitJahre}J)</span>
                 <span className="text-xs text-white/70">{fmtEur(calc.exitWert)}</span>
               </div>
               <div className="flex justify-between">
