@@ -324,7 +324,8 @@ export function calculateHonorar(
   // Uses special formula, not HOAI table
   // Excel D303 = Kostenmodell C22+C23+C24 = NUF Wohnen + VK/TF + UG ≈ erloesflaecheWarm
   // We use nufR + nufGewerbe + vkTf as best approximation of Excel's D303
-  const brandschutzFlaeche = masses.nufR_m2 + masses.nufGewerbe_m2 + masses.vkTf_m2;
+  // Bezugsfläche = BGF oi + BGF S (nicht NUF!) — Excel: Honorarrechner Row 277
+  const brandschutzFlaeche = masses.bgfOi_m2 + masses.bgfS_m2;
   const bsHonorar100 = calcBrandschutzHonorar(brandschutzFlaeche);
   const bsLpSumme = LP_BRANDSCHUTZ.reduce((s, v) => s + v, 0);
   const bsNetto = bsHonorar100 * bsLpSumme;
