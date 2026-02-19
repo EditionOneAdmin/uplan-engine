@@ -36,7 +36,7 @@ export function calculateKG400(config: KostXConfig, masses: MassCalculation): KG
     return { basisKG400_eurM2Netto: 0, total_eurNetto: 0, total_eurBrutto: 0, kkw_eurM2Brutto: 0 };
   }
 
-  // Basis 620 €/m² netto
+  // Basis 620 €/m² — this is already BRUTTO in Excel (Kostenmodell C17)
   let basis = EP.kg400Basis_eurM2;
 
   // Nicht-Fernwärme Zuschlag
@@ -69,7 +69,8 @@ export function calculateKG400(config: KostXConfig, masses: MassCalculation): KG
 
   // Multiplikatoren
   const bpi = lookupBaupreisindex(config.baubeginn);
-  let kg400_eurM2_brutto = basis * config.regionalfaktor * (1 + config.guZuschlag) * (1 + bpi) * MwSt;
+  // No MwSt multiplication — basis values (620 etc.) are already brutto in Excel
+  let kg400_eurM2_brutto = basis * config.regionalfaktor * (1 + config.guZuschlag) * (1 + bpi);
 
   // E-Mobilität (bereits brutto-like, addiert als €/m² NUF)
   if (config.eMobilitaet) {
