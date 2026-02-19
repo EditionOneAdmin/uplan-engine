@@ -145,6 +145,31 @@ export function calculateMetrics(shapes: FormXShape[], config: FormXConfig): For
   };
 }
 
+/** Returns signed area; positive = CCW, negative = CW */
+export function signedPolygonArea(points: Point[]): number {
+  if (points.length < 3) return 0;
+  let area = 0;
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    area += points[i].x * points[j].y;
+    area -= points[j].x * points[i].y;
+  }
+  return area / 2;
+}
+
+/** Distance from point to line segment, returns distance and closest point parameter t */
+export function pointToSegmentDist(px: number, py: number, x1: number, y1: number, x2: number, y2: number): { dist: number; t: number } {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return { dist: Math.hypot(px - x1, py - y1), t: 0 };
+  let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const cx = x1 + t * dx;
+  const cy = y1 + t * dy;
+  return { dist: Math.hypot(px - cx, py - cy), t };
+}
+
 export function isPointInPolygon(point: Point, polygon: Point[]): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {

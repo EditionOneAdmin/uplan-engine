@@ -186,7 +186,7 @@ export default function FormXApp() {
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-teal-600 hover:bg-teal-500 rounded-lg transition-colors">
             <ArrowRight size={14} /> KostX
           </button>
-          <span className="text-xs text-white/40 hidden sm:inline ml-2">U-Plan Engine v0.2 · Build 034</span>
+          <span className="text-xs text-white/40 hidden sm:inline ml-2">U-Plan Engine v0.2 · Build 035</span>
         </div>
       </header>
 
