@@ -64,24 +64,38 @@ export function BuildingCard({ unit, building, baufeld, index, selected, onSelec
           : "border-white/10 bg-[#0F172A]/50 hover:bg-[#0F172A]/70"
       }`}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm">🏢</span>
-            <span className="text-xs font-semibold text-white truncate">Gebäude {index + 1}</span>
+      {/* Rendering Image + Header */}
+      <div className="flex gap-2.5 px-3 py-2">
+        {/* Thumbnail */}
+        {building.rendering && (
+          <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 bg-white/5">
+            <img
+              src={building.rendering}
+              alt={building.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-white truncate">Gebäude {index + 1}</span>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewSteckbrief(); }}
+              className="p-1 rounded hover:bg-white/10 transition-colors text-white/40 hover:text-white/80 shrink-0"
+              title="Steckbrief öffnen"
+            >
+              📋
+            </button>
           </div>
           <div className="text-[10px] text-white/40 truncate mt-0.5">
             <span style={{ color: mfr.color }}>{mfr.label}</span> · {building.name}
           </div>
+          <div className="text-[10px] text-white/30 mt-0.5">
+            {unit.geschosse} OG · {unit.units} WE · {fmtNum(wf)} m² WF
+          </div>
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); onViewSteckbrief(); }}
-          className="p-1 rounded hover:bg-white/10 transition-colors text-white/40 hover:text-white/80 shrink-0"
-          title="Steckbrief öffnen"
-        >
-          📋
-        </button>
       </div>
 
       {/* Stats */}
