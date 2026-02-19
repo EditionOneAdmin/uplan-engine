@@ -211,7 +211,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   </div>
   <div class="progress-bar-wrap">
     <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
-    <div class="progress-label" id="progressLabel">0 von 10</div>
+    <div class="progress-label" id="progressLabel">0 von 30</div>
   </div>
   <div class="topbar-actions">
     <span class="badge badge-ok" id="badgeOk">✓ 0</span>
@@ -269,7 +269,47 @@ const P = [
   { id:"09",name:"5-107",bz:"Spandau",typ:"WA",yr:"2022",img:"09_5-107_Spandau_hq.jpg",pdf:"09_5-107_Spandau.pdf",
     ex:[{t:"WA",g:"WA",grz:.4,gfz:null,gs:4,bw:"o",h:null,df:"",c:{grz:.7,gfz:0,gs:.7,bw:.6},s:["GR variiert: 100–250m²","GF variiert: 300–500m²","OK 48.0–57.2m über NHN","GRZ-Überschr. bis 0.75"]}]},
   { id:"10",name:"7-1VE",bz:"Tempelhof-Schöneberg",typ:"MK",yr:"2013",img:"10_7-1VE_TempSchoe_hq.jpg",pdf:"10_7-1VE_TempSchoe.pdf",
-    ex:[{t:"Vorhabengrundstück",g:"MK",grz:.4,gfz:1.0,gs:null,bw:"",h:62.5,df:"",c:{grz:.5,gfz:.5,gs:0,bw:0},s:["Wohnen + Kita + Gewerbe","OK max 62.5m über NHN","Flachdächer ≥15% begrünen","GRZ/GFZ-Überschr. bis 40%"]}]}
+    ex:[{t:"Vorhabengrundstück",g:"MK",grz:.4,gfz:1.0,gs:null,bw:"",h:62.5,df:"",c:{grz:.5,gfz:.5,gs:0,bw:0},s:["Wohnen + Kita + Gewerbe","OK max 62.5m über NHN","Flachdächer ≥15% begrünen","GRZ/GFZ-Überschr. bis 40%"]}]},
+  { id:"11",name:"VII-36-2VE",bz:"Charlottenburg-Wilm.",typ:"WA",yr:"2013",img:"11_VII-36-2VE_ChaWi_hq.jpg",pdf:"11_VII-36-2VE_ChaWi.pdf",
+    ex:[{t:"",g:"WA",grz:0.4,gfz:0.8,gs:6,bw:"o",h:60.5,df:"",c:{grz:1,gfz:1,gs:1,bw:1},s:[]}]},
+  { id:"12",name:"4-57VE",bz:"Charlottenburg-Wilm.",typ:"WA",yr:"2021",img:"12_4-57VE_ChaWi_hq.jpg",pdf:"12_4-57VE_ChaWi.pdf",
+    ex:[{t:"Wohnen 1",g:"WA",grz:0.4,gfz:0.8,gs:4,bw:"o",h:null,df:"",c:{grz:0.6,gfz:0.6,gs:0.8,bw:0.9},s:[]},{t:"Wohnen 2",g:"WA",grz:0.4,gfz:0.8,gs:4,bw:"o",h:null,df:"",c:{grz:0.6,gfz:0.6,gs:0.8,bw:0.9},s:[]}]},
+  { id:"13",name:"XIV-287b-1",bz:"Neukölln",typ:"WA",yr:"2020",img:"13_XIV-287b-1_Neuk_hq.jpg",pdf:"13_XIV-287b-1_Neuk.pdf",
+    ex:[{t:"WA1",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:16,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.9},s:[]},{t:"WA2",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:16,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]}]},
+  { id:"14",name:"I-B5u",bz:"Mitte",typ:"WB+MI",yr:"2011",img:"14_I-B5u_Mitte_hq.jpg",pdf:"14_I-B5u_Mitte.pdf",
+    ex:[{t:"(keine Extraktion)",g:"?",grz:null,gfz:null,gs:null,bw:"",h:null,df:"",c:{grz:0,gfz:0,gs:0,bw:0},s:[]}]},
+  { id:"15",name:"XIV-274b",bz:"Neukölln",typ:"WA",yr:"2013",img:"15_XIV-274b_Neuk_hq.jpg",pdf:"15_XIV-274b_Neuk.pdf",
+    ex:[{t:"WA1",g:"WA",grz:0.2,gfz:0.4,gs:2,bw:"o",h:null,df:"",c:{grz:1,gfz:1,gs:1,bw:0.9},s:[]},{t:"WA2",g:"WA",grz:0.2,gfz:0.4,gs:2,bw:"o",h:null,df:"",c:{grz:1,gfz:1,gs:1,bw:0.9},s:[]},{t:"WA3",g:"WA",grz:0.2,gfz:0.4,gs:2,bw:"o",h:null,df:"",c:{grz:1,gfz:1,gs:1,bw:0.9},s:[]}]},
+  { id:"16",name:"10-53",bz:"Marzahn-Hellersdorf",typ:"WA+GE",yr:"2014",img:"16_10-53_MaHe_hq.jpg",pdf:"16_10-53_MaHe.pdf",
+    ex:[{t:"(keine Extraktion)",g:"?",grz:null,gfz:null,gs:null,bw:"",h:null,df:"",c:{grz:0,gfz:0,gs:0,bw:0},s:[]}]},
+  { id:"17",name:"4-48B",bz:"Charlottenburg-Wilm.",typ:"GE",yr:"2013",img:"17_4-48B_ChaWi_hq.jpg",pdf:"17_4-48B_ChaWi.pdf",
+    ex:[{t:"",g:"GE",grz:0.48,gfz:0.8,gs:4,bw:"o",h:null,df:"",c:{grz:1,gfz:1,gs:1,bw:0.8},s:[]},{t:"",g:"GE",grz:0.48,gfz:1,gs:4,bw:"o",h:null,df:"",c:{grz:1,gfz:1,gs:1,bw:0.8},s:[]}]},
+  { id:"18",name:"11-47ba",bz:"Lichtenberg",typ:"WA+GE",yr:"2021",img:"18_11-47ba_Lichtenb_hq.jpg",pdf:"18_11-47ba_Lichtenb.pdf",
+    ex:[{t:"GE 1",g:"GE",grz:0.6,gfz:1.2,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.7},s:[]},{t:"WA 2",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]},{t:"WA 3",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]},{t:"WA 4",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]},{t:"WA 5",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]},{t:"WA 6",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]},{t:"WA 7",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]},{t:"WA 8",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]},{t:"WA 1",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.8},s:[]},{t:"GB 1",g:"GB",grz:0.4,gfz:0.8,gs:4,bw:"o",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.7},s:[]}]},
+  { id:"19",name:"XV-51c-1",bz:"Treptow-Köpenick",typ:"GE",yr:"2013",img:"19_XV-51c-1_TrKo_hq.jpg",pdf:"19_XV-51c-1_TrKo.pdf",
+    ex:[{t:"GE 1",g:"GE",grz:0.6,gfz:1.8,gs:null,bw:"o",h:20,df:"",c:{grz:1,gfz:1,gs:0,bw:1},s:[]}]},
+  { id:"20",name:"V-1-2",bz:"Friedrichshain-Kreuzb.",typ:"WA",yr:"2017",img:"20_V-1-2_FrKr_hq.jpg",pdf:"20_V-1-2_FrKr.pdf",
+    ex:[{t:"",g:"WA",grz:null,gfz:0.8,gs:3,bw:"o",h:72.3,df:"",c:{grz:0,gfz:1,gs:1,bw:0.8},s:[]}]},
+  { id:"21",name:"VIII-527-1",bz:"Spandau",typ:"WA",yr:"2008",img:"21_VIII-527-1_Spandau_hq.jpg",pdf:"21_VIII-527-1_Spandau.pdf",
+    ex:[{t:"",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]}]},
+  { id:"22",name:"9-17VE",bz:"Treptow-Köpenick",typ:"WA",yr:"2021",img:"22_9-17VE_TrKo_hq.jpg",pdf:"22_9-17VE_TrKo.pdf",
+    ex:[{t:"",g:"WA",grz:0.6,gfz:null,gs:6,bw:"o",h:55,df:"Flachdach",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]}]},
+  { id:"23",name:"IV-23",bz:"Pankow",typ:"WA",yr:"2019",img:"23_IV-23_Pankow_hq.jpg",pdf:"23_IV-23_Pankow.pdf",
+    ex:[{t:"",g:"WA",grz:0.4,gfz:0.8,gs:5,bw:"o",h:14,df:"Pultdach/Sattel",c:{grz:1,gfz:1,gs:1,bw:1},s:[]},{t:"",g:"WA",grz:0.4,gfz:0.8,gs:7,bw:"o",h:14,df:"Pultdach/Sattel",c:{grz:1,gfz:1,gs:1,bw:1},s:[]}]},
+  { id:"24",name:"7-47",bz:"Tempelhof-Schöneberg",typ:"MK",yr:"2018",img:"24_7-47_TempSchoe_hq.jpg",pdf:"24_7-47_TempSchoe.pdf",
+    ex:[{t:"(keine Extraktion)",g:"?",grz:null,gfz:null,gs:null,bw:"",h:null,df:"",c:{grz:0,gfz:0,gs:0,bw:0},s:[]}]},
+  { id:"25",name:"6-32",bz:"Steglitz-Zehlendorf",typ:"WA",yr:"2019",img:"25_6-32_StegZehl_hq.jpg",pdf:"25_6-32_StegZehl.pdf",
+    ex:[{t:"(keine Extraktion)",g:"?",grz:null,gfz:null,gs:null,bw:"",h:null,df:"",c:{grz:0,gfz:0,gs:0,bw:0},s:[]}]},
+  { id:"26",name:"11-11a",bz:"Lichtenberg",typ:"WA",yr:"2011",img:"26_11-11a_Lichtenb_hq.jpg",pdf:"26_11-11a_Lichtenb.pdf",
+    ex:[{t:"",g:"WA",grz:0.4,gfz:1.2,gs:3,bw:"g",h:null,df:"",c:{grz:0.9,gfz:0.9,gs:0.9,bw:0.9},s:[]}]},
+  { id:"27",name:"5-120VE",bz:"Spandau",typ:"WA",yr:"2024",img:"27_5-120VE_Spandau_hq.jpg",pdf:"27_5-120VE_Spandau.pdf",
+    ex:[{t:"I",g:"WA",grz:0.4,gfz:0.8,gs:4,bw:"o",h:null,df:"",c:{grz:0.3,gfz:0.3,gs:1,bw:1},s:[]}]},
+  { id:"28",name:"XXI-2-1",bz:"Marzahn-Hellersdorf",typ:"WA+MI+GE",yr:"2011",img:"28_XXI-2-1_MaHe_hq.jpg",pdf:"28_XXI-2-1_MaHe.pdf",
+    ex:[{t:"MI",g:"MI",grz:0.4,gfz:1,gs:3,bw:"o",h:null,df:"",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]},{t:"GE 1",g:"GE",grz:0.4,gfz:1,gs:3,bw:"o",h:null,df:"",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]},{t:"WA",g:"WA",grz:0.25,gfz:0.5,gs:2,bw:"o",h:null,df:"",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]},{t:"GE 2",g:"GE",grz:0.5,gfz:1,gs:2,bw:"o",h:null,df:"",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]},{t:"GE 3",g:"GE",grz:0.4,gfz:0.8,gs:2,bw:"o",h:null,df:"",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]}]},
+  { id:"29",name:"I-B5s",bz:"Mitte",typ:"WA",yr:"2012",img:"29_I-B5s_Mitte_hq.jpg",pdf:"29_I-B5s_Mitte.pdf",
+    ex:[{t:"",g:"SO",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]},{t:"",g:"WA",grz:0.4,gfz:0.8,gs:3,bw:"o",h:null,df:"",c:{grz:0.8,gfz:0.7,gs:0.9,bw:0.7},s:[]}]},
+  { id:"30",name:"5-105VE",bz:"Spandau",typ:"WA",yr:"2024",img:"30_5-105VE_Spandau_hq.jpg",pdf:"30_5-105VE_Spandau.pdf",
+    ex:[{t:"",g:"WA",grz:0.7,gfz:null,gs:5,bw:"o",h:51,df:"",c:{grz:1,gfz:0,gs:1,bw:0.8},s:[]}]}
 ];
 
 let R = JSON.parse(localStorage.getItem('bplan-r2')||'{}');
