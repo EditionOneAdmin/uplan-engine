@@ -629,9 +629,17 @@ export default function FormXCanvas({
               <rect key={`vh-${i}`}
                 x={p.x - handleSize / 2} y={p.y - handleSize / 2}
                 width={handleSize} height={handleSize}
-                fill={dragMode === 'vertex' && dragVertexIdx === i ? '#5EEAD4' : '#14B8A6'}
+                fill={dragMode === 'vertex' && dragShapeId === shape.id && dragVertexIdx === i ? '#5EEAD4' : '#14B8A6'}
                 stroke="white" strokeWidth={strokeW * 0.5}
                 style={{ cursor: 'move', pointerEvents: 'auto' }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setDragMode('vertex');
+                  setDragShapeId(shape.id);
+                  setDragVertexIdx(i);
+                  setGhostPoints([...shape.points]);
+                }}
               />
             ))}
 
@@ -648,6 +656,17 @@ export default function FormXCanvas({
                   fill={isHov ? '#F59E0B' : '#14B8A6'}
                   stroke="white" strokeWidth={strokeW * 0.4}
                   style={{ cursor: 'move', pointerEvents: 'auto' }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const w = snap(svgToWorld(e.clientX, e.clientY));
+                    setDragMode('edge');
+                    setDragShapeId(shape.id);
+                    setDragEdgeIdx(i);
+                    setDragEdgeStart(w);
+                    setDragEdgeOrigPts([...shape.points]);
+                    setGhostPoints([...shape.points]);
+                  }}
                 />
               );
             })}
