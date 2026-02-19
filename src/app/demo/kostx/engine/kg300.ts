@@ -371,7 +371,7 @@ export function calculateKG3XX(config: KostXConfig, masses: MassCalculation, sub
     + extraKG300.reduce((s, e) => s + e.betrag_eur / MwSt, 0);
 
   // Baupreissteigerung // Excel: Row 212
-  const bpi = lookupBaupreisindex(config.baubeginn);
+  const bpi = lookupBaupreisindex(config.baubeginn, config.baukostenindexPa);
   const basisFuerBPI = summeVorZuschlaege + zuschlaegeSumme;
   const baupreisNetto = bpi * basisFuerBPI;
 

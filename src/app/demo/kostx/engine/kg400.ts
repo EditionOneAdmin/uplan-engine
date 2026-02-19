@@ -40,7 +40,7 @@ export function calculateKG400(config: KostXConfig, masses: MassCalculation): KG
   let basis = EP.kg400Basis_eurM2;
 
   // Nicht-Fernwärme Zuschlag
-  if (config.energieversorgung === 'Luftwasserwärmepumpe' || config.energieversorgung === 'Enercube') {
+  if (config.energieversorgung === 'Luftwasserwärmepumpe') {
     basis += EP.kg400NichtFernwaerme_eurM2;
   } else if (config.energieversorgung === 'geothermische Wärmepumpe') {
     basis += EP.kg400NichtFernwaerme_eurM2 * 2;
@@ -68,7 +68,7 @@ export function calculateKG400(config: KostXConfig, masses: MassCalculation): KG
   }
 
   // Multiplikatoren
-  const bpi = lookupBaupreisindex(config.baubeginn);
+  const bpi = lookupBaupreisindex(config.baubeginn, config.baukostenindexPa);
   // No MwSt multiplication — basis values (620 etc.) are already brutto in Excel
   let kg400_eurM2_brutto = basis * config.regionalfaktor * (1 + config.guZuschlag) * (1 + bpi);
 

@@ -21,7 +21,7 @@ export type Fenstermaterial = 'Kunststoff' | 'Holz';
 export type Sonnenschutz = 'nein' | 'Raffstore elektr.' | 'Rolladen elektr.' | 'Rolladen manuell' | 'Sonnenschutzverglasung';
 export type Fassadengestaltung = 'WDVS' | 'WDVS mit Klinkerriemchen';
 export type Balkontyp = 'vorgestellte Balkone' | 'hängende Balkone' | 'Loggien';
-export type Energieversorgung = 'Fernwärme' | 'Luftwasserwärmepumpe' | 'Enercube' | 'geothermische Wärmepumpe';
+export type Energieversorgung = 'Fernwärme' | 'Luftwasserwärmepumpe' | 'geothermische Wärmepumpe';
 export type PositionierungBaeder = 'an Außenwand' | 'innenliegend';
 export type Kuechen = 'nein' | 'Küche Ø 4500€' | 'Küche Ø 6000€' | 'Küche Ø 8000€' | 'Küche Ø 10000€';
 export type Gebaeueklasse = 3 | 4 | 5 | 'Hochhaus' | 'sehr hohes Hochhaus' | 'Wolkenkratzer';
@@ -47,6 +47,7 @@ export interface KostXConfig {
 
   // A.1.2 Kosteneinflüsse (Secondary)
   baubeginn: string;          // z.B. "Q1 2026"
+  baukostenindexPa: number;   // BKI p.a. in Prozent (default 1.5)
   regionalfaktor: number;
   guZuschlag: number;         // 0–0.30
   energiestandard: Energiestandard;

@@ -1,16 +1,19 @@
 'use client';
 
+import InfoTooltip from './InfoTooltip';
+
 interface ParameterSelectProps {
   label: string;
   value: string;
   options: { value: string; label: string }[];
   onChange: (value: string) => void;
+  info?: string;
 }
 
-export default function ParameterSelect({ label, value, options, onChange }: ParameterSelectProps) {
+export default function ParameterSelect({ label, value, options, onChange, info }: ParameterSelectProps) {
   return (
     <div className="mb-3">
-      <label className="block text-xs text-white/60 mb-1">{label}</label>
+      <label className="block text-xs text-white/60 mb-1 flex items-center">{label}{info && <InfoTooltip text={info} />}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

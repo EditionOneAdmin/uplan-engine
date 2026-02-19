@@ -16,12 +16,11 @@ export default function TechConfig({ config, onChange }: Props) {
       <ParameterSelect label="Energieversorgung" value={config.energieversorgung} options={[
         { value: 'Fernwärme', label: 'Fernwärme' },
         { value: 'Luftwasserwärmepumpe', label: 'LWWP' },
-        { value: 'Enercube', label: 'Enercube' },
         { value: 'geothermische Wärmepumpe', label: 'Geothermie' },
       ]} onChange={(v) => onChange({ energieversorgung: v as KostXConfig['energieversorgung'] })} />
-      <ParameterSelect label="Positionierung Bäder" value={config.positionierungBaeder} options={[
-        { value: 'an Außenwand', label: 'An Außenwand' },
-        { value: 'innenliegend', label: 'Innenliegend' },
+      <ParameterSelect label="Bäder Lüftung" value={config.positionierungBaeder} options={[
+        { value: 'an Außenwand', label: 'Ohne Lüftungsanlage (Außenwand)' },
+        { value: 'innenliegend', label: 'Mit Lüftungsanlage (innenliegend)' },
       ]} onChange={(v) => onChange({ positionierungBaeder: v as KostXConfig['positionierungBaeder'] })} />
       <ToggleSwitch label="PV-Anlage" checked={config.pvAnlage} onChange={(v) => onChange({ pvAnlage: v })} />
       {config.pvAnlage && (

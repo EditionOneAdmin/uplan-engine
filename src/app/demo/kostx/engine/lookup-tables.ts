@@ -176,9 +176,22 @@ export const BAUPREIS_INDEX: BaupreisIndex[] = [
   { quartal: 'Q4 2035', faktor: 0.15 },
 ];
 
-export function lookupBaupreisindex(quartal: string): number {
-  const entry = BAUPREIS_INDEX.find(b => b.quartal === quartal);
-  return entry?.faktor ?? 0;
+/**
+ * Dynamische BPI-Berechnung basierend auf Quartal-Differenz zu Q4 2025.
+ * @param quartal - z.B. "Q1 2026"
+ * @param bkiPa - Jährliche Baupreissteigerung in Prozent (z.B. 1.5)
+ */
+export function lookupBaupreisindex(quartal: string, bkiPa: number = 1.5): number {
+  // Parse quartal string "Q1 2026" → quarter 1, year 2026
+  const match = quartal.match(/Q(\d)\s+(\d{4})/);
+  if (!match) return 0;
+  const q = parseInt(match[1]);
+  const y = parseInt(match[2]);
+  // Q4 2025 = reference (quartal 0)
+  const refQ = 4;
+  const refY = 2025;
+  const quartalsAbstand = (y - refY) * 4 + (q - refQ);
+  return quartalsAbstand * (bkiPa / 100 / 4);
 }
 
 // ============================================================
@@ -216,7 +229,7 @@ export const VERKEHRSFLAECHE = {
 /** Technikfläche pro TH */
 export const TECHNIKFLAECHE = {
   ohneFernwaerme_m2: 40,   // Kostentabellen I6
-  mitFernwaerme_m2: 32.5,  // Kostentabellen I7 (und Enercube)
+  mitFernwaerme_m2: 32.5,  // Kostentabellen I7
 };
 
 // ============================================================

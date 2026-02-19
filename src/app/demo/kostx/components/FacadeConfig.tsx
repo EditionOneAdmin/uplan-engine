@@ -25,7 +25,7 @@ export default function FacadeConfig({ config, onChange }: Props) {
         { value: 'WDVS', label: 'WDVS' },
         { value: 'WDVS mit Klinkerriemchen', label: 'WDVS + Klinker' },
       ]} onChange={(v) => onChange({ fassadengestaltung: v as KostXConfig['fassadengestaltung'] })} />
-      <ParameterSlider label="Balkon-Anteil" value={config.balkoneAnteil * 100} min={0} max={100} step={5} unit="%" formatValue={(v) => v.toFixed(0)} onChange={(v) => onChange({ balkoneAnteil: v / 100 })} />
+      <ParameterSlider label="Anteil WE mit Balkon" value={config.balkoneAnteil * 100} min={0} max={100} step={5} unit="%" formatValue={(v) => v.toFixed(0)} onChange={(v) => onChange({ balkoneAnteil: v / 100 })} />
       <ParameterSelect label="Balkontyp" value={config.balkontyp} options={[
         { value: 'vorgestellte Balkone', label: 'Vorgestellt' },
         { value: 'hängende Balkone', label: 'Hängend' },

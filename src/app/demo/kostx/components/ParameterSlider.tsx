@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import InfoTooltip from './InfoTooltip';
 
 interface ParameterSliderProps {
   label: string;
@@ -12,10 +13,11 @@ interface ParameterSliderProps {
   showInput?: boolean;
   formatValue?: (v: number) => string;
   onChange: (value: number) => void;
+  info?: string;
 }
 
 export default function ParameterSlider({
-  label, value, min, max, step, unit = '', showInput = false, formatValue, onChange,
+  label, value, min, max, step, unit = '', showInput = false, formatValue, onChange, info,
 }: ParameterSliderProps) {
   const displayValue = formatValue ? formatValue(value) : `${value}`;
   const pct = ((value - min) / (max - min)) * 100;
@@ -32,7 +34,7 @@ export default function ParameterSlider({
   return (
     <div className="mb-3">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-white/60">{label}</span>
+        <span className="text-xs text-white/60 flex items-center">{label}{info && <InfoTooltip text={info} />}</span>
         {!showInput && (
           <span className="text-xs font-medium text-white/90">{displayValue}{unit && ` ${unit}`}</span>
         )}

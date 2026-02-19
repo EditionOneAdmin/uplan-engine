@@ -132,6 +132,7 @@ export function calculateTiefgarage(
   tg: TiefgarageConfig,
   regionalfaktor: number,
   baubeginn: string,
+  bkiPa: number = 1.5,
 ): TiefgarageResult {
   const rf = regionalfaktor;
   const gr = calculateGR(tg);
@@ -266,7 +267,7 @@ export function calculateTiefgarage(
 
   // === Position 19: Baupreissteigerung ===
   // Excel: G60 = BPI * SUM(G42:G58)
-  const bpi = lookupBaupreisindex(baubeginn);
+  const bpi = lookupBaupreisindex(baubeginn, bkiPa);
   const bpiNetto = bpi * zwischensumme1;
 
   const totalNetto = zwischensumme1 + skalierungNetto + bpiNetto;
@@ -326,7 +327,7 @@ export function calculateBasement(
 
   if (isTG && config.tiefgarage) {
     // Vollständiger TG-Rechner
-    const tgResult = calculateTiefgarage(config.tiefgarage, rf, config.baubeginn);
+    const tgResult = calculateTiefgarage(config.tiefgarage, rf, config.baubeginn, config.baukostenindexPa);
 
     // Convert to BasementCost
     const kgPositionen: KGPosition[] = tgResult.positionen.map((p) => ({
@@ -371,7 +372,7 @@ export function calculateBasement(
   const sonstiges = 0.05 * kg300Sum;
   const be = 0.05 * (kg300Sum + sonstiges);
   const kg400Netto = bgfUi * 90 * rf;
-  const bpi = lookupBaupreisindex(config.baubeginn);
+  const bpi = lookupBaupreisindex(config.baubeginn, config.baukostenindexPa);
   const bpiKosten = bpi * (kg300Sum + sonstiges + be + kg400Netto);
   const totalNetto = kg300Sum + sonstiges + be + kg400Netto + bpiKosten;
 

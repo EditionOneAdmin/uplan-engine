@@ -49,6 +49,7 @@ export const KOSTX_DEFAULTS: KostXConfig = {
 
   // A.1.2 Kosteneinflüsse
   baubeginn: 'Q1 2026',
+  baukostenindexPa: 1.5,
   regionalfaktor: 1.0,
   guZuschlag: 0,
   energiestandard: 'GEG',

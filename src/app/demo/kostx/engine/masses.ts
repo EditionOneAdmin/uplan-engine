@@ -106,7 +106,7 @@ export function calculateMasses(config: KostXConfig): MassCalculation {
   // Technikfläche (pro TH)
   const hatKeller = config.untergeschoss !== 'nein' && config.untergeschoss !== 'keine Angabe';
   const technikflaecheProTH_m2 = hatKeller ? 0
-    : (config.energieversorgung === 'Fernwärme' || config.energieversorgung === 'Enercube')
+    : (config.energieversorgung === 'Fernwärme')
       ? TECHNIKFLAECHE.mitFernwaerme_m2
       : TECHNIKFLAECHE.ohneFernwaerme_m2;
 
