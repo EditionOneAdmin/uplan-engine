@@ -1,0 +1,31 @@
+{
+  "land": "nrw",
+  "gesetz": "BauO NRW",
+  "stand": "2024-01",
+  "abstandsflaechen": {
+    "faktor": 0.4,
+    "minimum_m": 3,
+    "bemerkung": "0.4 * H, mindestens 3m (Regelfall)"
+  },
+  "stellplaetze": {
+    "pkw": {
+      "pflicht_pro_we": 1.0,
+      "bemerkung": "Richtwert 1.0/WE, kommunal variabel (Stellplatzsatzung)"
+    },
+    "fahrrad": {
+      "pflicht_pro_we": 1,
+      "bemerkung": "1 Fahrradstellplatz pro Wohneinheit"
+    }
+  },
+  "gebaeudeKlassen": [
+    { "klasse": 1, "hoehe_max": 7, "beschreibung": "Freistehend, max 2 NE, H ≤ 7m" },
+    { "klasse": 2, "hoehe_max": 7, "beschreibung": "Max 2 NE, H ≤ 7m (nicht freistehend)" },
+    { "klasse": 3, "hoehe_max": 7, "beschreibung": "H ≤ 7m, sonstige Gebäude" },
+    { "klasse": 4, "hoehe_max": 13, "beschreibung": "H ≤ 13m, NE ≤ 400m²" },
+    { "klasse": 5, "hoehe_max": 22, "beschreibung": "H ≤ 22m, sonstige Gebäude" }
+  ],
+  "barrierefreiheit": {
+    "schwelle_geschosse": 2,
+    "bemerkung": "Ab 2+ Geschosse: Wohnungen barrierefrei erreichbar"
+  }
+}
