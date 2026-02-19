@@ -10,7 +10,7 @@ import CostFactors from './components/CostFactors';
 import FacadeConfig from './components/FacadeConfig';
 import TechConfig from './components/TechConfig';
 import RoofConfig from './components/RoofConfig';
-import EconomicsConfig from './components/EconomicsConfig';
+// EconomicsConfig removed — Wirtschaftlichkeit lives in CostCalculator
 import SectionHeader from './components/SectionHeader';
 import CostSummary from './components/CostSummary';
 import CostBreakdown from './components/CostBreakdown';
@@ -109,12 +109,7 @@ export default function KostXApp() {
             </div>
           </div>
 
-          <div className="border-t border-white/10">
-            <SectionHeader title="Wirtschaftlichkeit" icon="📊" isOpen={!!sections.econ} onToggle={() => toggle('econ')} />
-            <div className={`overflow-hidden transition-all duration-200 ${sections.econ ? 'max-h-[1000px]' : 'max-h-0'}`}>
-              <EconomicsConfig config={config} onChange={onChange} />
-            </div>
-          </div>
+          {/* Wirtschaftlichkeit section removed — lives in CostCalculator */}
         </aside>
 
         {/* Results */}
