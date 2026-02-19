@@ -17,6 +17,9 @@ import CostBreakdown from './components/CostBreakdown';
 import MassDisplay from './components/MassDisplay';
 import WaterfallChart from './components/WaterfallChart';
 import DetailTable from './components/DetailTable';
+import HonorarDisplay from './components/HonorarDisplay';
+import TiefgarageDisplay from './components/TiefgarageDisplay';
+import KostenaufstellungView from './components/KostenaufstellungView';
 
 type Action = { type: 'patch'; payload: Partial<KostXConfig> } | { type: 'reset' };
 
@@ -28,9 +31,20 @@ function reducer(state: KostXConfig, action: Action): KostXConfig {
   }
 }
 
+const TABS = [
+  { key: 'overview', label: 'Übersicht' },
+  { key: 'detail', label: 'KG Detail' },
+  { key: 'kostenaufstellung', label: 'Kostenaufstellung' },
+  { key: 'honorare', label: 'Honorare' },
+  { key: 'tiefgarage', label: 'Tiefgarage' },
+] as const;
+
+type TabKey = typeof TABS[number]['key'];
+
 export default function KostXApp() {
   const [config, dispatch] = useReducer(reducer, KOSTX_DEFAULTS);
   const [sections, setSections] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
   const toggle = useCallback((key: string) => {
     setSections(p => ({ ...p, [key]: !p[key] }));
@@ -41,6 +55,8 @@ export default function KostXApp() {
   }, []);
 
   const result: KostXResult = useMemo(() => calculateKostX(config), [config]);
+
+  const hasTG = result.basement?.tiefgarageResult != null;
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-white">
@@ -63,7 +79,6 @@ export default function KostXApp() {
       <div className="flex flex-col lg:flex-row">
         {/* Sidebar */}
         <aside className="lg:w-[35%] xl:w-[30%] bg-[#151528] border-r border-white/10 lg:h-[calc(100vh-49px)] overflow-y-auto">
-          {/* Building Basics - always open */}
           <BuildingBasics config={config} onChange={onChange} />
 
           <div className="border-t border-white/10">
@@ -105,11 +120,45 @@ export default function KostXApp() {
         {/* Results */}
         <main className="flex-1 lg:h-[calc(100vh-49px)] overflow-y-auto">
           <CostSummary result={result} />
+
+          {/* Tabs */}
+          <div className="border-b border-white/10 px-4 flex gap-0 overflow-x-auto">
+            {TABS.filter(t => t.key !== 'tiefgarage' || hasTG).map(t => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === t.key
+                    ? 'border-teal-400 text-teal-400'
+                    : 'border-transparent text-white/40 hover:text-white/60'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
           <div className="divide-y divide-white/10">
-            <CostBreakdown result={result} />
-            <MassDisplay result={result} />
-            <WaterfallChart result={result} />
-            <DetailTable result={result} />
+            {activeTab === 'overview' && (
+              <>
+                <CostBreakdown result={result} />
+                <MassDisplay result={result} />
+                <WaterfallChart result={result} />
+              </>
+            )}
+            {activeTab === 'detail' && (
+              <DetailTable result={result} />
+            )}
+            {activeTab === 'kostenaufstellung' && (
+              <KostenaufstellungView result={result} />
+            )}
+            {activeTab === 'honorare' && (
+              <HonorarDisplay result={result} />
+            )}
+            {activeTab === 'tiefgarage' && hasTG && (
+              <TiefgarageDisplay result={result} />
+            )}
           </div>
         </main>
       </div>
