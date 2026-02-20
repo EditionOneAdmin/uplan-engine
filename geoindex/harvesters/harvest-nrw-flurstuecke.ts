@@ -25,9 +25,11 @@ const WFS_BASE =
 const FEATURE_TYPE = "ave:Flurstueck";
 const PAGE_SIZE = 1000; // WFS server may cap this
 const SUPABASE_URL =
-  process.env.SUPABASE_URL ?? "https://jkcnvuyklczouglhcoih.supabase.co";
+  process.env.SUPABASE_URL ??
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  "https://jkcnvuyklczouglhcoih.supabase.co";
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-const TABLE = "geoindex_flurstuecke";
+const TABLE = "geo_fluerstuecke";
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -239,26 +241,32 @@ async function main() {
       const center = geojson ? centroid(geojson) : null;
 
       rows.push({
-        source_id: String(f.idflurst),
-        flstkennz: String(f.flstkennz).trim(),
-        gemarkung: String(f.gemarkung),
-        gemaschl: String(f.gemaschl),
-        flur: String(f.flur),
-        flstnrzae: String(f.flstnrzae),
-        flstnrnen: f.flstnrnen ? String(f.flstnrnen) : null,
         gemeinde: String(f.gemeinde),
-        gmdschl: String(f.gmdschl),
+        gemarkung: String(f.gemarkung),
+        flur: String(f.flur),
+        zaehler: String(f.flstnrzae),
+        nenner: f.flstnrnen ? String(f.flstnrnen) : null,
+        bundesland: "nrw",
         kreis: String(f.kreis),
-        kreisschl: String(f.kreisschl),
-        flaeche_qm: Number(f.flaeche) || null,
-        lagebezeichnung: f.lagebeztxt ?? null,
-        nutzung: f.tntxt ?? null,
-        aktualitaet: f.aktualit ?? null,
-        geojson: geojson ? JSON.stringify(geojson) : null,
-        centroid_lng: center?.[0] ?? null,
-        centroid_lat: center?.[1] ?? null,
-        bundesland: "NRW",
-        quelle: "wfs_nw_alkis_vereinfacht",
+        nutzungsart: f.tntxt ?? null,
+        flaeche_m2: Number(f.flaeche) || null,
+        geometry: geojson
+          ? geojson.type === "MultiPolygon"
+            ? { type: "Polygon" as const, coordinates: (geojson as GeoJSON.MultiPolygon).coordinates[0] }
+            : geojson
+          : null,
+        raw_data: {
+          source_id: String(f.idflurst),
+          flstkennz: String(f.flstkennz).trim(),
+          gemaschl: String(f.gemaschl),
+          gmdschl: String(f.gmdschl),
+          kreisschl: String(f.kreisschl),
+          lagebezeichnung: f.lagebeztxt ?? null,
+          aktualitaet: f.aktualit ?? null,
+          centroid_lng: center?.[0] ?? null,
+          centroid_lat: center?.[1] ?? null,
+          quelle: "wfs_nw_alkis_vereinfacht",
+        },
       });
 
       totalFetched++;
@@ -272,7 +280,7 @@ async function main() {
     if (supabase && rows.length > 0) {
       const { error } = await supabase
         .from(TABLE)
-        .upsert(rows, { onConflict: "source_id" });
+        .insert(rows);
 
       if (error) {
         console.error("❌ Supabase upsert error:", error.message);
