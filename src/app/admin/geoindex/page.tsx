@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import QualityHeatmap from "./QualityHeatmap";
 
 interface GeoJob {
   id: string;
@@ -109,6 +110,12 @@ export default function GeoIndexPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Quality Heatmap */}
+      <section>
+        <h2 className="text-lg font-semibold text-zinc-300 mb-3">Qualitäts-Heatmap nach Gemeinde</h2>
+        <QualityHeatmap />
       </section>
 
       {/* Jobs */}

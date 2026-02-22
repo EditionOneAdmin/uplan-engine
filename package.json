@@ -33,6 +33,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "fast-xml-parser": "^5.3.6",
+    "pg": "^8.18.0",
+    "playwright": "^1.58.2",
     "postgres": "^3.4.8",
     "proj4": "^2.20.2",
     "shapefile": "^0.6.6",
